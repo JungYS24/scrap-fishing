@@ -53,8 +53,9 @@ namespace ScrapFishing.Boat
             }
 
             camera.orthographic = true;
-            camera.orthographicSize = 4.27f;
+            camera.orthographicSize = GameView.OrthoSize;
             camera.backgroundColor = Palette.Background;
+            gameObject.AddComponent<FixedResolution>().Attach(camera);
         }
 
         void BuildWorld()
@@ -99,11 +100,14 @@ namespace ScrapFishing.Boat
         {
             var canvasGo = new GameObject("Canvas");
             var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = Camera.main;
+            canvas.planeDistance = 1f;
+            canvas.pixelPerfect = true;
             var scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(480f, 854f);
-            scaler.matchWidthOrHeight = 1f;
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+            scaler.scaleFactor = 1f;
+            scaler.referenceResolution = new Vector2(GameView.Width, GameView.Height);
             canvasGo.AddComponent<GraphicRaycaster>();
 
             var eventGo = new GameObject("EventSystem");

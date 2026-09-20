@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Controls
@@ -43,6 +44,11 @@ namespace ScrapFishing.Controls
 
             if (pressedThisFrame)
             {
+                if (!FixedResolution.ContainsWindowPoint(position))
+                {
+                    return;
+                }
+
                 _pressed = true;
                 _pressPosition = position;
             }
@@ -53,7 +59,7 @@ namespace ScrapFishing.Controls
             }
 
             _pressed = false;
-            if (Vector2.Distance(_pressPosition, position) < minPixels)
+            if (Vector2.Distance(FixedResolution.ToGamePixels(_pressPosition), FixedResolution.ToGamePixels(position)) < minPixels)
             {
                 return;
             }
@@ -64,8 +70,8 @@ namespace ScrapFishing.Controls
                 return;
             }
 
-            var startWorld = cam.ScreenToWorldPoint(new Vector3(_pressPosition.x, _pressPosition.y, 10f));
-            var endWorld = cam.ScreenToWorldPoint(new Vector3(position.x, position.y, 10f));
+            var startWorld = FixedResolution.WindowToWorld(cam, _pressPosition);
+            var endWorld = FixedResolution.WindowToWorld(cam, position);
             startWorld.z = 0f;
             endWorld.z = 0f;
             OnSwipe?.Invoke(new SwipeInfo(_pressPosition, position, startWorld, endWorld));

@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Controls
@@ -21,6 +22,11 @@ namespace ScrapFishing.Controls
 
             if (pressedThisFrame)
             {
+                if (!FixedResolution.ContainsWindowPoint(position))
+                {
+                    return;
+                }
+
                 _pressed = true;
                 _pressPosition = position;
             }
@@ -31,7 +37,7 @@ namespace ScrapFishing.Controls
             }
 
             _pressed = false;
-            if (Vector2.Distance(_pressPosition, position) <= slopPixels)
+            if (Vector2.Distance(FixedResolution.ToGamePixels(_pressPosition), FixedResolution.ToGamePixels(position)) <= slopPixels)
             {
                 OnTap?.Invoke();
             }
