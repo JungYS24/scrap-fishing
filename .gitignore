@@ -57,6 +57,11 @@ ExportedObj/
 
 # Unity3D generated file on crash reports
 sysinfo.txt
+/[Aa]ssets/_Recovery/
+
+# macOS zip leftovers
+.DS_Store
+__MACOSX/
 
 # Builds
 *.apk
