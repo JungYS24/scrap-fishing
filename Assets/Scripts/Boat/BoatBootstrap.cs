@@ -60,12 +60,6 @@ namespace ScrapFishing.Boat
 
         void BuildWorld()
         {
-            var water = CreateSprite("Water", PlaceholderFactory.Square(Palette.Water), new Vector3(0f, -0.4f, 0f), new Vector3(5.2f, 8.2f, 1f), 0);
-            water.transform.SetParent(transform, true);
-
-            var barge = CreateSprite("Barge", PlaceholderFactory.Square(Palette.Magenta), new Vector3(0f, 3.95f, 0f), new Vector3(1.8f, 0.28f, 1f), 5);
-            barge.transform.SetParent(transform, true);
-
             var hookGo = CreateSprite("Hook", PlaceholderFactory.Circle(Palette.NeonGreen), new Vector3(0f, 3.55f, 0f), Vector3.one * 0.34f, 6);
             hookGo.transform.SetParent(transform, true);
             _hook = hookGo.AddComponent<HookMover>();

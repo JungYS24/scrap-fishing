@@ -8,18 +8,29 @@ namespace ScrapFishing.Boat
     public class ScrapSpawner : MonoBehaviour
     {
         readonly List<ScrapView> _live = new List<ScrapView>();
-        readonly ScrapDefinition[] _catalog =
-        {
-            ScrapDefinition.CreateRuntime("녹슨 회로", ScrapGrade.Junk, 10, new Color(0.55f, 0.55f, 0.5f)),
-            ScrapDefinition.CreateRuntime("폐배터리", ScrapGrade.Common, 25, Palette.Cyan),
-            ScrapDefinition.CreateRuntime("네온 기판", ScrapGrade.Rare, 60, Palette.Magenta),
-            ScrapDefinition.CreateRuntime("변이 어류", ScrapGrade.Mutant, 90, Palette.NeonGreen)
-        };
+        ScrapDefinition[] _catalog;
 
         public IReadOnlyList<ScrapView> Live => _live;
 
+        void EnsureCatalog()
+        {
+            if (_catalog != null)
+            {
+                return;
+            }
+
+            _catalog = new[]
+            {
+                ScrapDefinition.CreateRuntime("녹슨 회로", ScrapGrade.Junk, 10, new Color(0.55f, 0.55f, 0.5f)),
+                ScrapDefinition.CreateRuntime("폐배터리", ScrapGrade.Common, 25, Palette.Cyan),
+                ScrapDefinition.CreateRuntime("네온 기판", ScrapGrade.Rare, 60, Palette.Magenta),
+                ScrapDefinition.CreateRuntime("변이 어류", ScrapGrade.Mutant, 90, Palette.NeonGreen)
+            };
+        }
+
         public void SpawnForCast(float surfaceY, float targetY)
         {
+            EnsureCatalog();
             Clear();
             var count = Random.Range(5, 9);
             for (var i = 0; i < count; i++)
