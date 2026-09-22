@@ -98,28 +98,39 @@ namespace ScrapFishing.Boat
 
         void BuildUi()
         {
-            var canvasGo = new GameObject("Canvas");
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = Camera.main;
-            canvas.planeDistance = 1f;
-            canvas.pixelPerfect = true;
-            var scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
-            scaler.scaleFactor = 1f;
+            var canvas = FindFirstObjectByType<Canvas>();
+            if (canvas == null)
+            {
+                var canvasGo = new GameObject("Canvas");
+                canvas = canvasGo.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvasGo.AddComponent<GraphicRaycaster>();
+            }
+
+            var scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler == null)
+            {
+                scaler = canvas.gameObject.AddComponent<CanvasScaler>();
+            }
+
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(GameView.Width, GameView.Height);
-            canvasGo.AddComponent<GraphicRaycaster>();
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = GameView.CanvasMatch;
 
-            var eventGo = new GameObject("EventSystem");
-            eventGo.AddComponent<EventSystem>();
-            eventGo.AddComponent<InputSystemUIInputModule>();
+            if (FindFirstObjectByType<EventSystem>() == null)
+            {
+                var eventGo = new GameObject("EventSystem");
+                eventGo.AddComponent<EventSystem>();
+                eventGo.AddComponent<InputSystemUIInputModule>();
+            }
 
-            _title = canvasGo.AddComponent<TitleView>();
-            _title.Build(canvasGo.transform);
-            _hud = canvasGo.AddComponent<HudView>();
-            _hud.Build(canvasGo.transform);
-            _results = canvasGo.AddComponent<ResultsView>();
-            _results.Build(canvasGo.transform);
+            _title = canvas.gameObject.AddComponent<TitleView>();
+            _title.Build(canvas.transform);
+            _hud = canvas.gameObject.AddComponent<HudView>();
+            _hud.Build(canvas.transform);
+            _results = canvas.gameObject.AddComponent<ResultsView>();
+            _results.Build(canvas.transform);
         }
 
         void BindInput()

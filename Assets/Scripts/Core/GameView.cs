@@ -8,6 +8,7 @@ namespace ScrapFishing.Core
         public const int Height = 854;
         public const float Aspect = Width / (float)Height;
         public const float PixelsPerUnit = 100f;
-        public const float OrthoSize = Height / (PixelsPerUnit * 2f);
+        public const float OrthoSize = 4.27f;
+        public const float CanvasMatch = 0f;
     }
 }
