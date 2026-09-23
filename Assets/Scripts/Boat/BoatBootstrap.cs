@@ -1,3 +1,4 @@
+using ScrapFishing.Audio;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
 using ScrapFishing.Scrap;
@@ -22,6 +23,7 @@ namespace ScrapFishing.Boat
 
         void Awake()
         {
+            AudioManager.Ensure();
             _flow = gameObject.AddComponent<GameFlow>();
             _session = gameObject.AddComponent<RunSession>();
 
@@ -142,6 +144,7 @@ namespace ScrapFishing.Boat
                     _title.SetVisible(false);
                     _flow.StartRun();
                     _casting.ResetHook();
+                    AudioManager.Ensure().PlayBgm();
                     break;
                 case GamePhase.Aiming:
                     _casting.CastFromGauge();
