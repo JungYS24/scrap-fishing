@@ -9,7 +9,8 @@ namespace ScrapFishing.Core
         Aiming,
         Casting,
         Reeling,
-        CastComplete
+        CastComplete,
+        Results
     }
 
     public class GameFlow : MonoBehaviour
@@ -51,6 +52,16 @@ namespace ScrapFishing.Core
         public void ReturnToAiming()
         {
             SetPhase(GamePhase.Aiming);
+        }
+
+        public void ShowResults()
+        {
+            SetPhase(GamePhase.Results);
+        }
+
+        public void ReturnToTitle()
+        {
+            SetPhase(GamePhase.Title);
         }
     }
 }

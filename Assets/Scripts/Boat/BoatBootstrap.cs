@@ -31,7 +31,7 @@ namespace ScrapFishing.Boat
             BuildWorld();
             BuildUi();
             BindInput();
-            _flow.PhaseChanged += _ => RefreshHud();
+            _flow.PhaseChanged += HandlePhaseChanged;
         }
 
         void Start()
@@ -43,6 +43,7 @@ namespace ScrapFishing.Boat
 
         void Update()
         {
+            TickSession();
             RefreshHud();
         }
 
@@ -142,6 +143,7 @@ namespace ScrapFishing.Boat
                 case GamePhase.Title:
                     _session.ResetRun();
                     _title.SetVisible(false);
+                    _results.Hide();
                     _flow.StartRun();
                     _casting.ResetHook();
                     AudioManager.Ensure().PlayBgm();
@@ -150,10 +152,70 @@ namespace ScrapFishing.Boat
                     _casting.CastFromGauge();
                     break;
                 case GamePhase.CastComplete:
+                    if (_session.IsExpired)
+                    {
+                        EndRun();
+                        break;
+                    }
+
                     _casting.ResetHook();
                     _flow.ReturnToAiming();
                     break;
+                case GamePhase.Results:
+                    _results.Hide();
+                    _title.SetVisible(true);
+                    _casting.ResetHook();
+                    _flow.ReturnToTitle();
+                    break;
             }
+        }
+
+        void HandlePhaseChanged(GamePhase phase)
+        {
+            if (phase == GamePhase.CastComplete && _session.IsExpired)
+            {
+                EndRun();
+            }
+
+            RefreshHud();
+        }
+
+        void TickSession()
+        {
+            if (_session == null || _flow == null)
+            {
+                return;
+            }
+
+            if (!_session.IsRunning)
+            {
+                return;
+            }
+
+            _session.Tick(Time.deltaTime);
+            if (!_session.IsExpired)
+            {
+                return;
+            }
+
+            if (_flow.Phase == GamePhase.Aiming || _flow.Phase == GamePhase.CastComplete)
+            {
+                EndRun();
+            }
+        }
+
+        void EndRun()
+        {
+            if (_flow.Phase == GamePhase.Results)
+            {
+                return;
+            }
+
+            _session.Stop();
+            _casting.ResetHook();
+            _results.Show(_session);
+            _title.SetVisible(false);
+            _flow.ShowResults();
         }
 
         void RefreshHud()
@@ -166,7 +228,7 @@ namespace ScrapFishing.Boat
             _hud.Refresh(_flow, _session, _gauge != null ? _gauge.Normalized : 0f);
             if (_gauge != null)
             {
-                _gauge.gameObject.SetActive(_flow.Phase != GamePhase.Title);
+                _gauge.gameObject.SetActive(_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results);
             }
         }
 

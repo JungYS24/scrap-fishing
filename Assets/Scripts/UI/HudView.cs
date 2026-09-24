@@ -6,6 +6,7 @@ namespace ScrapFishing.UI
 {
     public class HudView : MonoBehaviour
     {
+        Text _time;
         Text _depth;
         Text _scrap;
         Text _hint;
@@ -20,11 +21,14 @@ namespace ScrapFishing.UI
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
+            _time = UiFonts.CreateText(rect, "Time", 18, TextAnchor.UpperLeft);
+            Stretch(_time.rectTransform, new Vector2(0.05f, 0.90f), new Vector2(0.5f, 0.98f));
+
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
-            Stretch(_depth.rectTransform, new Vector2(0.05f, 0.88f), new Vector2(0.6f, 0.97f));
+            Stretch(_depth.rectTransform, new Vector2(0.05f, 0.82f), new Vector2(0.5f, 0.90f));
 
             _scrap = UiFonts.CreateText(rect, "Scrap", 18, TextAnchor.UpperRight);
-            Stretch(_scrap.rectTransform, new Vector2(0.4f, 0.88f), new Vector2(0.95f, 0.97f));
+            Stretch(_scrap.rectTransform, new Vector2(0.5f, 0.90f), new Vector2(0.95f, 0.98f));
 
             _hint = UiFonts.CreateText(rect, "Hint", 16, TextAnchor.LowerCenter);
             Stretch(_hint.rectTransform, new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.12f));
@@ -38,9 +42,11 @@ namespace ScrapFishing.UI
                 return;
             }
 
+            var playing = flow.Phase != GamePhase.Title && flow.Phase != GamePhase.Results;
             var meters = 8f + gauge * 42f;
-            _depth.text = flow.Phase == GamePhase.Title ? string.Empty : $"DEPTH {meters:0}m";
-            _scrap.text = $"SCRAP {session.TotalValue}";
+            _time.text = playing ? $"TIME {session.Remaining:0}" : string.Empty;
+            _depth.text = playing ? $"DEPTH {meters:0}m" : string.Empty;
+            _scrap.text = playing ? $"SCRAP {session.TotalValue}" : string.Empty;
             _hint.text = HintFor(flow.Phase);
         }
 
@@ -56,6 +62,8 @@ namespace ScrapFishing.UI
                     return "스와이프로 건져 올려";
                 case GamePhase.CastComplete:
                     return "탭해서 다시 캐스팅";
+                case GamePhase.Results:
+                    return "탭해서 타이틀";
                 default:
                     return string.Empty;
             }

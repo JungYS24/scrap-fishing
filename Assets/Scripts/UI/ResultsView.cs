@@ -8,6 +8,7 @@ namespace ScrapFishing.UI
     {
         GameObject _root;
         Text _summary;
+        Text _prompt;
 
         public void Build(Transform canvas)
         {
@@ -24,10 +25,18 @@ namespace ScrapFishing.UI
             background.raycastTarget = false;
 
             _summary = UiFonts.CreateText(rect, "Summary", 24, TextAnchor.MiddleCenter);
-            _summary.rectTransform.anchorMin = new Vector2(0.08f, 0.32f);
+            _summary.rectTransform.anchorMin = new Vector2(0.08f, 0.36f);
             _summary.rectTransform.anchorMax = new Vector2(0.92f, 0.72f);
             _summary.rectTransform.offsetMin = Vector2.zero;
             _summary.rectTransform.offsetMax = Vector2.zero;
+
+            _prompt = UiFonts.CreateText(rect, "Prompt", 22, TextAnchor.MiddleCenter);
+            _prompt.rectTransform.anchorMin = new Vector2(0.1f, 0.18f);
+            _prompt.rectTransform.anchorMax = new Vector2(0.9f, 0.32f);
+            _prompt.rectTransform.offsetMin = Vector2.zero;
+            _prompt.rectTransform.offsetMax = Vector2.zero;
+            _prompt.text = "탭해서 타이틀";
+            _prompt.color = new Color(0.75f, 0.9f, 1f, 0.9f);
 
             Hide();
         }
