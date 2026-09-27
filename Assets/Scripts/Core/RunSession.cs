@@ -15,6 +15,8 @@ namespace ScrapFishing.Core
         public float Remaining => Mathf.Max(0f, Duration - Elapsed);
         public bool IsExpired => _running && Elapsed >= Duration;
         public bool IsRunning => _running;
+        public bool HasDived { get; private set; }
+        public bool CanDive => !HasDived && Remaining >= 8f;
 
         readonly List<ScrapDefinition> _caught = new List<ScrapDefinition>();
         bool _running;
@@ -24,8 +26,14 @@ namespace ScrapFishing.Core
             CastDepth = 0f;
             TotalValue = 0;
             Elapsed = 0f;
+            HasDived = false;
             _running = true;
             _caught.Clear();
+        }
+
+        public void MarkDived()
+        {
+            HasDived = true;
         }
 
         public void Tick(float deltaTime)

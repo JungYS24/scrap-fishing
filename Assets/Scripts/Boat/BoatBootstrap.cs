@@ -1,6 +1,7 @@
 using ScrapFishing.Audio;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
+using ScrapFishing.Dive;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -16,7 +17,10 @@ namespace ScrapFishing.Boat
         RunSession _session;
         DepthGauge _gauge;
         HookMover _hook;
+        ScrapSpawner _spawner;
         CastingController _casting;
+        DiveDirector _dive;
+        VirtualJoystick _stick;
         TitleView _title;
         HudView _hud;
         ResultsView _results;
@@ -31,6 +35,7 @@ namespace ScrapFishing.Boat
             BuildWorld();
             BuildUi();
             BindInput();
+            BindDive();
             _flow.PhaseChanged += HandlePhaseChanged;
         }
 
@@ -74,13 +79,13 @@ namespace ScrapFishing.Boat
 
             var spawnerGo = new GameObject("ScrapSpawner");
             spawnerGo.transform.SetParent(transform, false);
-            var spawner = spawnerGo.AddComponent<ScrapSpawner>();
+            _spawner = spawnerGo.AddComponent<ScrapSpawner>();
 
             _casting = gameObject.AddComponent<CastingController>();
-            _casting.Bind(_flow, _session, _gauge, _hook, spawner);
+            _casting.Bind(_flow, _session, _gauge, _hook, _spawner);
 
             var catcher = gameObject.AddComponent<SwipeCatcher>();
-            catcher.Bind(_hook, spawner, _session);
+            catcher.Bind(_hook, _spawner, _session);
 
             var swipe = gameObject.AddComponent<SwipeReader>();
             swipe.Bind(Camera.main);
@@ -91,6 +96,9 @@ namespace ScrapFishing.Boat
                     catcher.HandleSwipe(info);
                 }
             };
+
+            _dive = gameObject.AddComponent<DiveDirector>();
+            _dive.Finished += HandleDiveFinished;
         }
 
         void BuildUi()
@@ -128,6 +136,13 @@ namespace ScrapFishing.Boat
             _hud.Build(canvas.transform);
             _results = canvas.gameObject.AddComponent<ResultsView>();
             _results.Build(canvas.transform);
+            _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
+            _stick.Build(canvas.transform);
+        }
+
+        void BindDive()
+        {
+            _dive.Bind(_spawner, _session, _gauge, _hook.gameObject, _stick);
         }
 
         void BindInput()
@@ -158,6 +173,14 @@ namespace ScrapFishing.Boat
                         break;
                     }
 
+                    if (_session.CanDive)
+                    {
+                        _casting.ResetHook();
+                        _flow.BeginDive();
+                        _dive.Begin();
+                        break;
+                    }
+
                     _casting.ResetHook();
                     _flow.ReturnToAiming();
                     break;
@@ -168,6 +191,18 @@ namespace ScrapFishing.Boat
                     _flow.ReturnToTitle();
                     break;
             }
+        }
+
+        void HandleDiveFinished()
+        {
+            if (_session.IsExpired)
+            {
+                EndRun();
+                return;
+            }
+
+            _casting.ResetHook();
+            _flow.ReturnToAiming();
         }
 
         void HandlePhaseChanged(GamePhase phase)
@@ -212,6 +247,11 @@ namespace ScrapFishing.Boat
             }
 
             _session.Stop();
+            if (_dive != null && _dive.IsActive)
+            {
+                _dive.Cancel();
+            }
+
             _casting.ResetHook();
             _results.Show(_session);
             _title.SetVisible(false);
@@ -225,10 +265,15 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _hud.Refresh(_flow, _session, _gauge != null ? _gauge.Normalized : 0f);
+            _hud.Refresh(
+                _flow,
+                _session,
+                _gauge != null ? _gauge.Normalized : 0f,
+                _dive != null ? _dive.DiveFill : 0f,
+                _dive != null && _dive.IsForcedAscent);
             if (_gauge != null)
             {
-                _gauge.gameObject.SetActive(_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results);
+                _gauge.gameObject.SetActive(_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results && _flow.Phase != GamePhase.Diving);
             }
         }
 

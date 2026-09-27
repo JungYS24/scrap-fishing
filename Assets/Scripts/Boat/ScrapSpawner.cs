@@ -28,6 +28,24 @@ namespace ScrapFishing.Boat
             };
         }
 
+        public void SpawnForDive()
+        {
+            EnsureCatalog();
+            Clear();
+            var count = Random.Range(8, 13);
+            for (var i = 0; i < count; i++)
+            {
+                var definition = _catalog[WeightedIndex()];
+                var go = new GameObject(definition.DisplayName);
+                go.transform.SetParent(transform, false);
+                go.transform.position = new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f);
+                go.transform.localScale = Vector3.one * Random.Range(0.28f, 0.42f);
+                var view = go.AddComponent<ScrapView>();
+                view.Bind(definition);
+                _live.Add(view);
+            }
+        }
+
         public void SpawnForCast(float surfaceY, float targetY)
         {
             EnsureCatalog();

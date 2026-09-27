@@ -10,6 +10,7 @@ namespace ScrapFishing.Core
         Casting,
         Reeling,
         CastComplete,
+        Diving,
         Results
     }
 
@@ -52,6 +53,11 @@ namespace ScrapFishing.Core
         public void ReturnToAiming()
         {
             SetPhase(GamePhase.Aiming);
+        }
+
+        public void BeginDive()
+        {
+            SetPhase(GamePhase.Diving);
         }
 
         public void ShowResults()
