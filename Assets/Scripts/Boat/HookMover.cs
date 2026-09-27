@@ -1,3 +1,4 @@
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
@@ -7,11 +8,9 @@ namespace ScrapFishing.Boat
         public Vector3 Position => transform.position;
 
         LineRenderer _line;
-        Vector3 _surfacePoint;
 
         public void Build(Vector3 surfacePoint)
         {
-            _surfacePoint = surfacePoint;
             transform.position = surfacePoint;
 
             _line = gameObject.AddComponent<LineRenderer>();
@@ -43,7 +42,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _line.SetPosition(0, _surfacePoint);
+            _line.SetPosition(0, SurfaceLayout.RodTip);
             _line.SetPosition(1, transform.position);
         }
     }

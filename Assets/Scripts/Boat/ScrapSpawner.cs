@@ -28,6 +28,20 @@ namespace ScrapFishing.Boat
             };
         }
 
+        public void UseLootSprite(Sprite sprite)
+        {
+            EnsureCatalog();
+            if (sprite == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < _catalog.Length; i++)
+            {
+                _catalog[i].Sprite = sprite;
+            }
+        }
+
         public void SpawnForDive()
         {
             EnsureCatalog();

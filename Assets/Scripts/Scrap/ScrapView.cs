@@ -20,7 +20,9 @@ namespace ScrapFishing.Scrap
             _renderer.sprite = definition.Sprite != null
                 ? definition.Sprite
                 : PlaceholderFactory.Square(definition.PlaceholderColor);
-            _renderer.color = Color.white;
+            _renderer.color = definition.Sprite != null
+                ? Color.Lerp(Color.white, definition.PlaceholderColor, 0.4f)
+                : Color.white;
             _renderer.sortingOrder = 2;
         }
     }

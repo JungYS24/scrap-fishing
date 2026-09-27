@@ -68,10 +68,11 @@ namespace ScrapFishing.Boat
 
         void BuildWorld()
         {
-            var hookGo = CreateSprite("Hook", PlaceholderFactory.Circle(Palette.NeonGreen), new Vector3(0f, 3.55f, 0f), Vector3.one * 0.34f, 6);
+            BuildSurface();
+            var hookGo = CreateSprite("Hook", PlaceholderFactory.Circle(Palette.NeonGreen), new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f), Vector3.one * 0.28f, 6);
             hookGo.transform.SetParent(transform, true);
             _hook = hookGo.AddComponent<HookMover>();
-            _hook.Build(new Vector3(0f, 3.55f, 0f));
+            _hook.Build(new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f));
 
             var gaugeGo = new GameObject("DepthGauge");
             _gauge = gaugeGo.AddComponent<DepthGauge>();
@@ -99,6 +100,18 @@ namespace ScrapFishing.Boat
 
             _dive = gameObject.AddComponent<DiveDirector>();
             _dive.Finished += HandleDiveFinished;
+        }
+
+        void BuildSurface()
+        {
+            var root = new GameObject("SurfaceProps");
+            root.transform.SetParent(transform, false);
+
+            var barge = CreateSprite("Barge", PlaceholderFactory.Square(new Color(0.18f, 0.2f, 0.26f)), SurfaceLayout.Barge, new Vector3(1.15f, 0.22f, 1f), 4);
+            barge.transform.SetParent(root.transform, true);
+
+            var fisher = CreateSprite("Fisher", PlaceholderFactory.Square(Palette.Cyan), SurfaceLayout.Fisher, new Vector3(0.22f, 0.38f, 1f), 5);
+            fisher.transform.SetParent(root.transform, true);
         }
 
         void BuildUi()

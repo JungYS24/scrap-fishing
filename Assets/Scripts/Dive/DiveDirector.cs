@@ -21,6 +21,7 @@ namespace ScrapFishing.Dive
         GameObject _player;
         GameObject _fish;
         GameObject _mineTemplate;
+        GameObject _surfaceProps;
         GameObject _hook;
         DepthGauge _gauge;
         ScrapSpawner _spawner;
@@ -50,6 +51,7 @@ namespace ScrapFishing.Dive
             _player = GameObject.Find("Player");
             _fish = GameObject.Find("Fish");
             _mineTemplate = GameObject.Find("Mine");
+            _surfaceProps = GameObject.Find("SurfaceProps");
             if (_player != null)
             {
                 _diver = _player.GetComponent<DiverController>() ?? _player.AddComponent<DiverController>();
@@ -76,6 +78,8 @@ namespace ScrapFishing.Dive
             {
                 _diver.Place(new Vector3(0f, 2.2f, 0f));
             }
+            var loot = _fish != null ? _fish.GetComponent<SpriteRenderer>() : null;
+            _spawner.UseLootSprite(loot != null ? loot.sprite : null);
             _spawner.SpawnForDive();
             BuildMines();
             ShowUnderwater();
@@ -158,6 +162,7 @@ namespace ScrapFishing.Dive
             SetActive(_player, false);
             SetActive(_fish, false);
             SetActive(_mineTemplate, false);
+            SetActive(_surfaceProps, true);
             SetActive(_hook, true);
             if (_gauge != null)
             {
@@ -172,6 +177,7 @@ namespace ScrapFishing.Dive
             SetActive(_midground, true);
             SetActive(_player, true);
             SetActive(_fish, true);
+            SetActive(_surfaceProps, false);
             SetActive(_hook, false);
             if (_gauge != null)
             {
