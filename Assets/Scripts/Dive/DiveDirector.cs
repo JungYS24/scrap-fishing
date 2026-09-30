@@ -76,12 +76,17 @@ namespace ScrapFishing.Dive
             _session.MarkDived();
             if (_diver != null)
             {
-                _diver.Place(new Vector3(0f, 2.2f, 0f));
+                _diver.Place(new Vector3(0f, -1.35f, 0f));
             }
             var loot = _fish != null ? _fish.GetComponent<SpriteRenderer>() : null;
             _spawner.UseLootSprite(loot != null ? loot.sprite : null);
             _spawner.SpawnForDive();
             BuildMines();
+            if (_fish != null)
+            {
+                EnsureDrift(_fish, 0.45f, 0.22f, 0.7f);
+            }
+
             ShowUnderwater();
             _stick.SetVisible(true);
         }
@@ -208,6 +213,13 @@ namespace ScrapFishing.Dive
             go.transform.position = position;
             var hazard = go.GetComponent<Hazard>() ?? go.AddComponent<Hazard>();
             _hazards.Add(hazard);
+            EnsureDrift(go, 0.18f, 0.28f, 0.55f);
+        }
+
+        static void EnsureDrift(GameObject go, float rangeX, float rangeY, float speed)
+        {
+            var drift = go.GetComponent<AmbientDrift>() ?? go.AddComponent<AmbientDrift>();
+            drift.Configure(go.transform.position, rangeX, rangeY, speed);
         }
 
         void ClearMines()

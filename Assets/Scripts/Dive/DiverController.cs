@@ -6,7 +6,7 @@ namespace ScrapFishing.Dive
     public class DiverController : MonoBehaviour
     {
         [SerializeField] float speed = 3.4f;
-        [SerializeField] float ascentSpeed = 4.6f;
+        [SerializeField] float ascentSpeed = 3.2f;
 
         VirtualJoystick _stick;
         Vector2 _min;
@@ -62,6 +62,11 @@ namespace ScrapFishing.Dive
             var next = transform.position + move;
             next.x = Mathf.Clamp(next.x, _min.x, _max.x);
             next.y = Mathf.Clamp(next.y, _min.y, _max.y);
+            if (!_forcedAscent && move.sqrMagnitude < 0.00001f)
+            {
+                next.y += Mathf.Sin(Time.time * 2.2f) * 0.012f;
+            }
+
             transform.position = next;
             if (_renderer != null && Mathf.Abs(move.x) > 0.0001f)
             {

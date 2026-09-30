@@ -13,6 +13,9 @@ namespace ScrapFishing.UI
         Text _hint;
         GameObject _diveBar;
         Image _diveFill;
+        Text _toast;
+        float _toastUntil;
+        int _lastCatchCount;
 
         public void Build(Transform canvas)
         {
@@ -37,6 +40,11 @@ namespace ScrapFishing.UI
             Stretch(_hint.rectTransform, new Vector2(0.38f, 0.04f), new Vector2(0.88f, 0.14f));
             _hint.color = new Color(0.75f, 0.9f, 1f, 0.9f);
 
+            _toast = UiFonts.CreateText(rect, "Toast", 22, TextAnchor.MiddleCenter);
+            Stretch(_toast.rectTransform, new Vector2(0.15f, 0.42f), new Vector2(0.85f, 0.56f));
+            _toast.color = Palette.NeonGreen;
+            _toast.text = string.Empty;
+
             BuildDiveBar(rect);
         }
 
@@ -54,6 +62,7 @@ namespace ScrapFishing.UI
             _depth.text = diving ? string.Empty : playing ? $"DEPTH {meters:0}m" : string.Empty;
             _scrap.text = playing ? $"SCRAP {session.TotalValue}" : string.Empty;
             _hint.text = HintFor(flow, session, forcedAscent);
+            RefreshToast(session, playing);
             if (_diveBar != null)
             {
                 _diveBar.SetActive(diving);
@@ -99,6 +108,36 @@ namespace ScrapFishing.UI
             label.color = Palette.Cyan;
 
             _diveBar.SetActive(false);
+        }
+
+        void RefreshToast(RunSession session, bool playing)
+        {
+            if (_toast == null)
+            {
+                return;
+            }
+
+            var count = session.Caught.Count;
+            if (!playing)
+            {
+                _lastCatchCount = count;
+                _toast.text = string.Empty;
+                return;
+            }
+
+            if (count > _lastCatchCount)
+            {
+                var latest = session.Caught[count - 1];
+                _toast.text = $"+{latest.Value} {latest.DisplayName}";
+                _toast.color = Palette.NeonGreen;
+                _toastUntil = Time.unscaledTime + 0.9f;
+            }
+
+            _lastCatchCount = count;
+            if (Time.unscaledTime > _toastUntil)
+            {
+                _toast.text = string.Empty;
+            }
         }
 
         static string HintFor(GameFlow flow, RunSession session, bool forcedAscent)

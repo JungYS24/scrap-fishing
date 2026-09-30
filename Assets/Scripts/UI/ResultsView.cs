@@ -45,7 +45,7 @@ namespace ScrapFishing.UI
         {
             var best = session.HighestGrade();
             var bestName = best != null ? best.DisplayName : "없음";
-            _summary.text = $"정산\n스크랩 {session.TotalValue}\n최고 등급 {bestName}";
+            _summary.text = $"정산\n스크랩 {session.TotalValue}\n건수 {session.Caught.Count}\n최고 등급 {bestName}";
             _root.SetActive(true);
         }
 

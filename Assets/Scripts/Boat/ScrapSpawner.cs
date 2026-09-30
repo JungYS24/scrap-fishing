@@ -49,14 +49,11 @@ namespace ScrapFishing.Boat
             var count = Random.Range(8, 13);
             for (var i = 0; i < count; i++)
             {
-                var definition = _catalog[WeightedIndex()];
-                var go = new GameObject(definition.DisplayName);
-                go.transform.SetParent(transform, false);
-                go.transform.position = new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f);
-                go.transform.localScale = Vector3.one * Random.Range(0.28f, 0.42f);
-                var view = go.AddComponent<ScrapView>();
-                view.Bind(definition);
-                _live.Add(view);
+                SpawnOne(
+                    _catalog[WeightedIndex()],
+                    new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f),
+                    0.22f,
+                    0.16f);
             }
         }
 
@@ -67,16 +64,25 @@ namespace ScrapFishing.Boat
             var count = Random.Range(5, 9);
             for (var i = 0; i < count; i++)
             {
-                var definition = _catalog[WeightedIndex()];
-                var go = new GameObject(definition.DisplayName);
-                go.transform.SetParent(transform, false);
                 var y = Random.Range(Mathf.Min(surfaceY - 0.4f, targetY + 0.3f), Mathf.Max(surfaceY - 0.4f, targetY + 0.3f));
-                go.transform.position = new Vector3(Random.Range(-1.35f, 1.35f), y, 0f);
-                go.transform.localScale = Vector3.one * Random.Range(0.28f, 0.42f);
-                var view = go.AddComponent<ScrapView>();
-                view.Bind(definition);
-                _live.Add(view);
+                SpawnOne(
+                    _catalog[WeightedIndex()],
+                    new Vector3(Random.Range(-1.35f, 1.35f), y, 0f),
+                    0.08f,
+                    0.05f);
             }
+        }
+
+        void SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY)
+        {
+            var go = new GameObject(definition.DisplayName);
+            go.transform.SetParent(transform, false);
+            go.transform.position = position;
+            go.transform.localScale = Vector3.one * Random.Range(0.28f, 0.42f);
+            var view = go.AddComponent<ScrapView>();
+            view.Bind(definition);
+            go.AddComponent<AmbientDrift>().Configure(position, rangeX, rangeY, Random.Range(0.45f, 0.85f));
+            _live.Add(view);
         }
 
         public void Remove(ScrapView view)
