@@ -10,6 +10,10 @@ namespace ScrapFishing.Audio
         public static AudioManager Instance { get; private set; }
 
         AudioSource _bgm;
+        AudioSource _sfx;
+        AudioClip _catchClip;
+        AudioClip _hurtClip;
+        AudioClip _castClip;
 
         public static AudioManager Ensure()
         {
@@ -40,6 +44,15 @@ namespace ScrapFishing.Audio
             _bgm.volume = BgmVolume;
             _bgm.ignoreListenerPause = true;
             _bgm.clip = Resources.Load<AudioClip>(BgmResource);
+
+            _sfx = gameObject.AddComponent<AudioSource>();
+            _sfx.playOnAwake = false;
+            _sfx.loop = false;
+            _sfx.spatialBlend = 0f;
+            _sfx.ignoreListenerPause = true;
+            _catchClip = MakeTone(880, 0.09f);
+            _hurtClip = MakeTone(180, 0.16f);
+            _castClip = MakeTone(520, 0.07f);
         }
 
         public void PlayBgm()
@@ -50,6 +63,48 @@ namespace ScrapFishing.Audio
             }
 
             _bgm.Play();
+        }
+
+        public void PlayCatch()
+        {
+            PlaySfx(_catchClip, 0.45f);
+        }
+
+        public void PlayHurt()
+        {
+            PlaySfx(_hurtClip, 0.5f);
+        }
+
+        public void PlayCast()
+        {
+            PlaySfx(_castClip, 0.35f);
+        }
+
+        void PlaySfx(AudioClip clip, float volume)
+        {
+            if (_sfx == null || clip == null)
+            {
+                return;
+            }
+
+            _sfx.PlayOneShot(clip, volume);
+        }
+
+        static AudioClip MakeTone(int hertz, float seconds)
+        {
+            const int sampleRate = 22050;
+            var samples = Mathf.Max(1, Mathf.RoundToInt(sampleRate * seconds));
+            var data = new float[samples];
+            for (var i = 0; i < samples; i++)
+            {
+                var t = i / (float)sampleRate;
+                var envelope = 1f - t / seconds;
+                data[i] = Mathf.Sin(2f * Mathf.PI * hertz * t) * envelope * 0.35f;
+            }
+
+            var clip = AudioClip.Create("tone", samples, 1, sampleRate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
 
         void OnDestroy()

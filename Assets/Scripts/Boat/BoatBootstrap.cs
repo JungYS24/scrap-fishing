@@ -36,6 +36,7 @@ namespace ScrapFishing.Boat
             BuildUi();
             BindInput();
             BindDive();
+            _session.CaughtItem += AudioManager.Ensure().PlayCatch;
             _flow.PhaseChanged += HandlePhaseChanged;
         }
 
@@ -178,6 +179,7 @@ namespace ScrapFishing.Boat
                     break;
                 case GamePhase.Aiming:
                     _casting.CastFromGauge();
+                    AudioManager.Ensure().PlayCast();
                     break;
                 case GamePhase.CastComplete:
                     if (_session.IsExpired)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ScrapFishing.Scrap;
 using UnityEngine;
@@ -17,6 +18,8 @@ namespace ScrapFishing.Core
         public bool IsRunning => _running;
         public bool HasDived { get; private set; }
         public bool CanDive => !HasDived && Remaining >= 8f;
+
+        public event Action CaughtItem;
 
         readonly List<ScrapDefinition> _caught = new List<ScrapDefinition>();
         bool _running;
@@ -60,6 +63,7 @@ namespace ScrapFishing.Core
 
             _caught.Add(definition);
             TotalValue += definition.Value;
+            CaughtItem?.Invoke();
         }
 
         public ScrapDefinition HighestGrade()

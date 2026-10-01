@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ScrapFishing.Audio;
 using ScrapFishing.Boat;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
@@ -121,6 +122,12 @@ namespace ScrapFishing.Dive
             {
                 _oxygen.Add(MineDamage);
                 _iframe = 0.45f;
+                if (_diver != null)
+                {
+                    _diver.FlashHurt();
+                }
+
+                AudioManager.Ensure().PlayHurt();
             }
 
             if (!forced && (_oxygen.IsFull || _session.IsExpired))

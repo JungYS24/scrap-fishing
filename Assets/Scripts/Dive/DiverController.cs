@@ -1,4 +1,5 @@
 using ScrapFishing.Controls;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Dive
@@ -14,6 +15,8 @@ namespace ScrapFishing.Dive
         SpriteRenderer _renderer;
         bool _bound;
         bool _forcedAscent;
+        float _hurtUntil;
+        Color _baseColor = Color.white;
 
         public Vector3 Position => transform.position;
         public bool IsForcedAscent => _forcedAscent;
@@ -24,6 +27,11 @@ namespace ScrapFishing.Dive
             _min = min;
             _max = max;
             _renderer = GetComponent<SpriteRenderer>();
+            if (_renderer != null)
+            {
+                _baseColor = _renderer.color;
+            }
+
             _bound = true;
         }
 
@@ -31,6 +39,20 @@ namespace ScrapFishing.Dive
         {
             transform.position = position;
             _forcedAscent = false;
+            _hurtUntil = 0f;
+            if (_renderer != null)
+            {
+                _renderer.color = _baseColor;
+            }
+        }
+
+        public void FlashHurt()
+        {
+            _hurtUntil = Time.time + 0.18f;
+            if (_renderer != null)
+            {
+                _renderer.color = Palette.Magenta;
+            }
         }
 
         public void BeginForcedAscent()
@@ -68,9 +90,17 @@ namespace ScrapFishing.Dive
             }
 
             transform.position = next;
-            if (_renderer != null && Mathf.Abs(move.x) > 0.0001f)
+            if (_renderer != null)
             {
-                _renderer.flipX = move.x < 0f;
+                if (Time.time >= _hurtUntil && _renderer.color != _baseColor)
+                {
+                    _renderer.color = _baseColor;
+                }
+
+                if (Mathf.Abs(move.x) > 0.0001f)
+                {
+                    _renderer.flipX = move.x < 0f;
+                }
             }
         }
     }
