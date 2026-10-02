@@ -82,8 +82,8 @@
 - [ ] GitHub Pages 공개 URL로 구동
 - [x] 모바일 Portrait 기준 화면 (480 × 854)
 - [x] 1세션 1분 내외
-- [ ] 조작법 3종 이상(탭 · 스와이프 · 가상 스틱) 실제 플레이에 사용
-- [ ] 시작 ~ 결과 화면까지 끊김 없는 진행
+- [x] 조작법 3종 이상(탭 · 스와이프 · 가상 스틱) 실제 플레이에 사용
+- [x] 시작 ~ 결과 화면까지 끊김 없는 진행
 
 ---
 
@@ -100,10 +100,13 @@
 ## 🚀 로컬 빌드 & 배포
 
 ```bash
-# Player Settings > Publishing Settings > Compression Format: Disabled 로 빌드
+# Player Settings > Publishing Settings > Compression Format: Disabled 유지
+# Unity 메뉴: Scrap Fishing > Build WebGL to docs
+# 또는 에디터를 닫은 뒤 배치 빌드:
+
 # 빌드 출력 위치: 저장소 루트의 /docs 폴더
 
-git add .
+git add docs
 git commit -m "build: web build"
 git push
 ```
