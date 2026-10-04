@@ -100,9 +100,10 @@
 ## 🚀 로컬 빌드 & 배포
 
 ```bash
-# Player Settings > Publishing Settings > Compression Format: Disabled 유지
+# Compression: Gzip + Decompression Fallback
+# Managed Stripping: High / Exception Support: None
 # Unity 메뉴: Scrap Fishing > Build WebGL to docs
-# 또는 에디터를 닫은 뒤 배치 빌드:
+# 또는 에디터를 닫은 뒤 배치 빌드
 
 # 빌드 출력 위치: 저장소 루트의 /docs 폴더
 

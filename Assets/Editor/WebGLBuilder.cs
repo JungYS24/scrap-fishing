@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -10,10 +11,18 @@ namespace ScrapFishing.Build
         [MenuItem("Scrap Fishing/Build WebGL to docs")]
         public static void Build()
         {
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
 
             var output = Path.GetFullPath("docs");
             Directory.CreateDirectory(output);
+            var buildDir = Path.Combine(output, "Build");
+            if (Directory.Exists(buildDir))
+            {
+                Directory.Delete(buildDir, true);
+            }
 
             var options = new BuildPlayerOptions
             {
@@ -25,6 +34,7 @@ namespace ScrapFishing.Build
 
             var report = BuildPipeline.BuildPlayer(options);
             File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty);
+            File.WriteAllText(Path.GetFullPath("webgl-build.status"), report.summary.result.ToString());
             if (report.summary.result != BuildResult.Succeeded)
             {
                 Debug.LogError("WebGL build failed: " + report.summary.result);
@@ -40,4 +50,3 @@ namespace ScrapFishing.Build
         }
     }
 }
-
