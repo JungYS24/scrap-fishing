@@ -9,6 +9,7 @@ namespace ScrapFishing.Boat
     {
         readonly List<ScrapView> _live = new List<ScrapView>();
         ScrapDefinition[] _catalog;
+        Sprite _diveSprite;
 
         public IReadOnlyList<ScrapView> Live => _live;
 
@@ -28,18 +29,9 @@ namespace ScrapFishing.Boat
             };
         }
 
-        public void UseLootSprite(Sprite sprite)
+        public void SetDiveSprite(Sprite sprite)
         {
-            EnsureCatalog();
-            if (sprite == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < _catalog.Length; i++)
-            {
-                _catalog[i].Sprite = sprite;
-            }
+            _diveSprite = sprite;
         }
 
         public void SpawnForDive()
@@ -53,7 +45,8 @@ namespace ScrapFishing.Boat
                     _catalog[WeightedIndex()],
                     new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f),
                     0.22f,
-                    0.16f);
+                    0.16f,
+                    _diveSprite);
             }
         }
 
@@ -69,18 +62,19 @@ namespace ScrapFishing.Boat
                     _catalog[WeightedIndex()],
                     new Vector3(Random.Range(-1.35f, 1.35f), y, 0f),
                     0.08f,
-                    0.05f);
+                    0.05f,
+                    null);
             }
         }
 
-        void SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY)
+        void SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY, Sprite spriteOverride)
         {
             var go = new GameObject(definition.DisplayName);
             go.transform.SetParent(transform, false);
             go.transform.position = position;
             go.transform.localScale = Vector3.one * Random.Range(0.28f, 0.42f);
             var view = go.AddComponent<ScrapView>();
-            view.Bind(definition);
+            view.Bind(definition, spriteOverride);
             go.AddComponent<AmbientDrift>().Configure(position, rangeX, rangeY, Random.Range(0.45f, 0.85f));
             _live.Add(view);
         }

@@ -129,15 +129,23 @@ namespace ScrapFishing.UI
             {
                 var latest = session.Caught[count - 1];
                 _toast.text = $"+{latest.Value} {latest.DisplayName}";
-                _toast.color = Palette.NeonGreen;
-                _toastUntil = Time.unscaledTime + 0.9f;
+                _toastUntil = Time.unscaledTime + 0.95f;
             }
 
             _lastCatchCount = count;
-            if (Time.unscaledTime > _toastUntil)
+            if (string.IsNullOrEmpty(_toast.text) || Time.unscaledTime > _toastUntil)
             {
                 _toast.text = string.Empty;
+                Stretch(_toast.rectTransform, new Vector2(0.15f, 0.42f), new Vector2(0.85f, 0.56f));
+                return;
             }
+
+            var t = Mathf.Clamp01(1f - (_toastUntil - Time.unscaledTime) / 0.95f);
+            var rise = 0.08f * t;
+            Stretch(_toast.rectTransform, new Vector2(0.15f, 0.42f + rise), new Vector2(0.85f, 0.56f + rise));
+            var color = Palette.NeonGreen;
+            color.a = 1f - t * 0.35f;
+            _toast.color = color;
         }
 
         static string HintFor(GameFlow flow, RunSession session, bool forcedAscent)
@@ -145,17 +153,17 @@ namespace ScrapFishing.UI
             switch (flow.Phase)
             {
                 case GamePhase.Aiming:
-                    return "탭으로 캐스팅";
+                    return "타이밍 맞춰 탭!";
                 case GamePhase.Casting:
                     return "훅 하강 중";
                 case GamePhase.Reeling:
-                    return "스와이프로 건져 올려";
+                    return "스와이프로 낚아채기!";
                 case GamePhase.CastComplete:
-                    return session.CanDive ? "탭해서 잠수" : "탭해서 다시 캐스팅";
+                    return session.CanDive ? "탭: 재캐스팅\n아래로 스와이프: 잠수" : "탭해서 다시 캐스팅";
                 case GamePhase.Diving:
                     return forcedAscent ? "강제 부상" : "스틱으로 유영";
                 case GamePhase.Results:
-                    return "탭해서 타이틀";
+                    return "탭해서 재도전";
                 default:
                     return string.Empty;
             }

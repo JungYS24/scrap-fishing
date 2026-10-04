@@ -33,7 +33,7 @@ namespace ScrapFishing.UI
 
             var howTo = UiFonts.CreateText(rect, "HowTo", 16, TextAnchor.MiddleCenter);
             Stretch(howTo.rectTransform, new Vector2(0.08f, 0.16f), new Vector2(0.92f, 0.42f));
-            howTo.text = "탭 캐스팅\n스와이프 포획\n스틱 잠수";
+            howTo.text = "탭 캐스팅\n스와이프 포획\n아래로 스와이프 잠수\n스틱 유영";
             howTo.color = Palette.Cyan;
         }
 

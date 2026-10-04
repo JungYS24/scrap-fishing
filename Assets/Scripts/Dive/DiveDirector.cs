@@ -80,7 +80,7 @@ namespace ScrapFishing.Dive
                 _diver.Place(new Vector3(0f, -1.35f, 0f));
             }
             var loot = _fish != null ? _fish.GetComponent<SpriteRenderer>() : null;
-            _spawner.UseLootSprite(loot != null ? loot.sprite : null);
+            _spawner.SetDiveSprite(loot != null ? loot.sprite : null);
             _spawner.SpawnForDive();
             BuildMines();
             if (_fish != null)

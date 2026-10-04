@@ -8,7 +8,7 @@ namespace ScrapFishing.Scrap
 
         SpriteRenderer _renderer;
 
-        public void Bind(ScrapDefinition definition)
+        public void Bind(ScrapDefinition definition, Sprite spriteOverride = null)
         {
             Definition = definition;
             _renderer = GetComponent<SpriteRenderer>();
@@ -17,10 +17,11 @@ namespace ScrapFishing.Scrap
                 _renderer = gameObject.AddComponent<SpriteRenderer>();
             }
 
-            _renderer.sprite = definition.Sprite != null
-                ? definition.Sprite
+            var sprite = spriteOverride != null ? spriteOverride : definition.Sprite;
+            _renderer.sprite = sprite != null
+                ? sprite
                 : PlaceholderFactory.Square(definition.PlaceholderColor);
-            _renderer.color = definition.Sprite != null
+            _renderer.color = sprite != null
                 ? Color.Lerp(Color.white, definition.PlaceholderColor, 0.4f)
                 : Color.white;
             _renderer.sortingOrder = 2;

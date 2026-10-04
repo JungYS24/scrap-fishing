@@ -11,6 +11,8 @@ namespace ScrapFishing.Controls
         public readonly Vector3 StartWorld;
         public readonly Vector3 EndWorld;
 
+        public bool IsDownward => EndWorld.y < StartWorld.y - 0.25f;
+
         public SwipeInfo(Vector2 startScreen, Vector2 endScreen, Vector3 startWorld, Vector3 endWorld)
         {
             StartScreen = startScreen;

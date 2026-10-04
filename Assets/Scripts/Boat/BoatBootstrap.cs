@@ -24,6 +24,7 @@ namespace ScrapFishing.Boat
         TitleView _title;
         HudView _hud;
         ResultsView _results;
+        SwipeTrail _trail;
 
         void Awake()
         {
@@ -91,11 +92,20 @@ namespace ScrapFishing.Boat
 
             var swipe = gameObject.AddComponent<SwipeReader>();
             swipe.Bind(Camera.main);
+            _trail = gameObject.AddComponent<SwipeTrail>();
+            _trail.Build();
             swipe.OnSwipe += info =>
             {
                 if (_flow.Phase == GamePhase.Reeling)
                 {
+                    _trail.Show(info);
                     catcher.HandleSwipe(info);
+                    return;
+                }
+
+                if (_flow.Phase == GamePhase.CastComplete && OfferDive() && info.IsDownward)
+                {
+                    StartDive();
                 }
             };
 
@@ -188,24 +198,45 @@ namespace ScrapFishing.Boat
                         break;
                     }
 
-                    if (_session.CanDive)
+                    Recast();
+                    break;
+                case GamePhase.Results:
+                    if (!_results.CanAcceptInput)
                     {
-                        _casting.ResetHook();
-                        _flow.BeginDive();
-                        _dive.Begin();
                         break;
                     }
 
-                    _casting.ResetHook();
-                    _flow.ReturnToAiming();
-                    break;
-                case GamePhase.Results:
-                    _results.Hide();
-                    _title.SetVisible(true);
-                    _casting.ResetHook();
-                    _flow.ReturnToTitle();
+                    RestartRun();
                     break;
             }
+        }
+
+        bool OfferDive()
+        {
+            return _session != null && _session.CanDive && !_session.IsExpired;
+        }
+
+        void StartDive()
+        {
+            _casting.ResetHook();
+            _flow.BeginDive();
+            _dive.Begin();
+        }
+
+        void Recast()
+        {
+            _casting.ResetHook();
+            _flow.ReturnToAiming();
+        }
+
+        void RestartRun()
+        {
+            _results.Hide();
+            _title.SetVisible(false);
+            _session.ResetRun();
+            _casting.ResetHook();
+            _flow.StartRun();
+            AudioManager.Ensure().PlayBgm();
         }
 
         void HandleDiveFinished()
