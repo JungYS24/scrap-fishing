@@ -12,9 +12,7 @@ namespace ScrapFishing.Dive
     {
         public event Action Finished;
 
-        const float OxygenSeconds = 16f;
         const float SurfaceY = 3.2f;
-        const float MineDamage = 0.18f;
 
         GameObject _neocity;
         GameObject _background;
@@ -73,7 +71,7 @@ namespace ScrapFishing.Dive
         {
             _active = true;
             _iframe = 0.4f;
-            _oxygen.ResetMeter(OxygenSeconds);
+            _oxygen.ResetMeter(DepthZone.DiveSeconds(_session.DeepestCast));
             _session.MarkDived();
             if (_diver != null)
             {
@@ -81,8 +79,8 @@ namespace ScrapFishing.Dive
             }
             var loot = _fish != null ? _fish.GetComponent<SpriteRenderer>() : null;
             _spawner.SetDiveSprite(loot != null ? loot.sprite : null);
-            _spawner.SpawnForDive();
-            BuildMines();
+            _spawner.SpawnForDive(_session.DeepestCast);
+            BuildMines(_session.DeepestCast);
             if (_fish != null)
             {
                 EnsureDrift(_fish, 0.45f, 0.22f, 0.7f);
@@ -120,7 +118,7 @@ namespace ScrapFishing.Dive
             _iframe = Mathf.Max(0f, _iframe - Time.deltaTime);
             if (!forced && _iframe <= 0f && HitsMine())
             {
-                _oxygen.Add(MineDamage);
+                _oxygen.Add(DepthZone.MineDamage(_session.DeepestCast));
                 _iframe = 0.45f;
                 if (_diver != null)
                 {
@@ -197,7 +195,7 @@ namespace ScrapFishing.Dive
             }
         }
 
-        void BuildMines()
+        void BuildMines(float depth)
         {
             ClearMines();
             if (_mineTemplate != null)
@@ -205,7 +203,8 @@ namespace ScrapFishing.Dive
                 PlaceMine(_mineTemplate, new Vector3(-1.1f, -0.8f, 0f));
             }
 
-            for (var i = 0; i < 2; i++)
+            var extra = 2 + DepthZone.ExtraMines(depth);
+            for (var i = 0; i < extra; i++)
             {
                 var go = _mineTemplate != null ? Instantiate(_mineTemplate) : new GameObject("Mine");
                 go.name = "DiveMine";

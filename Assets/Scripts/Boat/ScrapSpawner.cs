@@ -8,41 +8,23 @@ namespace ScrapFishing.Boat
     public class ScrapSpawner : MonoBehaviour
     {
         readonly List<ScrapView> _live = new List<ScrapView>();
-        ScrapDefinition[] _catalog;
         Sprite _diveSprite;
 
         public IReadOnlyList<ScrapView> Live => _live;
-
-        void EnsureCatalog()
-        {
-            if (_catalog != null)
-            {
-                return;
-            }
-
-            _catalog = new[]
-            {
-                ScrapDefinition.CreateRuntime("녹슨 회로", ScrapGrade.Junk, 10, new Color(0.55f, 0.55f, 0.5f)),
-                ScrapDefinition.CreateRuntime("폐배터리", ScrapGrade.Common, 25, Palette.Cyan),
-                ScrapDefinition.CreateRuntime("네온 기판", ScrapGrade.Rare, 60, Palette.Magenta),
-                ScrapDefinition.CreateRuntime("변이 어류", ScrapGrade.Mutant, 90, Palette.NeonGreen)
-            };
-        }
 
         public void SetDiveSprite(Sprite sprite)
         {
             _diveSprite = sprite;
         }
 
-        public void SpawnForDive()
+        public void SpawnForDive(float depth)
         {
-            EnsureCatalog();
             Clear();
-            var count = Random.Range(8, 13);
+            var count = 8 + DepthZone.Index(depth);
             for (var i = 0; i < count; i++)
             {
                 SpawnOne(
-                    _catalog[WeightedIndex()],
+                    ScrapCatalog.Pick(depth),
                     new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f),
                     0.22f,
                     0.16f,
@@ -50,16 +32,16 @@ namespace ScrapFishing.Boat
             }
         }
 
-        public void SpawnForCast(float surfaceY, float targetY)
+        public void SpawnForCast(float surfaceY, float targetY, float depth)
         {
-            EnsureCatalog();
             Clear();
-            var count = Random.Range(5, 9);
+            var count = DepthZone.SpawnCount(depth);
             for (var i = 0; i < count; i++)
             {
-                var y = Random.Range(Mathf.Min(surfaceY - 0.4f, targetY + 0.3f), Mathf.Max(surfaceY - 0.4f, targetY + 0.3f));
+                var along = Random.Range(0.15f, 1f);
+                var y = Mathf.Lerp(surfaceY - 0.45f, targetY + 0.2f, along);
                 SpawnOne(
-                    _catalog[WeightedIndex()],
+                    ScrapCatalog.Pick(depth),
                     new Vector3(Random.Range(-1.35f, 1.35f), y, 0f),
                     0.08f,
                     0.05f,
@@ -99,15 +81,6 @@ namespace ScrapFishing.Boat
             }
 
             _live.Clear();
-        }
-
-        int WeightedIndex()
-        {
-            var roll = Random.value;
-            if (roll < 0.4f) return 0;
-            if (roll < 0.7f) return 1;
-            if (roll < 0.9f) return 2;
-            return 3;
         }
     }
 }

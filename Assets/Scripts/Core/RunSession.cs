@@ -9,7 +9,8 @@ namespace ScrapFishing.Core
     {
         public const float Duration = 60f;
 
-        public float CastDepth { get; set; }
+        public float CastDepth { get; private set; }
+        public float DeepestCast { get; private set; }
         public int TotalValue { get; private set; }
         public float Elapsed { get; private set; }
         public IReadOnlyList<ScrapDefinition> Caught => _caught;
@@ -27,11 +28,21 @@ namespace ScrapFishing.Core
         public void ResetRun()
         {
             CastDepth = 0f;
+            DeepestCast = 0f;
             TotalValue = 0;
             Elapsed = 0f;
             HasDived = false;
             _running = true;
             _caught.Clear();
+        }
+
+        public void RegisterCast(float depth)
+        {
+            CastDepth = Mathf.Clamp01(depth);
+            if (CastDepth > DeepestCast)
+            {
+                DeepestCast = CastDepth;
+            }
         }
 
         public void MarkDived()

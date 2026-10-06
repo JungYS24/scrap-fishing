@@ -6,9 +6,6 @@ namespace ScrapFishing.Boat
 {
     public class CastingController : MonoBehaviour
     {
-        [SerializeField] float descendSpeed = 6.5f;
-        [SerializeField] float reelSpeed = 3.4f;
-
         GameFlow _flow;
         RunSession _session;
         DepthGauge _gauge;
@@ -34,11 +31,11 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _session.CastDepth = _gauge.Normalized;
-            _targetY = Mathf.Lerp(SurfaceLayout.WaterlineY - 0.5f, SurfaceLayout.MaxDepthY, _gauge.Normalized);
+            _session.RegisterCast(_gauge.Normalized);
+            _targetY = Mathf.Lerp(SurfaceLayout.WaterlineY - 0.5f, SurfaceLayout.MaxDepthY, _session.CastDepth);
             _gauge.SetLocked(true);
             _hook.Place(new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f));
-            _spawner.SpawnForCast(SurfaceLayout.WaterlineY, _targetY);
+            _spawner.SpawnForCast(SurfaceLayout.WaterlineY, _targetY, _session.CastDepth);
             _descending = true;
             _flow.BeginCasting();
         }
@@ -59,7 +56,7 @@ namespace ScrapFishing.Boat
 
             if (_flow.Phase == GamePhase.Casting && _descending)
             {
-                StepToward(_targetY, descendSpeed, () =>
+                StepToward(_targetY, Mathf.Lerp(7.2f, 5.2f, _session.CastDepth), () =>
                 {
                     _descending = false;
                     _flow.BeginReeling();
@@ -67,7 +64,7 @@ namespace ScrapFishing.Boat
             }
             else if (_flow.Phase == GamePhase.Reeling)
             {
-                StepToward(SurfaceLayout.WaterlineY, reelSpeed, () => _flow.CompleteCast());
+                StepToward(SurfaceLayout.WaterlineY, Mathf.Lerp(4.1f, 2.35f, _session.CastDepth), () => _flow.CompleteCast());
             }
         }
 

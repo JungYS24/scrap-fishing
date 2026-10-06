@@ -57,9 +57,9 @@ namespace ScrapFishing.UI
 
             var playing = flow.Phase != GamePhase.Title && flow.Phase != GamePhase.Results;
             var diving = flow.Phase == GamePhase.Diving;
-            var meters = 8f + gauge * 42f;
+            var meters = DepthZone.Meters(gauge);
             _time.text = playing ? $"TIME {session.Remaining:0}" : string.Empty;
-            _depth.text = diving ? string.Empty : playing ? $"DEPTH {meters:0}m" : string.Empty;
+            _depth.text = diving ? string.Empty : playing ? $"DEPTH {meters:0}m {DepthZone.Name(gauge)}" : string.Empty;
             _scrap.text = playing ? $"SCRAP {session.TotalValue}" : string.Empty;
             _hint.text = HintFor(flow, session, forcedAscent);
             RefreshToast(session, playing);
@@ -153,7 +153,7 @@ namespace ScrapFishing.UI
             switch (flow.Phase)
             {
                 case GamePhase.Aiming:
-                    return "타이밍 맞춰 탭!";
+                    return "깊게 탭할수록 고가!";
                 case GamePhase.Casting:
                     return "훅 하강 중";
                 case GamePhase.Reeling:

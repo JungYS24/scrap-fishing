@@ -19,7 +19,7 @@ namespace ScrapFishing.Boat
         {
             transform.SetParent(parent, false);
             transform.position = SurfaceLayout.Gauge;
-            _halfHeight = (SurfaceLayout.WaterlineY - SurfaceLayout.MaxDepthY) * 0.5f;
+            _halfHeight = SurfaceLayout.GaugeHeight * 0.5f;
 
             var track = new GameObject("Track").AddComponent<SpriteRenderer>();
             track.transform.SetParent(transform, false);
@@ -40,7 +40,7 @@ namespace ScrapFishing.Boat
             _locked = locked;
             if (_markerRenderer != null)
             {
-                _markerRenderer.color = locked ? Palette.Magenta : Palette.NeonGreen;
+                _markerRenderer.color = locked ? Palette.Magenta : DepthZone.MarkerColor(Normalized);
             }
         }
 
@@ -55,6 +55,7 @@ namespace ScrapFishing.Boat
             if (_marker != null)
             {
                 _marker.localPosition = new Vector3(0f, Mathf.Lerp(_halfHeight - 0.08f, -_halfHeight + 0.08f, Normalized), 0f);
+                _markerRenderer.color = DepthZone.MarkerColor(Normalized);
             }
         }
     }

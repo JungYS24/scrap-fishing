@@ -25,6 +25,7 @@ namespace ScrapFishing.Boat
         HudView _hud;
         ResultsView _results;
         SwipeTrail _trail;
+        CastCamera _castCamera;
 
         void Awake()
         {
@@ -76,6 +77,9 @@ namespace ScrapFishing.Boat
             _hook = hookGo.AddComponent<HookMover>();
             _hook.Build(new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f));
 
+            _castCamera = gameObject.AddComponent<CastCamera>();
+            _castCamera.Bind(Camera.main, _hook, _flow);
+
             var gaugeGo = new GameObject("DepthGauge");
             _gauge = gaugeGo.AddComponent<DepthGauge>();
             _gauge.Build(transform);
@@ -123,6 +127,24 @@ namespace ScrapFishing.Boat
 
             var fisher = CreateSprite("Fisher", PlaceholderFactory.Square(Palette.Cyan), SurfaceLayout.Fisher, new Vector3(0.22f, 0.38f, 1f), 5);
             fisher.transform.SetParent(root.transform, true);
+
+            var waterHeight = SurfaceLayout.WaterlineY - SurfaceLayout.MaxDepthY + 4f;
+            var water = CreateSprite(
+                "CastWater",
+                PlaceholderFactory.Square(Palette.Water),
+                new Vector3(0f, SurfaceLayout.WaterlineY - waterHeight * 0.5f, 0f),
+                new Vector3(5.6f, waterHeight, 1f),
+                -12);
+            water.transform.SetParent(root.transform, true);
+
+            var deepHeight = waterHeight * 0.55f;
+            var deep = CreateSprite(
+                "DeepWater",
+                PlaceholderFactory.Square(Palette.DeepWater),
+                new Vector3(0f, SurfaceLayout.MaxDepthY + deepHeight * 0.35f, 0f),
+                new Vector3(5.6f, deepHeight, 1f),
+                -11);
+            deep.transform.SetParent(root.transform, true);
         }
 
         void BuildUi()
@@ -218,6 +240,7 @@ namespace ScrapFishing.Boat
 
         void StartDive()
         {
+            _castCamera.SnapRest();
             _casting.ResetHook();
             _flow.BeginDive();
             _dive.Begin();
