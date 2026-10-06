@@ -38,10 +38,10 @@ namespace ScrapFishing.Boat
             var count = DepthZone.SpawnCount(depth);
             for (var i = 0; i < count; i++)
             {
-                var along = Random.Range(0.15f, 1f);
-                var y = Mathf.Lerp(surfaceY - 0.45f, targetY + 0.2f, along);
+                var along = Random.value < 0.42f ? Random.Range(0.72f, 1f) : Random.Range(0.12f, 0.72f);
+                var y = Mathf.Lerp(surfaceY - 0.45f, targetY + 0.15f, along);
                 SpawnOne(
-                    ScrapCatalog.Pick(depth),
+                    ScrapCatalog.Pick(DepthZone.FromWorldY(y)),
                     new Vector3(Random.Range(-1.35f, 1.35f), y, 0f),
                     0.08f,
                     0.05f,
@@ -54,11 +54,53 @@ namespace ScrapFishing.Boat
             var go = new GameObject(definition.DisplayName);
             go.transform.SetParent(transform, false);
             go.transform.position = position;
-            go.transform.localScale = Vector3.one * Random.Range(0.28f, 0.42f);
+            go.transform.localScale = Vector3.one * (0.26f + (int)definition.Grade * 0.055f + Random.Range(-0.02f, 0.03f));
             var view = go.AddComponent<ScrapView>();
             view.Bind(definition, spriteOverride);
             go.AddComponent<AmbientDrift>().Configure(position, rangeX, rangeY, Random.Range(0.45f, 0.85f));
             _live.Add(view);
+        }
+
+        public void CollectNear(Vector3 hook, float radius, RunSession session)
+        {
+            for (var i = _live.Count - 1; i >= 0; i--)
+            {
+                var scrap = _live[i];
+                if (scrap == null)
+                {
+                    continue;
+                }
+
+                if (Vector3.Distance(scrap.transform.position, hook) <= radius)
+                {
+                    session.AddCatch(scrap.Definition);
+                    Remove(scrap);
+                }
+            }
+        }
+
+        public void AttractToward(Vector3 hook, float radius, float speed)
+        {
+            for (var i = 0; i < _live.Count; i++)
+            {
+                var scrap = _live[i];
+                if (scrap == null)
+                {
+                    continue;
+                }
+
+                var delta = hook - scrap.transform.position;
+                if (delta.sqrMagnitude > radius * radius)
+                {
+                    continue;
+                }
+
+                var drift = scrap.GetComponent<AmbientDrift>();
+                if (drift != null)
+                {
+                    drift.PullOrigin(hook, speed * Time.deltaTime);
+                }
+            }
         }
 
         public void Remove(ScrapView view)

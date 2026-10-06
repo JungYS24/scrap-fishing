@@ -19,6 +19,11 @@ namespace ScrapFishing.Dive
             _session = session;
         }
 
+        public void SetRadius(float value)
+        {
+            radius = value;
+        }
+
         public void Collect()
         {
             if (_diver == null || _spawner == null)

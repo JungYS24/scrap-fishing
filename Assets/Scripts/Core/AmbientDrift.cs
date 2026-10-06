@@ -20,6 +20,11 @@ namespace ScrapFishing.Core
             enabled = true;
         }
 
+        public void PullOrigin(Vector3 target, float distance)
+        {
+            _origin = Vector3.MoveTowards(_origin, target, distance);
+        }
+
         void Update()
         {
             var t = Time.time * _speed + _phase;

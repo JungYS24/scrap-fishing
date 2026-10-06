@@ -14,6 +14,9 @@ namespace ScrapFishing.Audio
         AudioClip _catchClip;
         AudioClip _hurtClip;
         AudioClip _castClip;
+        AudioClip _reelClip;
+        AudioClip _diveClip;
+        AudioClip[] _zoneClips;
 
         public static AudioManager Ensure()
         {
@@ -53,6 +56,15 @@ namespace ScrapFishing.Audio
             _catchClip = MakeTone(880, 0.09f);
             _hurtClip = MakeTone(180, 0.16f);
             _castClip = MakeTone(520, 0.07f);
+            _reelClip = MakeTone(340, 0.1f);
+            _diveClip = MakeTone(260, 0.14f);
+            _zoneClips = new[]
+            {
+                MakeTone(400, 0.07f),
+                MakeTone(520, 0.07f),
+                MakeTone(660, 0.08f),
+                MakeTone(820, 0.09f)
+            };
         }
 
         public void PlayBgm()
@@ -78,6 +90,27 @@ namespace ScrapFishing.Audio
         public void PlayCast()
         {
             PlaySfx(_castClip, 0.35f);
+        }
+
+        public void PlayReel()
+        {
+            PlaySfx(_reelClip, 0.32f);
+        }
+
+        public void PlayDive()
+        {
+            PlaySfx(_diveClip, 0.4f);
+        }
+
+        public void PlayZone(int index)
+        {
+            if (_zoneClips == null || _zoneClips.Length == 0)
+            {
+                return;
+            }
+
+            var i = Mathf.Clamp(index, 0, _zoneClips.Length - 1);
+            PlaySfx(_zoneClips[i], 0.28f);
         }
 
         void PlaySfx(AudioClip clip, float volume)

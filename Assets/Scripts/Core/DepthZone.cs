@@ -58,5 +58,21 @@ namespace ScrapFishing.Core
         {
             return 0.14f + Index(normalized) * 0.04f;
         }
+
+        public static Color WaterColor(int index)
+        {
+            switch (index)
+            {
+                case 0: return new Color(0.10f, 0.28f, 0.42f);
+                case 1: return new Color(0.06f, 0.16f, 0.36f);
+                case 2: return new Color(0.14f, 0.07f, 0.28f);
+                default: return Palette.DeepWater;
+            }
+        }
+
+        public static float FromWorldY(float y)
+        {
+            return Mathf.InverseLerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, y);
+        }
     }
 }

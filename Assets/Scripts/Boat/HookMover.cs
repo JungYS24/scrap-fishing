@@ -29,6 +29,21 @@ namespace ScrapFishing.Boat
             RefreshLine();
         }
 
+        public void Tint(Color color)
+        {
+            if (_line == null)
+            {
+                return;
+            }
+
+            var tip = color;
+            tip.a = 0.9f;
+            var end = color;
+            end.a = 0.5f;
+            _line.startColor = tip;
+            _line.endColor = end;
+        }
+
         public void Place(Vector3 position)
         {
             transform.position = position;

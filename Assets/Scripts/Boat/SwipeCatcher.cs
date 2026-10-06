@@ -6,8 +6,8 @@ namespace ScrapFishing.Boat
 {
     public class SwipeCatcher : MonoBehaviour
     {
-        [SerializeField] float hookHitRadius = 1.15f;
-        [SerializeField] float catchRadius = 0.85f;
+        [SerializeField] float hookHitRadius = 1.35f;
+        [SerializeField] float catchRadius = 1.05f;
 
         HookMover _hook;
         ScrapSpawner _spawner;

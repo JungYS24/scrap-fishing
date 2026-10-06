@@ -100,7 +100,7 @@ namespace ScrapFishing.Boat
             _trail.Build();
             swipe.OnSwipe += info =>
             {
-                if (_flow.Phase == GamePhase.Reeling)
+                if (_flow.Phase == GamePhase.Casting || _flow.Phase == GamePhase.Reeling)
                 {
                     _trail.Show(info);
                     catcher.HandleSwipe(info);
@@ -128,23 +128,27 @@ namespace ScrapFishing.Boat
             var fisher = CreateSprite("Fisher", PlaceholderFactory.Square(Palette.Cyan), SurfaceLayout.Fisher, new Vector3(0.22f, 0.38f, 1f), 5);
             fisher.transform.SetParent(root.transform, true);
 
-            var waterHeight = SurfaceLayout.WaterlineY - SurfaceLayout.MaxDepthY + 4f;
-            var water = CreateSprite(
-                "CastWater",
-                PlaceholderFactory.Square(Palette.Water),
-                new Vector3(0f, SurfaceLayout.WaterlineY - waterHeight * 0.5f, 0f),
-                new Vector3(5.6f, waterHeight, 1f),
-                -12);
-            water.transform.SetParent(root.transform, true);
+            for (var i = 0; i < 4; i++)
+            {
+                var top = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, i / 4f);
+                var bottom = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, (i + 1) / 4f);
+                var height = top - bottom;
+                var band = CreateSprite(
+                    "ZoneWater" + i,
+                    PlaceholderFactory.Square(DepthZone.WaterColor(i)),
+                    new Vector3(0f, (top + bottom) * 0.5f, 0f),
+                    new Vector3(5.6f, height + 0.08f, 1f),
+                    -12 + i);
+                band.transform.SetParent(root.transform, true);
+            }
 
-            var deepHeight = waterHeight * 0.55f;
-            var deep = CreateSprite(
-                "DeepWater",
-                PlaceholderFactory.Square(Palette.DeepWater),
-                new Vector3(0f, SurfaceLayout.MaxDepthY + deepHeight * 0.35f, 0f),
-                new Vector3(5.6f, deepHeight, 1f),
-                -11);
-            deep.transform.SetParent(root.transform, true);
+            var pad = CreateSprite(
+                "ZoneWaterPad",
+                PlaceholderFactory.Square(DepthZone.WaterColor(3)),
+                new Vector3(0f, SurfaceLayout.MaxDepthY - 2f, 0f),
+                new Vector3(5.6f, 4f, 1f),
+                -9);
+            pad.transform.SetParent(root.transform, true);
         }
 
         void BuildUi()
@@ -242,6 +246,7 @@ namespace ScrapFishing.Boat
         {
             _castCamera.SnapRest();
             _casting.ResetHook();
+            AudioManager.Ensure().PlayDive();
             _flow.BeginDive();
             _dive.Begin();
         }

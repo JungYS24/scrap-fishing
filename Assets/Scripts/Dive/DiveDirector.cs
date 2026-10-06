@@ -80,6 +80,10 @@ namespace ScrapFishing.Dive
             var loot = _fish != null ? _fish.GetComponent<SpriteRenderer>() : null;
             _spawner.SetDiveSprite(loot != null ? loot.sprite : null);
             _spawner.SpawnForDive(_session.DeepestCast);
+            if (_magnet != null)
+            {
+                _magnet.SetRadius(0.5f + DepthZone.Index(_session.DeepestCast) * 0.08f);
+            }
             BuildMines(_session.DeepestCast);
             if (_fish != null)
             {
