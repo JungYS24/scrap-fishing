@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ScrapFishing.Core;
+using ScrapFishing.Dive;
 using ScrapFishing.Scrap;
 using UnityEngine;
 
@@ -7,14 +8,16 @@ namespace ScrapFishing.Boat
 {
     public class ScrapSpawner : MonoBehaviour
     {
+        static readonly float[] DiveFishScale = { 1.25f, 1.15f, 1.05f };
+
         readonly List<ScrapView> _live = new List<ScrapView>();
-        Sprite _diveSprite;
+        DiveArt _diveArt;
 
         public IReadOnlyList<ScrapView> Live => _live;
 
-        public void SetDiveSprite(Sprite sprite)
+        public void SetDiveArt(DiveArt art)
         {
-            _diveSprite = sprite;
+            _diveArt = art;
         }
 
         public void SpawnForDive(float depth)
@@ -23,12 +26,21 @@ namespace ScrapFishing.Boat
             var count = 8 + DepthZone.Index(depth);
             for (var i = 0; i < count; i++)
             {
-                SpawnOne(
-                    ScrapCatalog.Pick(depth),
-                    new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f),
-                    0.22f,
-                    0.16f,
-                    _diveSprite);
+                var definition = ScrapCatalog.Pick(depth);
+                var position = new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f);
+                if (_diveArt == null)
+                {
+                    SpawnOne(definition, position, 0.22f, 0.16f, null);
+                    continue;
+                }
+
+                var kind = DiveArt.FishKind(definition.Grade);
+                var frames = _diveArt.Fish(kind);
+                var view = SpawnOne(definition, position, 0.32f, 0.16f, frames.Length > 0 ? frames[0] : null);
+                view.transform.localScale = Vector3.one * DiveFishScale[kind];
+                var animator = view.gameObject.AddComponent<SpriteAnimator>();
+                animator.Play(frames, 7f, true);
+                animator.FaceMovement(true);
             }
         }
 
@@ -49,7 +61,7 @@ namespace ScrapFishing.Boat
             }
         }
 
-        void SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY, Sprite spriteOverride)
+        ScrapView SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY, Sprite spriteOverride)
         {
             var go = new GameObject(definition.DisplayName);
             go.transform.SetParent(transform, false);
@@ -59,6 +71,7 @@ namespace ScrapFishing.Boat
             view.Bind(definition, spriteOverride);
             go.AddComponent<AmbientDrift>().Configure(position, rangeX, rangeY, Random.Range(0.45f, 0.85f));
             _live.Add(view);
+            return view;
         }
 
         public void CollectNear(Vector3 hook, float radius, RunSession session)

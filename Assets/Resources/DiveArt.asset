@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acee2f71ec1834c41a6a3c0042fea29f, type: 3}
+  m_Name: DiveArt
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Dive.DiveArt
+  FishSmall: {fileID: 2800000, guid: f9545e2db26aebe41a6b41dbaa8a5f7a, type: 3}
+  FishDart: {fileID: 2800000, guid: 704a9b553b02af94098ccc198d06d046, type: 3}
+  FishBig: {fileID: 2800000, guid: ae1d12e5d12563a468b9271db3e68f14, type: 3}
+  PlayerIdle: {fileID: 2800000, guid: 60fce3c24914cf641a2369073dd6d951, type: 3}
+  PlayerSwim: {fileID: 2800000, guid: 7d0a633e4b903024ab7cb01620c9dbd8, type: 3}
+  PlayerHurt: {fileID: 2800000, guid: 5e46e142965a45c4da267102cfb14b56, type: 3}
+  Bubbles: {fileID: 2800000, guid: 858a48e88ecc4de428d9f900f86c54ee, type: 3}
+  ExplosionSmall: {fileID: 2800000, guid: 3fa750ac0e1fe3d49a22779204f57a5a, type: 3}
+  ExplosionMedium: {fileID: 2800000, guid: 0a72b0f881a53cc4fa874d24e6098b4f, type: 3}
+  ExplosionBig: {fileID: 2800000, guid: e4a39642aef844e48b19b96a74226628, type: 3}
+  MineSmall: {fileID: 2639714144170648786, guid: e0c98006ad0881f4f953c85c71df6aba, type: 3}
+  MineMedium: {fileID: -5933715298724706184, guid: 1ca46edb1fc3d8c419ef4518fc1ab1ba, type: 3}
+  MineBig: {fileID: -2955957596030943199, guid: a4e515e0e4ae5e94bb8a70a40308d4c2, type: 3}

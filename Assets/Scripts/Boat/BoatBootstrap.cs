@@ -79,9 +79,15 @@ namespace ScrapFishing.Boat
         void BuildWorld()
         {
             BuildSurface();
-            var hookGo = CreateSprite("Hook", PlaceholderFactory.Circle(Palette.NeonGreen), new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f), Vector3.one * 0.28f, 6);
-            hookGo.transform.SetParent(transform, true);
-            _hook = hookGo.AddComponent<HookMover>();
+            _hook = FindFirstObjectByType<HookMover>(FindObjectsInactive.Include);
+            if (_hook == null)
+            {
+                Debug.LogWarning("씬에 Lure(HookMover)가 없어 임시 루어를 만듭니다. 메뉴 Scrap Fishing > Build Boat Scene을 실행하세요.");
+                var hookGo = CreateSprite("Lure", PlaceholderFactory.Circle(Palette.NeonGreen), Vector3.zero, Vector3.one * 0.28f, 6);
+                _hook = hookGo.AddComponent<HookMover>();
+            }
+
+            _hook.gameObject.SetActive(true);
             _hook.Build(new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f));
 
             _castCamera = gameObject.AddComponent<CastCamera>();
@@ -124,14 +130,12 @@ namespace ScrapFishing.Boat
 
         void BuildSurface()
         {
-            var root = new GameObject("SurfaceProps");
-            root.transform.SetParent(transform, false);
-
-            var barge = CreateSprite("Barge", PlaceholderFactory.Square(new Color(0.18f, 0.2f, 0.26f)), SurfaceLayout.Barge, new Vector3(1.15f, 0.22f, 1f), 4);
-            barge.transform.SetParent(root.transform, true);
-
-            var fisher = CreateSprite("Fisher", PlaceholderFactory.Square(Palette.Cyan), SurfaceLayout.Fisher, new Vector3(0.22f, 0.38f, 1f), 5);
-            fisher.transform.SetParent(root.transform, true);
+            var root = GameObject.Find("SurfaceProps");
+            if (root == null)
+            {
+                Debug.LogWarning("씬에 SurfaceProps(Nomad)가 없습니다. 메뉴 Scrap Fishing > Build Boat Scene을 실행하세요.");
+                root = new GameObject("SurfaceProps");
+            }
 
             for (var i = 0; i < 4; i++)
             {
@@ -189,8 +193,8 @@ namespace ScrapFishing.Boat
             _hud.Build(canvas.transform, _canvasUi.ChipText);
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(canvas.transform);
-            _title = canvas.gameObject.AddComponent<TitleView>();
-            _title.Build(canvas.transform, BeginRun);
+            _title = _canvasUi.Title;
+            _title.Bind(BeginRun);
             _canvasUi.BringReadyToFront();
             _results = canvas.gameObject.AddComponent<ResultsView>();
             _results.Build(canvas.transform, _session.Restart);

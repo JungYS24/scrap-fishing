@@ -12,9 +12,11 @@ namespace ScrapFishing.UI
         [SerializeField] GameObject readyPanel;
         [SerializeField] Text dollarText;
         [SerializeField] UpgradeButton[] upgradeButtons;
+        [SerializeField] TitleView title;
 
         public DepthGauge DepthGauge => depthGauge;
         public Text ChipText => chipText;
+        public TitleView Title => title;
 
         void OnEnable()
         {
@@ -29,6 +31,11 @@ namespace ScrapFishing.UI
 
         public void BringReadyToFront()
         {
+            if (title != null)
+            {
+                title.transform.SetAsLastSibling();
+            }
+
             if (readyPanel != null)
             {
                 readyPanel.transform.SetAsLastSibling();

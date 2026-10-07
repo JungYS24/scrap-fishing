@@ -8,10 +8,13 @@ namespace ScrapFishing.Dive
         [SerializeField] int amount = -25;
 
         public int Amount => amount;
+        public int Size { get; private set; } = 1;
 
-        public void SetAmount(int value)
+        public void Configure(int penalty, float hitRadius, int size)
         {
-            amount = value;
+            amount = penalty;
+            radius = hitRadius;
+            Size = size;
         }
 
         public bool Hits(Vector3 point)

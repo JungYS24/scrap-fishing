@@ -17,6 +17,9 @@ namespace ScrapFishing.Dive
         bool _forcedAscent;
         float _hurtUntil;
         Color _baseColor = Color.white;
+        Sprite[] _idle;
+        Sprite[] _swim;
+        Sprite[] _hurt;
 
         public Vector3 Position => transform.position;
         public bool IsForcedAscent => _forcedAscent;
@@ -35,6 +38,13 @@ namespace ScrapFishing.Dive
             _bound = true;
         }
 
+        public void SetAnimations(Sprite[] idle, Sprite[] swim, Sprite[] hurt)
+        {
+            _idle = idle;
+            _swim = swim;
+            _hurt = hurt;
+        }
+
         public void Place(Vector3 position)
         {
             transform.position = position;
@@ -48,7 +58,7 @@ namespace ScrapFishing.Dive
 
         public void FlashHurt()
         {
-            _hurtUntil = Time.time + 0.18f;
+            _hurtUntil = Time.time + 0.36f;
             if (_renderer != null)
             {
                 _renderer.color = Palette.Magenta;
@@ -101,7 +111,22 @@ namespace ScrapFishing.Dive
                 {
                     _renderer.flipX = move.x < 0f;
                 }
+
+                Animate(_forcedAscent || move.sqrMagnitude > 0.000004f);
             }
+        }
+
+        void Animate(bool moving)
+        {
+            var hurt = Time.time < _hurtUntil;
+            var frames = hurt ? _hurt : moving ? _swim : _idle;
+            if (frames == null || frames.Length == 0)
+            {
+                return;
+            }
+
+            var fps = hurt ? 14f : moving ? 10f : 6f;
+            _renderer.sprite = frames[Mathf.FloorToInt(Time.time * fps) % frames.Length];
         }
     }
 }

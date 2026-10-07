@@ -5,6 +5,9 @@ namespace ScrapFishing.Boat
 {
     public class HookMover : MonoBehaviour
     {
+        [SerializeField] Transform rodTip;
+        [SerializeField] Transform lineEnd;
+
         public Vector3 Position => transform.position;
 
         LineRenderer _line;
@@ -13,7 +16,12 @@ namespace ScrapFishing.Boat
         {
             transform.position = surfacePoint;
 
-            _line = gameObject.AddComponent<LineRenderer>();
+            _line = gameObject.GetComponent<LineRenderer>();
+            if (_line == null)
+            {
+                _line = gameObject.AddComponent<LineRenderer>();
+            }
+
             _line.positionCount = 2;
             _line.useWorldSpace = true;
             _line.startWidth = 0.035f;
@@ -57,8 +65,8 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _line.SetPosition(0, SurfaceLayout.RodTip);
-            _line.SetPosition(1, transform.position);
+            _line.SetPosition(0, rodTip != null ? rodTip.position : SurfaceLayout.RodTip);
+            _line.SetPosition(1, lineEnd != null ? lineEnd.position : transform.position);
         }
     }
 }

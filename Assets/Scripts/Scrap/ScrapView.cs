@@ -22,7 +22,7 @@ namespace ScrapFishing.Scrap
                 ? sprite
                 : PlaceholderFactory.Square(definition.PlaceholderColor);
             _renderer.color = sprite != null
-                ? Color.Lerp(Color.white, definition.PlaceholderColor, 0.4f)
+                ? Color.Lerp(Color.white, definition.PlaceholderColor, 0.25f)
                 : Color.white;
             _renderer.sortingOrder = 2;
         }
