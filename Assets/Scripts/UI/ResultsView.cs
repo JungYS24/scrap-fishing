@@ -49,7 +49,7 @@ namespace ScrapFishing.UI
             Stretch(_bestText.rectTransform, new Vector2(0.08f, 0.46f), new Vector2(0.92f, 0.53f));
 
             _detail = UiFonts.CreateText(rect, "Detail", 18, TextAnchor.MiddleCenter);
-            Stretch(_detail.rectTransform, new Vector2(0.08f, 0.36f), new Vector2(0.92f, 0.46f));
+            Stretch(_detail.rectTransform, new Vector2(0.08f, 0.32f), new Vector2(0.92f, 0.46f));
             _detail.color = Palette.Cyan;
 
             _restart = UiButton.Create(rect, "RestartButton", "재도전", new Vector2(0.25f, 0.18f), new Vector2(0.75f, 0.28f), onRestart);
@@ -71,7 +71,7 @@ namespace ScrapFishing.UI
             var bestName = best != null ? best.DisplayName : "없음";
             _cyText.text = $"획득 {session.CY} CY";
             _bestText.text = $"최고 기록 {session.BestCY} CY";
-            _detail.text = $"건수 {session.Caught.Count}\n최고 등급 {bestName}";
+            _detail.text = $"건수 {session.Caught.Count}\n최고 등급 {bestName}\n달러 +{session.EarnedDollars} (보유 $ {Progression.Dollars})";
             _newBest.SetActive(session.IsNewBest);
             _readyAt = Time.unscaledTime + InputLock;
             _restart.interactable = false;

@@ -1,46 +1,39 @@
 using ScrapFishing.Core;
-using ScrapFishing.Scrap;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ScrapFishing.Boat
 {
     public class DepthGauge : MonoBehaviour
     {
         [SerializeField] float speed = 1.35f;
+        [SerializeField] RectTransform marker;
+        [SerializeField] Image markerImage;
+        [SerializeField] RectTransform lockedArea;
 
-        Transform _marker;
-        SpriteRenderer _markerRenderer;
-        float _halfHeight;
         bool _locked;
+        float _maxDepth = 1f;
 
         public float Normalized { get; private set; }
 
-        public void Build(Transform parent)
+        public void SetMaxDepth(float maxDepth)
         {
-            transform.SetParent(parent, false);
-            transform.position = SurfaceLayout.Gauge;
-            _halfHeight = SurfaceLayout.GaugeHeight * 0.5f;
-
-            var track = new GameObject("Track").AddComponent<SpriteRenderer>();
-            track.transform.SetParent(transform, false);
-            track.sprite = PlaceholderFactory.Square(new Color(0.08f, 0.1f, 0.16f, 0.85f));
-            track.transform.localScale = new Vector3(0.16f, _halfHeight * 2f, 1f);
-            track.sortingOrder = 10;
-
-            _markerRenderer = new GameObject("Marker").AddComponent<SpriteRenderer>();
-            _marker = _markerRenderer.transform;
-            _marker.SetParent(transform, false);
-            _markerRenderer.sprite = PlaceholderFactory.Square(Palette.NeonGreen);
-            _marker.localScale = new Vector3(0.3f, 0.14f, 1f);
-            _markerRenderer.sortingOrder = 11;
+            _maxDepth = Mathf.Clamp(maxDepth, 0.05f, 1f);
+            Normalized = Mathf.Min(Normalized, _maxDepth);
+            if (lockedArea != null)
+            {
+                lockedArea.anchorMin = Vector2.zero;
+                lockedArea.anchorMax = new Vector2(1f, 1f - _maxDepth);
+                lockedArea.gameObject.SetActive(_maxDepth < 1f);
+            }
         }
 
         public void SetLocked(bool locked)
         {
             _locked = locked;
-            if (_markerRenderer != null)
+            if (markerImage != null)
             {
-                _markerRenderer.color = locked ? Palette.Magenta : DepthZone.MarkerColor(Normalized);
+                markerImage.color = locked ? Palette.Magenta : DepthZone.MarkerColor(Normalized);
             }
         }
 
@@ -51,11 +44,18 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            Normalized = Mathf.PingPong(Time.time * speed, 1f);
-            if (_marker != null)
+            Normalized = Mathf.PingPong(Time.time * speed, _maxDepth);
+            if (marker != null)
             {
-                _marker.localPosition = new Vector3(0f, Mathf.Lerp(_halfHeight - 0.08f, -_halfHeight + 0.08f, Normalized), 0f);
-                _markerRenderer.color = DepthZone.MarkerColor(Normalized);
+                var y = Mathf.Lerp(0.98f, 0.02f, Normalized);
+                marker.anchorMin = new Vector2(0f, y);
+                marker.anchorMax = new Vector2(1f, y);
+                marker.anchoredPosition = Vector2.zero;
+            }
+
+            if (markerImage != null)
+            {
+                markerImage.color = DepthZone.MarkerColor(Normalized);
             }
         }
     }

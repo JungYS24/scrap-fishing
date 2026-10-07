@@ -26,12 +26,18 @@ namespace ScrapFishing.Boat
         ResultsView _results;
         SwipeTrail _trail;
         CastCamera _castCamera;
+        BoatCanvas _canvasUi;
 
         void Awake()
         {
             AudioManager.Ensure();
             _flow = gameObject.AddComponent<GameFlow>();
             _session = gameObject.AddComponent<RunSession>();
+            _canvasUi = FindFirstObjectByType<BoatCanvas>();
+            if (_canvasUi == null)
+            {
+                Debug.LogError("Canvas에 BoatCanvas가 없습니다. 메뉴 Scrap Fishing > Build Scene UI를 실행하세요.");
+            }
 
             ConfigureCamera();
             BuildWorld();
@@ -45,6 +51,7 @@ namespace ScrapFishing.Boat
         void Start()
         {
             _title.SetVisible(true);
+            _canvasUi.SetReadyVisible(true);
             _results.Hide();
             RefreshHud();
         }
@@ -80,9 +87,7 @@ namespace ScrapFishing.Boat
             _castCamera = gameObject.AddComponent<CastCamera>();
             _castCamera.Bind(Camera.main, _hook, _flow);
 
-            var gaugeGo = new GameObject("DepthGauge");
-            _gauge = gaugeGo.AddComponent<DepthGauge>();
-            _gauge.Build(transform);
+            _gauge = _canvasUi.DepthGauge;
 
             var spawnerGo = new GameObject("ScrapSpawner");
             spawnerGo.transform.SetParent(transform, false);
@@ -181,11 +186,12 @@ namespace ScrapFishing.Boat
             }
 
             _hud = canvas.gameObject.AddComponent<HudView>();
-            _hud.Build(canvas.transform);
+            _hud.Build(canvas.transform, _canvasUi.ChipText);
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(canvas.transform);
             _title = canvas.gameObject.AddComponent<TitleView>();
             _title.Build(canvas.transform, BeginRun);
+            _canvasUi.BringReadyToFront();
             _results = canvas.gameObject.AddComponent<ResultsView>();
             _results.Build(canvas.transform, _session.Restart);
         }
@@ -209,7 +215,9 @@ namespace ScrapFishing.Boat
             }
 
             _session.StartRun();
+            _gauge.SetMaxDepth(Progression.MaxDepth);
             _title.SetVisible(false);
+            _canvasUi.SetReadyVisible(false);
             _results.Hide();
             _flow.StartRun();
             _casting.ResetHook();

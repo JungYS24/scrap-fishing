@@ -16,6 +16,8 @@ namespace ScrapFishing.Core
         public int CY { get; private set; }
         public int BestCY { get; private set; }
         public bool IsNewBest { get; private set; }
+        public int LastGain { get; private set; }
+        public int EarnedDollars { get; private set; }
         public float Elapsed { get; private set; }
         public IReadOnlyList<ScrapDefinition> Caught => _caught;
         public float Remaining => Mathf.Max(0f, Duration - Elapsed);
@@ -28,6 +30,7 @@ namespace ScrapFishing.Core
 
         readonly List<ScrapDefinition> _caught = new List<ScrapDefinition>();
         bool _running;
+        float _chipMultiplier = 1f;
 
         void Start()
         {
@@ -40,9 +43,12 @@ namespace ScrapFishing.Core
             DeepestCast = 0f;
             CY = 0;
             IsNewBest = false;
+            LastGain = 0;
+            EarnedDollars = 0;
             Elapsed = 0f;
             HasDived = false;
             _running = true;
+            _chipMultiplier = Progression.ChipMultiplier;
             _caught.Clear();
             Time.timeScale = 1f;
         }
@@ -50,6 +56,8 @@ namespace ScrapFishing.Core
         public void EndRun()
         {
             _running = false;
+            EarnedDollars = CY;
+            Progression.AddDollars(EarnedDollars);
             BestCY = PlayerPrefs.GetInt(BestKey, 0);
             IsNewBest = CY > BestCY;
             if (IsNewBest)
@@ -105,7 +113,8 @@ namespace ScrapFishing.Core
             }
 
             _caught.Add(definition);
-            AddCY(definition.Value);
+            LastGain = Mathf.RoundToInt(definition.Value * _chipMultiplier);
+            AddCY(LastGain);
             CaughtItem?.Invoke();
         }
 

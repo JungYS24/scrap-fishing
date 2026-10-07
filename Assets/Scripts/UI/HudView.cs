@@ -19,7 +19,7 @@ namespace ScrapFishing.UI
         int _lastCatchCount;
         int _lastCY;
 
-        public void Build(Transform canvas)
+        public void Build(Transform canvas, Text chipText)
         {
             var root = new GameObject("Hud");
             root.transform.SetParent(canvas, false);
@@ -29,9 +29,7 @@ namespace ScrapFishing.UI
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
-            _cy = UiFonts.CreateText(rect, "CY", 18, TextAnchor.UpperLeft);
-            Stretch(_cy.rectTransform, new Vector2(0.05f, 0.90f), new Vector2(0.5f, 0.98f));
-            _cy.color = Palette.NeonGreen;
+            _cy = chipText;
 
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
             Stretch(_depth.rectTransform, new Vector2(0.05f, 0.82f), new Vector2(0.5f, 0.90f));
@@ -63,7 +61,11 @@ namespace ScrapFishing.UI
             var meters = DepthZone.Meters(gauge);
             _time.text = playing ? $"TIME {session.Remaining:0}" : string.Empty;
             _depth.text = diving ? string.Empty : playing ? $"DEPTH {meters:0}m {DepthZone.Name(gauge)}" : string.Empty;
-            _cy.text = playing ? $"{session.CY} CY" : string.Empty;
+            if (_cy != null)
+            {
+                _cy.text = playing ? $"{session.CY} CY" : string.Empty;
+            }
+
             _hint.text = HintFor(flow, session, forcedAscent);
             RefreshToast(session, playing);
             if (_oxygenBar != null)
@@ -133,7 +135,7 @@ namespace ScrapFishing.UI
             if (count > _lastCatchCount)
             {
                 var latest = session.Caught[count - 1];
-                ShowToast($"+{latest.Value} {latest.DisplayName}", Palette.NeonGreen);
+                ShowToast($"+{session.LastGain} {latest.DisplayName}", Palette.NeonGreen);
             }
             else if (cy < _lastCY)
             {

@@ -34,6 +34,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            var radius = catchRadius + Progression.CatchRadiusBonus;
             for (var i = _spawner.Live.Count - 1; i >= 0; i--)
             {
                 var scrap = _spawner.Live[i];
@@ -42,7 +43,7 @@ namespace ScrapFishing.Boat
                     continue;
                 }
 
-                if (Vector3.Distance(scrap.transform.position, hookPos) <= catchRadius)
+                if (Vector3.Distance(scrap.transform.position, hookPos) <= radius)
                 {
                     _session.AddCatch(scrap.Definition);
                     _spawner.Remove(scrap);
