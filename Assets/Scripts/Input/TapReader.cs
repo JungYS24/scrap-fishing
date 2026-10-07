@@ -22,7 +22,7 @@ namespace ScrapFishing.Controls
 
             if (pressedThisFrame)
             {
-                if (!FixedResolution.ContainsWindowPoint(position))
+                if (!FixedResolution.ContainsWindowPoint(position) || PointerUtil.IsOverUi(position))
                 {
                     return;
                 }

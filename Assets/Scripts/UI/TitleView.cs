@@ -1,3 +1,4 @@
+using System;
 using ScrapFishing.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +9,7 @@ namespace ScrapFishing.UI
     {
         GameObject _root;
 
-        public void Build(Transform canvas)
+        public void Build(Transform canvas, Action onStart)
         {
             _root = new GameObject("Title");
             _root.transform.SetParent(canvas, false);
@@ -20,16 +21,13 @@ namespace ScrapFishing.UI
 
             var background = _root.AddComponent<Image>();
             background.color = new Color(0.02f, 0.03f, 0.06f, 0.72f);
-            background.raycastTarget = false;
 
             var title = UiFonts.CreateText(rect, "TitleLabel", 42, TextAnchor.MiddleCenter);
             Stretch(title.rectTransform, new Vector2(0.08f, 0.58f), new Vector2(0.92f, 0.8f));
             title.text = "SCRAP FISHING";
             title.color = Palette.NeonGreen;
 
-            var prompt = UiFonts.CreateText(rect, "Prompt", 22, TextAnchor.MiddleCenter);
-            Stretch(prompt.rectTransform, new Vector2(0.1f, 0.44f), new Vector2(0.9f, 0.56f));
-            prompt.text = "탭해서 출항";
+            UiButton.Create(rect, "StartButton", "출항", new Vector2(0.25f, 0.44f), new Vector2(0.75f, 0.54f), onStart);
 
             var howTo = UiFonts.CreateText(rect, "HowTo", 16, TextAnchor.MiddleCenter);
             Stretch(howTo.rectTransform, new Vector2(0.08f, 0.16f), new Vector2(0.92f, 0.42f));

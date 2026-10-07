@@ -59,6 +59,11 @@ namespace ScrapFishing.Core
             return 0.14f + Index(normalized) * 0.04f;
         }
 
+        public static int MinePenalty(float normalized)
+        {
+            return -(20 + Index(normalized) * 3);
+        }
+
         public static Color WaterColor(int index)
         {
             switch (index)

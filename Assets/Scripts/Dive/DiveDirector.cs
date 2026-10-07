@@ -120,9 +120,12 @@ namespace ScrapFishing.Dive
 
             _magnet.Collect();
             _iframe = Mathf.Max(0f, _iframe - Time.deltaTime);
-            if (!forced && _iframe <= 0f && HitsMine())
+            var mine = !forced && _iframe <= 0f ? HitMine() : null;
+            if (mine != null)
             {
                 _oxygen.Add(DepthZone.MineDamage(_session.DeepestCast));
+                _session.AddCY(mine.Amount);
+                mine.gameObject.SetActive(false);
                 _iframe = 0.45f;
                 if (_diver != null)
                 {
@@ -202,9 +205,10 @@ namespace ScrapFishing.Dive
         void BuildMines(float depth)
         {
             ClearMines();
+            var penalty = DepthZone.MinePenalty(depth);
             if (_mineTemplate != null)
             {
-                PlaceMine(_mineTemplate, new Vector3(-1.1f, -0.8f, 0f));
+                PlaceMine(_mineTemplate, new Vector3(-1.1f, -0.8f, 0f), penalty);
             }
 
             var extra = 2 + DepthZone.ExtraMines(depth);
@@ -213,15 +217,16 @@ namespace ScrapFishing.Dive
                 var go = _mineTemplate != null ? Instantiate(_mineTemplate) : new GameObject("Mine");
                 go.name = "DiveMine";
                 go.transform.SetParent(transform, false);
-                PlaceMine(go, new Vector3(UnityEngine.Random.Range(-1.6f, 1.6f), UnityEngine.Random.Range(-3.2f, 0.4f), 0f));
+                PlaceMine(go, new Vector3(UnityEngine.Random.Range(-1.6f, 1.6f), UnityEngine.Random.Range(-3.2f, 0.4f), 0f), penalty);
             }
         }
 
-        void PlaceMine(GameObject go, Vector3 position)
+        void PlaceMine(GameObject go, Vector3 position, int penalty)
         {
             go.SetActive(true);
             go.transform.position = position;
             var hazard = go.GetComponent<Hazard>() ?? go.AddComponent<Hazard>();
+            hazard.SetAmount(penalty);
             _hazards.Add(hazard);
             EnsureDrift(go, 0.18f, 0.28f, 0.55f);
         }
@@ -253,23 +258,24 @@ namespace ScrapFishing.Dive
             _hazards.Clear();
         }
 
-        bool HitsMine()
+        Hazard HitMine()
         {
             if (_diver == null)
             {
-                return false;
+                return null;
             }
 
             var point = _diver.Position;
             for (var i = 0; i < _hazards.Count; i++)
             {
-                if (_hazards[i] != null && _hazards[i].Hits(point))
+                var hazard = _hazards[i];
+                if (hazard != null && hazard.gameObject.activeSelf && hazard.Hits(point))
                 {
-                    return true;
+                    return hazard;
                 }
             }
 
-            return false;
+            return null;
         }
 
         static void SetActive(GameObject go, bool active)

@@ -180,14 +180,14 @@ namespace ScrapFishing.Boat
                 eventGo.AddComponent<InputSystemUIInputModule>();
             }
 
-            _title = canvas.gameObject.AddComponent<TitleView>();
-            _title.Build(canvas.transform);
             _hud = canvas.gameObject.AddComponent<HudView>();
             _hud.Build(canvas.transform);
-            _results = canvas.gameObject.AddComponent<ResultsView>();
-            _results.Build(canvas.transform);
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(canvas.transform);
+            _title = canvas.gameObject.AddComponent<TitleView>();
+            _title.Build(canvas.transform, BeginRun);
+            _results = canvas.gameObject.AddComponent<ResultsView>();
+            _results.Build(canvas.transform, _session.Restart);
         }
 
         void BindDive()
@@ -201,18 +201,25 @@ namespace ScrapFishing.Boat
             tap.OnTap += HandleTap;
         }
 
+        void BeginRun()
+        {
+            if (_flow.Phase != GamePhase.Title)
+            {
+                return;
+            }
+
+            _session.StartRun();
+            _title.SetVisible(false);
+            _results.Hide();
+            _flow.StartRun();
+            _casting.ResetHook();
+            AudioManager.Ensure().PlayBgm();
+        }
+
         void HandleTap()
         {
             switch (_flow.Phase)
             {
-                case GamePhase.Title:
-                    _session.ResetRun();
-                    _title.SetVisible(false);
-                    _results.Hide();
-                    _flow.StartRun();
-                    _casting.ResetHook();
-                    AudioManager.Ensure().PlayBgm();
-                    break;
                 case GamePhase.Aiming:
                     _casting.CastFromGauge();
                     AudioManager.Ensure().PlayCast();
@@ -225,14 +232,6 @@ namespace ScrapFishing.Boat
                     }
 
                     Recast();
-                    break;
-                case GamePhase.Results:
-                    if (!_results.CanAcceptInput)
-                    {
-                        break;
-                    }
-
-                    RestartRun();
                     break;
             }
         }
@@ -255,16 +254,6 @@ namespace ScrapFishing.Boat
         {
             _casting.ResetHook();
             _flow.ReturnToAiming();
-        }
-
-        void RestartRun()
-        {
-            _results.Hide();
-            _title.SetVisible(false);
-            _session.ResetRun();
-            _casting.ResetHook();
-            _flow.StartRun();
-            AudioManager.Ensure().PlayBgm();
         }
 
         void HandleDiveFinished()
@@ -320,7 +309,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _session.Stop();
+            _session.EndRun();
             if (_dive != null && _dive.IsActive)
             {
                 _dive.Cancel();
