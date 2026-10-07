@@ -8,6 +8,7 @@ namespace ScrapFishing.UI
     // Resources/UI 의 네온 UI 스프라이트를 코드로 바로 붙이는 헬퍼.
     //   buttons/ : 아이콘이 들어간 완성 버튼 (btn_boat, btn_rod, btn_battery, btn_cube, btn_fire, btn_target)
     //   frames/  : 텍스트·아이콘을 뺀 9-slice 프레임 (frame_button_teal, frame_bar_teal, frame_panel_dim, ...)
+    //   panels/  : 목업 원본 크기 패널, 텍스트만 제거 (panel_battle, panel_money, panel_chat, panel_userid, ...)
     //   icons/   : 배경을 뺀 단독 아이콘 (icon_boat, icon_dollar, icon_chip, portrait, ...)
     public static class UiSkin
     {
