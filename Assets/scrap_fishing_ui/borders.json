@@ -1,0 +1,44 @@
+{
+ "frame_button_teal": [
+  70,
+  60,
+  70,
+  60
+ ],
+ "frame_bar_teal": [
+  40,
+  50,
+  40,
+  50
+ ],
+ "frame_panel_dim": [
+  28,
+  22,
+  28,
+  22
+ ],
+ "frame_tile_teal": [
+  70,
+  70,
+  70,
+  70
+ ],
+ "frame_tile_blue": [
+  60,
+  60,
+  60,
+  60
+ ],
+ "frame_small_magenta": [
+  40,
+  40,
+  40,
+  40
+ ],
+ "frame_small_cyan": [
+  40,
+  40,
+  40,
+  40
+ ]
+}
