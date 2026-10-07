@@ -125,8 +125,10 @@ namespace ScrapFishing.Build
         static DepthGauge BuildGauge(RectTransform parent)
         {
             var rect = CreateRect(parent, "DepthGauge", new Vector2(0.905f, 0.07f), new Vector2(0.945f, 0.47f));
+            BuildGaugeArt(rect, "GaugeFrame", GaugeFrameSprite, Image.Type.Sliced);
             CreateImage(rect, "Track", Vector2.zero, Vector2.one, new Color(0.08f, 0.1f, 0.16f, 0.85f));
             var locked = CreateImage(rect, "LockedArea", Vector2.zero, new Vector2(1f, 0.51f), new Color(0.35f, 0.05f, 0.25f, 0.75f));
+            BuildGaugeArt(rect, "GaugeTicks", GaugeTicksSprite, Image.Type.Simple);
             var marker = CreateImage(rect, "Marker", new Vector2(0f, 0.98f), new Vector2(1f, 0.98f), Palette.NeonGreen);
             marker.rectTransform.sizeDelta = new Vector2(14f, 12f);
 
@@ -138,6 +140,27 @@ namespace ScrapFishing.Build
             so.ApplyModifiedPropertiesWithoutUndo();
             SetLayer(rect);
             return gauge;
+        }
+
+        // 게이지 하우징은 트랙 바깥으로 가로 15 / 세로 14 만큼 나온다 (스프라이트는 3배 해상도, PPU 300).
+        const string GaugeFrameSprite = "Assets/scrap_fishing_ui/gauge/gauge_frame.png";
+        const string GaugeTicksSprite = "Assets/scrap_fishing_ui/gauge/gauge_ticks.png";
+        static readonly Vector2 GaugeMargin = new Vector2(15f, 14f);
+
+        static void BuildGaugeArt(RectTransform gauge, string name, string spritePath, Image.Type type)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                Debug.LogWarning("게이지 스프라이트를 찾지 못했습니다: " + spritePath);
+                return;
+            }
+
+            var image = CreateImage(gauge, name, Vector2.zero, Vector2.one, Color.white);
+            image.rectTransform.offsetMin = -GaugeMargin;
+            image.rectTransform.offsetMax = GaugeMargin;
+            image.sprite = sprite;
+            image.type = type;
         }
 
         static Text BuildChip(RectTransform parent)
