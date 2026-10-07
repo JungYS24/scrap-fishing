@@ -109,15 +109,27 @@ namespace ScrapFishing.Boat
             swipe.Bind(Camera.main);
             _trail = gameObject.AddComponent<SwipeTrail>();
             _trail.Build();
-            swipe.OnSwipe += info =>
+            var strokeHit = false;
+            swipe.OnBegin += () =>
             {
-                if (_flow.Phase == GamePhase.Casting || _flow.Phase == GamePhase.Reeling)
+                strokeHit = false;
+                _trail.Begin();
+            };
+            swipe.OnDrag += info =>
+            {
+                if (_flow.Phase != GamePhase.Casting && _flow.Phase != GamePhase.Reeling)
                 {
-                    _trail.Show(info);
-                    catcher.HandleSwipe(info);
                     return;
                 }
 
+                _trail.Extend(info);
+                if (!strokeHit && catcher.HandleSwipe(info))
+                {
+                    strokeHit = true;
+                }
+            };
+            swipe.OnSwipe += info =>
+            {
                 if (_flow.Phase == GamePhase.CastComplete && OfferDive() && info.IsDownward)
                 {
                     StartDive();
@@ -190,7 +202,7 @@ namespace ScrapFishing.Boat
             }
 
             _hud = canvas.gameObject.AddComponent<HudView>();
-            _hud.Build(canvas.transform, _canvasUi.ChipText);
+            _hud.Build(canvas.transform, _canvasUi.ChipText, _canvasUi.ChipPanel);
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(canvas.transform);
             _title = _canvasUi.Title;

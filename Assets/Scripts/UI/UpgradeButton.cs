@@ -12,6 +12,7 @@ namespace ScrapFishing.UI
         [SerializeField] Text nameText;
         [SerializeField] Text levelText;
         [SerializeField] Text costText;
+        [SerializeField] GameObject costIcon;
 
         void Awake()
         {
@@ -46,7 +47,12 @@ namespace ScrapFishing.UI
 
             if (costText != null)
             {
-                costText.text = maxed ? "MAX" : $"$ {cost}";
+                costText.text = maxed ? "MAX" : cost.ToString();
+            }
+
+            if (costIcon != null)
+            {
+                costIcon.SetActive(!maxed);
             }
 
             if (button != null)

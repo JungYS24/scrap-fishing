@@ -24,13 +24,17 @@ namespace ScrapFishing.Controls
 
     public class SwipeReader : MonoBehaviour
     {
-        [SerializeField] float minPixels = 70f;
+        [SerializeField] float minPixels = 40f;
 
+        public event Action OnBegin;
+        public event Action<SwipeInfo> OnDrag;
         public event Action<SwipeInfo> OnSwipe;
 
         Camera _camera;
         Vector2 _pressPosition;
+        Vector2 _lastPosition;
         bool _pressed;
+        bool _dragging;
 
         public void Bind(Camera camera)
         {
@@ -46,22 +50,20 @@ namespace ScrapFishing.Controls
 
             if (pressedThisFrame)
             {
+                _pressed = false;
                 if (!FixedResolution.ContainsWindowPoint(position) || PointerUtil.IsOverUi(position))
                 {
                     return;
                 }
 
                 _pressed = true;
+                _dragging = false;
                 _pressPosition = position;
+                _lastPosition = position;
+                OnBegin?.Invoke();
             }
 
-            if (!_pressed || !releasedThisFrame)
-            {
-                return;
-            }
-
-            _pressed = false;
-            if (Vector2.Distance(FixedResolution.ToGamePixels(_pressPosition), FixedResolution.ToGamePixels(position)) < minPixels)
+            if (!_pressed)
             {
                 return;
             }
@@ -72,11 +74,42 @@ namespace ScrapFishing.Controls
                 return;
             }
 
-            var startWorld = FixedResolution.WindowToWorld(cam, _pressPosition);
-            var endWorld = FixedResolution.WindowToWorld(cam, position);
+            if (!_dragging && GameDistance(_pressPosition, position) >= minPixels)
+            {
+                _dragging = true;
+                _lastPosition = _pressPosition;
+            }
+
+            if (_dragging && position != _lastPosition)
+            {
+                OnDrag?.Invoke(Build(cam, _lastPosition, position));
+            }
+
+            _lastPosition = position;
+            if (!releasedThisFrame)
+            {
+                return;
+            }
+
+            _pressed = false;
+            if (_dragging)
+            {
+                OnSwipe?.Invoke(Build(cam, _pressPosition, position));
+            }
+        }
+
+        static float GameDistance(Vector2 a, Vector2 b)
+        {
+            return Vector2.Distance(FixedResolution.ToGamePixels(a), FixedResolution.ToGamePixels(b));
+        }
+
+        static SwipeInfo Build(Camera cam, Vector2 start, Vector2 end)
+        {
+            var startWorld = FixedResolution.WindowToWorld(cam, start);
+            var endWorld = FixedResolution.WindowToWorld(cam, end);
             startWorld.z = 0f;
             endWorld.z = 0f;
-            OnSwipe?.Invoke(new SwipeInfo(_pressPosition, position, startWorld, endWorld));
+            return new SwipeInfo(start, end, startWorld, endWorld);
         }
     }
 }

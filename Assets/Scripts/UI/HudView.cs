@@ -10,6 +10,7 @@ namespace ScrapFishing.UI
         Text _time;
         Text _depth;
         Text _cy;
+        GameObject _cyPanel;
         Text _hint;
         GameObject _oxygenBar;
         Image _oxygenFill;
@@ -19,7 +20,7 @@ namespace ScrapFishing.UI
         int _lastCatchCount;
         int _lastCY;
 
-        public void Build(Transform canvas, Text chipText)
+        public void Build(Transform canvas, Text chipText, GameObject chipPanel)
         {
             var root = new GameObject("Hud");
             root.transform.SetParent(canvas, false);
@@ -30,6 +31,7 @@ namespace ScrapFishing.UI
             rect.offsetMax = Vector2.zero;
 
             _cy = chipText;
+            _cyPanel = chipPanel;
 
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
             Stretch(_depth.rectTransform, new Vector2(0.05f, 0.82f), new Vector2(0.5f, 0.90f));
@@ -63,7 +65,12 @@ namespace ScrapFishing.UI
             _depth.text = diving ? string.Empty : playing ? $"DEPTH {meters:0}m {DepthZone.Name(gauge)}" : string.Empty;
             if (_cy != null)
             {
-                _cy.text = playing ? $"{session.CY} CY" : string.Empty;
+                _cy.text = session.CY.ToString();
+            }
+
+            if (_cyPanel != null && _cyPanel.activeSelf != playing)
+            {
+                _cyPanel.SetActive(playing);
             }
 
             _hint.text = HintFor(flow, session, forcedAscent);

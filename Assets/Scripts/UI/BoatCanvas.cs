@@ -9,6 +9,7 @@ namespace ScrapFishing.UI
     {
         [SerializeField] DepthGauge depthGauge;
         [SerializeField] Text chipText;
+        [SerializeField] GameObject chipPanel;
         [SerializeField] GameObject readyPanel;
         [SerializeField] Text dollarText;
         [SerializeField] UpgradeButton[] upgradeButtons;
@@ -16,6 +17,7 @@ namespace ScrapFishing.UI
 
         public DepthGauge DepthGauge => depthGauge;
         public Text ChipText => chipText;
+        public GameObject ChipPanel => chipPanel;
         public TitleView Title => title;
 
         void OnEnable()
@@ -59,7 +61,7 @@ namespace ScrapFishing.UI
         {
             if (dollarText != null)
             {
-                dollarText.text = $"$ {Progression.Dollars}";
+                dollarText.text = Progression.Dollars.ToString();
             }
 
             if (upgradeButtons == null)

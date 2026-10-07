@@ -46,7 +46,25 @@ namespace ScrapFishing.Build
                 return;
             }
 
+            DisableBrowserGestures(output);
             Debug.Log("WebGL build succeeded: " + output);
+        }
+
+        const string TouchCss = "html, body { overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none }\n#unity-canvas { touch-action: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent }\n";
+
+        static void DisableBrowserGestures(string output)
+        {
+            var css = Path.Combine(output, "TemplateData", "style.css");
+            if (!File.Exists(css))
+            {
+                return;
+            }
+
+            var text = File.ReadAllText(css);
+            if (!text.Contains("touch-action"))
+            {
+                File.WriteAllText(css, text.TrimEnd('\n', '\r') + "\n" + TouchCss);
+            }
         }
     }
 }

@@ -20,18 +20,18 @@ namespace ScrapFishing.Boat
             _session = session;
         }
 
-        public void HandleSwipe(SwipeInfo swipe)
+        public bool HandleSwipe(SwipeInfo swipe)
         {
             if (_hook == null || _spawner == null)
             {
-                return;
+                return false;
             }
 
             var hookPos = _hook.Position;
             var distanceToSwipe = DistanceToSegment(hookPos, swipe.StartWorld, swipe.EndWorld);
             if (distanceToSwipe > hookHitRadius)
             {
-                return;
+                return false;
             }
 
             var radius = catchRadius + Progression.CatchRadiusBonus;
@@ -49,6 +49,8 @@ namespace ScrapFishing.Boat
                     _spawner.Remove(scrap);
                 }
             }
+
+            return true;
         }
 
         static float DistanceToSegment(Vector3 point, Vector3 a, Vector3 b)

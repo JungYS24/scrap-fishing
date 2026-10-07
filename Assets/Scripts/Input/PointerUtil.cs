@@ -7,27 +7,38 @@ namespace ScrapFishing.Controls
 {
     public static class PointerUtil
     {
+        const float EmulatedMouseWindow = 0.6f;
         static readonly List<RaycastResult> UiHits = new List<RaycastResult>();
+        static float _lastTouchTime = -1f;
 
         public static bool TryRead(out Vector2 position, out bool pressedThisFrame, out bool releasedThisFrame)
         {
-            var pointer = Pointer.current;
-            if (pointer != null)
+            var touch = Touchscreen.current;
+            if (touch != null)
             {
-                return Read(pointer.position.ReadValue(), pointer.press.wasPressedThisFrame, pointer.press.wasReleasedThisFrame, out position, out pressedThisFrame, out releasedThisFrame);
+                var press = touch.primaryTouch.press;
+                if (press.isPressed || press.wasPressedThisFrame || press.wasReleasedThisFrame)
+                {
+                    _lastTouchTime = Time.unscaledTime;
+                    return Read(touch.primaryTouch.position.ReadValue(), press.wasPressedThisFrame, press.wasReleasedThisFrame, out position, out pressedThisFrame, out releasedThisFrame);
+                }
             }
 
             var mouse = Mouse.current;
             if (mouse != null)
             {
+                if (Time.unscaledTime - _lastTouchTime < EmulatedMouseWindow)
+                {
+                    return Read(mouse.position.ReadValue(), false, false, out position, out pressedThisFrame, out releasedThisFrame);
+                }
+
                 return Read(mouse.position.ReadValue(), mouse.leftButton.wasPressedThisFrame, mouse.leftButton.wasReleasedThisFrame, out position, out pressedThisFrame, out releasedThisFrame);
             }
 
-            var touch = Touchscreen.current;
-            if (touch != null)
+            var pointer = Pointer.current;
+            if (pointer != null)
             {
-                var primary = touch.primaryTouch;
-                return Read(primary.position.ReadValue(), primary.press.wasPressedThisFrame, primary.press.wasReleasedThisFrame, out position, out pressedThisFrame, out releasedThisFrame);
+                return Read(pointer.position.ReadValue(), pointer.press.wasPressedThisFrame, pointer.press.wasReleasedThisFrame, out position, out pressedThisFrame, out releasedThisFrame);
             }
 
             position = default;
