@@ -91,9 +91,12 @@
 
 - **엔진**: Unity (WebGL 빌드)
 - **입력**: Unity Input System (EventSystem 기반 Pointer / On-Screen Stick)
+- **트윈**: DOTween Pro (저장소 미포함)
 - **배포**: GitHub Pages (`main` 브랜치 `/docs` 폴더)
 - **아트 파이프라인**: Retro Diffusion (도트 스프라이트 생성)
 - **개발 보조**: Cursor (바이브 코딩)
+
+> ⚠️ 클론 후 DOTween Pro를 Package Manager > My Assets에서 임포트하고, Setup DOTween(UI/Sprite/Audio/Physics2D)을 실행해야 컴파일됨.
 
 ---
 

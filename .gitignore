@@ -85,3 +85,9 @@ crashlytics-build.properties
 *.sln.DotSettings.user
 *.csproj.user
 .init
+
+# DOTween Pro (유료 에셋 - 공개 저장소에 올리지 않음)
+/Assets/Plugins/Demigiant/
+/Assets/Plugins/Demigiant.meta
+/Assets/Plugins/
+/Assets/Plugins.meta
