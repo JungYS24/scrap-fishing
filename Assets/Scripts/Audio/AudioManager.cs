@@ -16,6 +16,7 @@ namespace ScrapFishing.Audio
         AudioClip _castClip;
         AudioClip _reelClip;
         AudioClip _diveClip;
+        AudioClip _splashClip;
         AudioClip[] _zoneClips;
 
         public static AudioManager Ensure()
@@ -58,6 +59,7 @@ namespace ScrapFishing.Audio
             _castClip = MakeTone(520, 0.07f);
             _reelClip = MakeTone(340, 0.1f);
             _diveClip = MakeTone(260, 0.14f);
+            _splashClip = MakeSplash(0.16f);
             _zoneClips = new[]
             {
                 MakeTone(400, 0.07f),
@@ -102,6 +104,11 @@ namespace ScrapFishing.Audio
             PlaySfx(_diveClip, 0.4f);
         }
 
+        public void PlaySplash()
+        {
+            PlaySfx(_splashClip, 0.4f);
+        }
+
         public void PlayZone(int index)
         {
             if (_zoneClips == null || _zoneClips.Length == 0)
@@ -136,6 +143,28 @@ namespace ScrapFishing.Audio
             }
 
             var clip = AudioClip.Create("tone", samples, 1, sampleRate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        static AudioClip MakeSplash(float seconds)
+        {
+            const int sampleRate = 22050;
+            var samples = Mathf.Max(1, Mathf.RoundToInt(sampleRate * seconds));
+            var data = new float[samples];
+            var noise = new System.Random(7);
+            var phase = 0f;
+            for (var i = 0; i < samples; i++)
+            {
+                var t = i / (float)sampleRate;
+                var envelope = 1f - t / seconds;
+                envelope *= envelope;
+                phase += 2f * Mathf.PI * Mathf.Lerp(900f, 220f, t / seconds) / sampleRate;
+                var hiss = (float)noise.NextDouble() * 2f - 1f;
+                data[i] = (Mathf.Sin(phase) * 0.6f + hiss * 0.4f) * envelope * 0.35f;
+            }
+
+            var clip = AudioClip.Create("splash", samples, 1, sampleRate, false);
             clip.SetData(data, 0);
             return clip;
         }

@@ -90,17 +90,22 @@ namespace ScrapFishing.Boat
             _hook.gameObject.SetActive(true);
             _hook.Build(new Vector3(SurfaceLayout.HookX, SurfaceLayout.WaterlineY, 0f));
 
-            _castCamera = gameObject.AddComponent<CastCamera>();
-            _castCamera.Bind(Camera.main, _hook, _flow);
-
             _gauge = _canvasUi.DepthGauge;
 
             var spawnerGo = new GameObject("ScrapSpawner");
             spawnerGo.transform.SetParent(transform, false);
             _spawner = spawnerGo.AddComponent<ScrapSpawner>();
 
-            _casting = gameObject.AddComponent<CastingController>();
+            _casting = GetComponent<CastingController>();
+            if (_casting == null)
+            {
+                _casting = gameObject.AddComponent<CastingController>();
+            }
+
             _casting.Bind(_flow, _session, _gauge, _hook, _spawner);
+
+            _castCamera = gameObject.AddComponent<CastCamera>();
+            _castCamera.Bind(Camera.main, _hook, _flow, _casting);
 
             var catcher = gameObject.AddComponent<SwipeCatcher>();
             catcher.Bind(_hook, _spawner, _session);
@@ -117,7 +122,7 @@ namespace ScrapFishing.Boat
             };
             swipe.OnDrag += info =>
             {
-                if (_flow.Phase != GamePhase.Casting && _flow.Phase != GamePhase.Reeling)
+                if ((_flow.Phase != GamePhase.Casting && _flow.Phase != GamePhase.Reeling) || _casting.IsLaunching)
                 {
                     return;
                 }

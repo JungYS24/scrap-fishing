@@ -8,13 +8,15 @@ namespace ScrapFishing.Boat
         Camera _camera;
         HookMover _hook;
         GameFlow _flow;
+        CastingController _casting;
         Vector3 _rest;
 
-        public void Bind(Camera camera, HookMover hook, GameFlow flow)
+        public void Bind(Camera camera, HookMover hook, GameFlow flow, CastingController casting)
         {
             _camera = camera;
             _hook = hook;
             _flow = flow;
+            _casting = casting;
             if (_camera != null)
             {
                 _rest = _camera.transform.position;
@@ -39,7 +41,8 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            var follow = _hook != null && (_flow.Phase == GamePhase.Casting || _flow.Phase == GamePhase.Reeling);
+            var launching = _casting != null && _casting.IsLaunching;
+            var follow = _hook != null && !launching && (_flow.Phase == GamePhase.Casting || _flow.Phase == GamePhase.Reeling);
             if (!follow)
             {
                 MoveTo(_rest.y, 10f);
