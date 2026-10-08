@@ -11,6 +11,7 @@ namespace ScrapFishing.UI
         Text _depth;
         Text _cy;
         GameObject _cyPanel;
+        Text _dive;
         Text _hint;
         GameObject _oxygenBar;
         Image _oxygenFill;
@@ -38,6 +39,9 @@ namespace ScrapFishing.UI
 
             _time = UiFonts.CreateText(rect, "Time", 18, TextAnchor.UpperRight);
             Stretch(_time.rectTransform, new Vector2(0.5f, 0.90f), new Vector2(0.95f, 0.98f));
+
+            _dive = UiFonts.CreateText(rect, "DiveProgress", 18, TextAnchor.UpperRight);
+            Stretch(_dive.rectTransform, new Vector2(0.5f, 0.85f), new Vector2(0.95f, 0.90f));
 
             _hint = UiFonts.CreateText(rect, "Hint", 16, TextAnchor.MiddleRight);
             Stretch(_hint.rectTransform, new Vector2(0.38f, 0.04f), new Vector2(0.88f, 0.14f));
@@ -73,6 +77,7 @@ namespace ScrapFishing.UI
                 _cyPanel.SetActive(playing);
             }
 
+            RefreshDive(session, playing && !diving);
             _hint.text = HintFor(flow, session, forcedAscent);
             RefreshToast(session, playing);
             if (_oxygenBar != null)
@@ -166,6 +171,27 @@ namespace ScrapFishing.UI
             _toast.color = color;
         }
 
+        public void Notify(string message)
+        {
+            if (_toast != null)
+            {
+                ShowToast(message, Palette.Cyan);
+            }
+        }
+
+        void RefreshDive(RunSession session, bool visible)
+        {
+            if (!visible)
+            {
+                _dive.text = string.Empty;
+                return;
+            }
+
+            var filled = Mathf.Min(session.DiveProgress, RunSession.CastsPerDive);
+            _dive.text = "잠수 " + new string('●', filled) + new string('○', RunSession.CastsPerDive - filled);
+            _dive.color = session.CanDive ? Palette.Cyan : new Color(0.75f, 0.9f, 1f, 0.6f);
+        }
+
         void ShowToast(string message, Color color)
         {
             _toast.text = message;
@@ -178,7 +204,7 @@ namespace ScrapFishing.UI
             switch (flow.Phase)
             {
                 case GamePhase.Aiming:
-                    return "깊게 탭할수록 고가!";
+                    return session.CanDive ? "깊게 탭할수록 고가!\n아래로 스와이프: 잠수" : "깊게 탭할수록 고가!";
                 case GamePhase.Casting:
                     return "훅 하강 중";
                 case GamePhase.Reeling:

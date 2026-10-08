@@ -45,6 +45,7 @@ namespace ScrapFishing.Boat
             BindInput();
             BindDive();
             _session.CaughtItem += AudioManager.Ensure().PlayCatch;
+            _session.DiveCharged += AudioManager.Ensure().PlayDiveReady;
             _flow.PhaseChanged += HandlePhaseChanged;
         }
 
@@ -135,9 +136,9 @@ namespace ScrapFishing.Boat
             };
             swipe.OnSwipe += info =>
             {
-                if (_flow.Phase == GamePhase.CastComplete && OfferDive() && info.IsDownward)
+                if (info.IsDownward)
                 {
-                    StartDive();
+                    HandleDiveSwipe();
                 }
             };
 
@@ -270,6 +271,27 @@ namespace ScrapFishing.Boat
             return _session != null && _session.CanDive && !_session.IsExpired;
         }
 
+        void HandleDiveSwipe()
+        {
+            if (_flow.Phase != GamePhase.Aiming && _flow.Phase != GamePhase.CastComplete)
+            {
+                return;
+            }
+
+            if (OfferDive())
+            {
+                StartDive();
+            }
+            else if (!_session.HasDiveCharge)
+            {
+                _hud.Notify($"잠수까지 캐스팅 {_session.CastsUntilDive}회");
+            }
+            else if (!_session.HasDiveTime)
+            {
+                _hud.Notify("남은 시간이 부족해 잠수 불가");
+            }
+        }
+
         void StartDive()
         {
             _castCamera.SnapRest();
@@ -299,6 +321,11 @@ namespace ScrapFishing.Boat
 
         void HandlePhaseChanged(GamePhase phase)
         {
+            if (phase == GamePhase.CastComplete && !_session.IsExpired)
+            {
+                _session.RegisterCastComplete();
+            }
+
             if (phase == GamePhase.CastComplete && _session.IsExpired)
             {
                 EndRun();

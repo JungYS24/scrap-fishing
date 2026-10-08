@@ -9,6 +9,8 @@ namespace ScrapFishing.Core
     public class RunSession : MonoBehaviour
     {
         public const float Duration = 60f;
+        public const int CastsPerDive = 3;
+        public const float MinDiveSeconds = 8f;
         const string BestKey = "BestCY";
 
         public float CastDepth { get; private set; }
@@ -23,10 +25,14 @@ namespace ScrapFishing.Core
         public float Remaining => Mathf.Max(0f, Duration - Elapsed);
         public bool IsExpired => _running && Elapsed >= Duration;
         public bool IsRunning => _running;
-        public bool HasDived { get; private set; }
-        public bool CanDive => !HasDived && Remaining >= 8f;
+        public int DiveProgress { get; private set; }
+        public bool HasDiveCharge => DiveProgress >= CastsPerDive;
+        public int CastsUntilDive => CastsPerDive - DiveProgress;
+        public bool HasDiveTime => Remaining >= MinDiveSeconds;
+        public bool CanDive => HasDiveCharge && HasDiveTime;
 
         public event Action CaughtItem;
+        public event Action DiveCharged;
 
         readonly List<ScrapDefinition> _caught = new List<ScrapDefinition>();
         bool _running;
@@ -46,7 +52,7 @@ namespace ScrapFishing.Core
             LastGain = 0;
             EarnedDollars = 0;
             Elapsed = 0f;
-            HasDived = false;
+            DiveProgress = 0;
             _running = true;
             _chipMultiplier = Progression.ChipMultiplier;
             _caught.Clear();
@@ -85,9 +91,23 @@ namespace ScrapFishing.Core
             }
         }
 
+        public void RegisterCastComplete()
+        {
+            if (HasDiveCharge)
+            {
+                return;
+            }
+
+            DiveProgress++;
+            if (HasDiveCharge)
+            {
+                DiveCharged?.Invoke();
+            }
+        }
+
         public void MarkDived()
         {
-            HasDived = true;
+            DiveProgress = 0;
         }
 
         public void Tick(float deltaTime)

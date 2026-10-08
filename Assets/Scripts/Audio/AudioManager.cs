@@ -17,6 +17,7 @@ namespace ScrapFishing.Audio
         AudioClip _reelClip;
         AudioClip _diveClip;
         AudioClip _splashClip;
+        AudioClip _diveReadyClip;
         AudioClip[] _zoneClips;
 
         public static AudioManager Ensure()
@@ -60,6 +61,7 @@ namespace ScrapFishing.Audio
             _reelClip = MakeTone(340, 0.1f);
             _diveClip = MakeTone(260, 0.14f);
             _splashClip = MakeSplash(0.16f);
+            _diveReadyClip = MakeChime(660, 990, 0.08f);
             _zoneClips = new[]
             {
                 MakeTone(400, 0.07f),
@@ -109,6 +111,11 @@ namespace ScrapFishing.Audio
             PlaySfx(_splashClip, 0.4f);
         }
 
+        public void PlayDiveReady()
+        {
+            PlaySfx(_diveReadyClip, 0.4f);
+        }
+
         public void PlayZone(int index)
         {
             if (_zoneClips == null || _zoneClips.Length == 0)
@@ -143,6 +150,24 @@ namespace ScrapFishing.Audio
             }
 
             var clip = AudioClip.Create("tone", samples, 1, sampleRate, false);
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        static AudioClip MakeChime(int lowHertz, int highHertz, float noteSeconds)
+        {
+            const int sampleRate = 22050;
+            var noteSamples = Mathf.Max(1, Mathf.RoundToInt(sampleRate * noteSeconds));
+            var data = new float[noteSamples * 2];
+            for (var i = 0; i < data.Length; i++)
+            {
+                var high = i >= noteSamples;
+                var t = (high ? i - noteSamples : i) / (float)sampleRate;
+                var envelope = 1f - t / noteSeconds;
+                data[i] = Mathf.Sin(2f * Mathf.PI * (high ? highHertz : lowHertz) * t) * envelope * 0.35f;
+            }
+
+            var clip = AudioClip.Create("chime", data.Length, 1, sampleRate, false);
             clip.SetData(data, 0);
             return clip;
         }
