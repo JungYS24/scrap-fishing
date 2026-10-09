@@ -15,6 +15,9 @@ namespace ScrapFishing.UI
         [SerializeField] UpgradeButton[] upgradeButtons;
         [SerializeField] TitleView title;
 
+        UiFxSettings _settings;
+        CountingText _dollarCount;
+
         public DepthGauge DepthGauge => depthGauge;
         public Text ChipText => chipText;
         public GameObject ChipPanel => chipPanel;
@@ -23,7 +26,8 @@ namespace ScrapFishing.UI
         void OnEnable()
         {
             Progression.Changed += Refresh;
-            Refresh();
+            EnsureFx();
+            RefreshUpgrades();
         }
 
         void OnDisable()
@@ -46,24 +50,83 @@ namespace ScrapFishing.UI
 
         public void SetReadyVisible(bool visible)
         {
-            if (readyPanel != null)
+            if (readyPanel == null)
             {
-                readyPanel.SetActive(visible);
+                return;
             }
 
             if (visible)
             {
-                Refresh();
+                readyPanel.SetActive(true);
+                RefreshUpgrades();
+                PlayReadyIntro();
+            }
+            else
+            {
+                readyPanel.SetActive(false);
+            }
+        }
+
+        void EnsureFx()
+        {
+            if (_settings == null)
+            {
+                _settings = Resources.Load<UiFxSettings>("UiFxSettings");
+            }
+
+            if (dollarText != null && _dollarCount == null)
+            {
+                _dollarCount = dollarText.GetComponent<CountingText>();
+                if (_dollarCount == null)
+                {
+                    _dollarCount = dollarText.gameObject.AddComponent<CountingText>();
+                }
+
+                _dollarCount.Bind(_settings, string.Empty, false, string.Empty, true);
+            }
+        }
+
+        void PlayReadyIntro()
+        {
+            EnsureFx();
+            if (_dollarCount != null)
+            {
+                _dollarCount.Snap(0);
+                _dollarCount.PlayTo(Progression.Dollars);
+            }
+
+            if (upgradeButtons == null)
+            {
+                return;
+            }
+
+            var stagger = _settings != null ? _settings.ReadyStagger : 0.08f;
+            for (var i = 0; i < upgradeButtons.Length; i++)
+            {
+                if (upgradeButtons[i] != null)
+                {
+                    upgradeButtons[i].PlayPop(i * stagger);
+                }
             }
         }
 
         void Refresh()
         {
-            if (dollarText != null)
+            EnsureFx();
+            if (_dollarCount != null)
+            {
+                _dollarCount.PlayTo(Progression.Dollars);
+            }
+            else if (dollarText != null)
             {
                 dollarText.text = Progression.Dollars.ToString();
             }
 
+            RefreshUpgrades();
+        }
+
+        void RefreshUpgrades()
+        {
             if (upgradeButtons == null)
             {
                 return;
