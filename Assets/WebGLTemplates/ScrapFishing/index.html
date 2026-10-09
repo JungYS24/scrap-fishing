@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="unity-loading">
+        <div id="unity-title">SCRAP FISHING</div>
+        <div id="unity-progress-track">
+          <div id="unity-progress-bar"></div>
+        </div>
+        <div id="unity-progress-label">0%</div>
+      </div>
+      <div id="unity-warning"></div>
+      <div id="boot-error" hidden>
+        <p>게임을 불러오지 못했습니다.</p>
+        <p id="boot-error-detail"></p>
+      </div>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var loading = document.querySelector("#unity-loading");
+      var bar = document.querySelector("#unity-progress-bar");
+      var label = document.querySelector("#unity-progress-label");
+      var bootError = document.querySelector("#boot-error");
+      var bootDetail = document.querySelector("#boot-error-detail");
+
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        var div = document.createElement("div");
+        div.textContent = msg;
+        div.className = type === "error" ? "banner-error" : "banner-warning";
+        warningBanner.appendChild(div);
+        warningBanner.style.display = "block";
+        if (type !== "error") {
+          setTimeout(function () {
+            if (div.parentNode) {
+              warningBanner.removeChild(div);
+            }
+            if (!warningBanner.children.length) {
+              warningBanner.style.display = "none";
+            }
+          }, 5000);
+        }
+      }
+
+      function showBootError(message) {
+        loading.style.display = "none";
+        bootError.hidden = false;
+        bootDetail.textContent = message || "잠시 후 다시 시도해 주세요.";
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#if MEMORY_FILENAME
+        memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner
+      };
+
+      config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+#if BACKGROUND_FILENAME
+      canvas.style.background = "url('" + buildUrl + "/{{{ BACKGROUND_FILENAME.replace(/'/g, '%27') }}}') center / cover";
+#else
+      canvas.style.background = "{{{ BACKGROUND_COLOR }}}";
+#endif
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = function () {
+        createUnityInstance(canvas, config, function (progress) {
+          var percent = Math.round(100 * progress);
+          bar.style.width = percent + "%";
+          label.textContent = percent + "%";
+        }).then(function () {
+          loading.style.display = "none";
+        }).catch(function (message) {
+          showBootError(message);
+        });
+      };
+      script.onerror = function () {
+        showBootError("로더를 받지 못했습니다. 네트워크를 확인해 주세요.");
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>

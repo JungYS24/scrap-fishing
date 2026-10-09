@@ -15,6 +15,7 @@ namespace ScrapFishing.Build
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.template = "PROJECT:ScrapFishing";
 
             var output = Path.GetFullPath("docs");
             Directory.CreateDirectory(output);
@@ -35,6 +36,11 @@ namespace ScrapFishing.Build
             var report = BuildPipeline.BuildPlayer(options);
             File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty);
             File.WriteAllText(Path.GetFullPath("webgl-build.status"), report.summary.result.ToString());
+            var leftover = Path.Combine(output, "TemplateData");
+            if (Directory.Exists(leftover))
+            {
+                Directory.Delete(leftover, true);
+            }
             if (report.summary.result != BuildResult.Succeeded)
             {
                 Debug.LogError("WebGL build failed: " + report.summary.result);
@@ -46,25 +52,7 @@ namespace ScrapFishing.Build
                 return;
             }
 
-            DisableBrowserGestures(output);
             Debug.Log("WebGL build succeeded: " + output);
-        }
-
-        const string TouchCss = "html, body { overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none }\n#unity-canvas { touch-action: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent }\n";
-
-        static void DisableBrowserGestures(string output)
-        {
-            var css = Path.Combine(output, "TemplateData", "style.css");
-            if (!File.Exists(css))
-            {
-                return;
-            }
-
-            var text = File.ReadAllText(css);
-            if (!text.Contains("touch-action"))
-            {
-                File.WriteAllText(css, text.TrimEnd('\n', '\r') + "\n" + TouchCss);
-            }
         }
     }
 }
