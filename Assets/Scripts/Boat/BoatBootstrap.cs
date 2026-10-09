@@ -209,6 +209,7 @@ namespace ScrapFishing.Boat
 
             _hud = canvas.gameObject.AddComponent<HudView>();
             _hud.Build(canvas.transform, _canvasUi.ChipText, _canvasUi.ChipPanel);
+            _hud.Bind(_session);
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(canvas.transform);
             _title = _canvasUi.Title;
@@ -237,6 +238,7 @@ namespace ScrapFishing.Boat
             }
 
             _session.StartRun();
+            _hud.NotifyRunReset();
             _gauge.SetMaxDepth(Progression.MaxDepth);
             _title.SetVisible(false);
             _canvasUi.SetReadyVisible(false);

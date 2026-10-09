@@ -32,6 +32,7 @@ namespace ScrapFishing.Core
         public bool CanDive => HasDiveCharge && HasDiveTime;
 
         public event Action CaughtItem;
+        public event Action<ScrapDefinition, Vector3, int> CaughtAt;
         public event Action DiveCharged;
 
         readonly List<ScrapDefinition> _caught = new List<ScrapDefinition>();
@@ -127,6 +128,11 @@ namespace ScrapFishing.Core
 
         public void AddCatch(ScrapDefinition definition)
         {
+            AddCatch(definition, Vector3.zero);
+        }
+
+        public void AddCatch(ScrapDefinition definition, Vector3 worldPos)
+        {
             if (definition == null)
             {
                 return;
@@ -136,6 +142,7 @@ namespace ScrapFishing.Core
             LastGain = Mathf.RoundToInt(definition.Value * _chipMultiplier);
             AddCY(LastGain);
             CaughtItem?.Invoke();
+            CaughtAt?.Invoke(definition, worldPos, LastGain);
         }
 
         public ScrapDefinition HighestGrade()

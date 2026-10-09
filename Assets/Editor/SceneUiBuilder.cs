@@ -24,6 +24,8 @@ namespace ScrapFishing.Build
                 return;
             }
 
+            EnsureUiFxSettings();
+
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             var canvas = Object.FindFirstObjectByType<Canvas>();
             if (canvas == null)
@@ -96,6 +98,31 @@ namespace ScrapFishing.Build
 
             PlayerPrefs.Save();
             Debug.Log("Dollar and upgrade levels reset.");
+        }
+
+        static void EnsureUiFxSettings()
+        {
+            const string settingsPath = "Assets/Resources/UiFxSettings.asset";
+            var settings = AssetDatabase.LoadAssetAtPath<UiFxSettings>(settingsPath);
+            if (settings == null)
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+                {
+                    AssetDatabase.CreateFolder("Assets", "Resources");
+                }
+
+                settings = ScriptableObject.CreateInstance<UiFxSettings>();
+                AssetDatabase.CreateAsset(settings, settingsPath);
+            }
+
+            var chip = LoadSprite(ChipIconPath);
+            if (chip != null && settings.chipSprite != chip)
+            {
+                settings.chipSprite = chip;
+                EditorUtility.SetDirty(settings);
+            }
+
+            AssetDatabase.SaveAssets();
         }
 
         static bool HasGenerated(Transform canvas)

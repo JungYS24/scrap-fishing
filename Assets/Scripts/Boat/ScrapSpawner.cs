@@ -86,7 +86,7 @@ namespace ScrapFishing.Boat
 
                 if (Vector3.Distance(scrap.transform.position, hook) <= radius)
                 {
-                    session.AddCatch(scrap.Definition);
+                    session.AddCatch(scrap.Definition, scrap.transform.position);
                     Remove(scrap);
                 }
             }

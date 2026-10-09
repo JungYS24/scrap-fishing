@@ -41,7 +41,7 @@ namespace ScrapFishing.Dive
 
                 if (Vector3.Distance(scrap.transform.position, _diver.position) <= radius)
                 {
-                    _session.AddCatch(scrap.Definition);
+                    _session.AddCatch(scrap.Definition, scrap.transform.position);
                     _spawner.Remove(scrap);
                 }
             }

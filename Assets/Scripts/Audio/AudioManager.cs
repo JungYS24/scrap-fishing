@@ -127,6 +127,19 @@ namespace ScrapFishing.Audio
             PlaySfx(_zoneClips[i], 0.28f);
         }
 
+        public void PlayChipArrive(float pitch)
+        {
+            if (_sfx == null || _catchClip == null)
+            {
+                return;
+            }
+
+            var previous = _sfx.pitch;
+            _sfx.pitch = Mathf.Clamp(pitch, 0.8f, 1.6f);
+            _sfx.PlayOneShot(_catchClip, 0.16f);
+            _sfx.pitch = previous;
+        }
+
         void PlaySfx(AudioClip clip, float volume)
         {
             if (_sfx == null || clip == null)
