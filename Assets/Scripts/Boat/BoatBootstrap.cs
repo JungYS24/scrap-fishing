@@ -207,16 +207,18 @@ namespace ScrapFishing.Boat
                 eventGo.AddComponent<InputSystemUIInputModule>();
             }
 
+            var area = GameAreaFit.Ensure(canvas);
             _hud = canvas.gameObject.AddComponent<HudView>();
-            _hud.Build(canvas.transform, _canvasUi.ChipText, _canvasUi.ChipPanel);
+            _hud.Build(area.Area, _canvasUi.ChipText, _canvasUi.ChipPanel);
             _hud.Bind(_session);
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
-            _stick.Build(canvas.transform);
+            _stick.Build(area.Area);
             _title = _canvasUi.Title;
             _title.Bind(BeginRun);
             _canvasUi.BringReadyToFront();
             _results = canvas.gameObject.AddComponent<ResultsView>();
-            _results.Build(canvas.transform, _session.Restart);
+            _results.Build(area.Area, _session.Restart);
+            area.Adopt();
         }
 
         void BindDive()

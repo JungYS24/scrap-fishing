@@ -59,7 +59,7 @@ namespace ScrapFishing.Core
             _letterboxCamera = letterboxGo.AddComponent<Camera>();
             _letterboxCamera.orthographic = true;
             _letterboxCamera.clearFlags = CameraClearFlags.SolidColor;
-            _letterboxCamera.backgroundColor = Color.black;
+            _letterboxCamera.backgroundColor = Palette.Background;
             _letterboxCamera.cullingMask = 0;
             _letterboxCamera.depth = _gameCamera.depth - 1;
             _letterboxCamera.allowHDR = false;

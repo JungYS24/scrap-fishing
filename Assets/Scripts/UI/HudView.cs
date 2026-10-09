@@ -58,17 +58,22 @@ namespace ScrapFishing.UI
             _cy = chipText;
             _cyPanel = chipPanel;
 
+            if (chipText != null && chipText.fontSize < 16)
+            {
+                chipText.fontSize = 22;
+            }
+
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
-            Stretch(_depth.rectTransform, new Vector2(0.05f, 0.82f), new Vector2(0.5f, 0.90f));
+            Stretch(_depth.rectTransform, new Vector2(0.06f, 0.80f), new Vector2(0.5f, 0.88f));
 
             _time = UiFonts.CreateText(rect, "Time", 18, TextAnchor.UpperRight);
-            Stretch(_time.rectTransform, new Vector2(0.5f, 0.90f), new Vector2(0.95f, 0.98f));
+            Stretch(_time.rectTransform, new Vector2(0.5f, 0.88f), new Vector2(0.94f, 0.96f));
 
             _dive = UiFonts.CreateText(rect, "DiveProgress", 18, TextAnchor.UpperRight);
-            Stretch(_dive.rectTransform, new Vector2(0.5f, 0.85f), new Vector2(0.95f, 0.90f));
+            Stretch(_dive.rectTransform, new Vector2(0.5f, 0.83f), new Vector2(0.94f, 0.88f));
 
             _hint = UiFonts.CreateText(rect, "Hint", 16, TextAnchor.MiddleRight);
-            Stretch(_hint.rectTransform, new Vector2(0.38f, 0.04f), new Vector2(0.88f, 0.14f));
+            Stretch(_hint.rectTransform, new Vector2(0.36f, 0.06f), new Vector2(0.88f, 0.16f));
             _hint.color = new Color(0.75f, 0.9f, 1f, 0.9f);
 
             BuildToast(rect);
@@ -414,7 +419,7 @@ namespace ScrapFishing.UI
             _oxygenBar = new GameObject("OxygenBar");
             _oxygenBar.transform.SetParent(parent, false);
             var bar = _oxygenBar.AddComponent<RectTransform>();
-            Stretch(bar, new Vector2(0.3f, 0.92f), new Vector2(0.7f, 0.965f));
+            Stretch(bar, new Vector2(0.3f, 0.88f), new Vector2(0.7f, 0.93f));
 
             var trackGo = new GameObject("Track");
             trackGo.transform.SetParent(_oxygenBar.transform, false);

@@ -13,19 +13,21 @@ namespace ScrapFishing.Controls
         public bool IsHeld { get; private set; }
 
         GameObject _root;
+        RectTransform _rootRect;
         RectTransform _knob;
-        Vector2 _originGame;
+        Canvas _canvas;
 
         public void Build(Transform canvas)
         {
             _root = new GameObject("Joystick");
             _root.transform.SetParent(canvas, false);
-            var rootRect = _root.AddComponent<RectTransform>();
-            rootRect.anchorMin = Vector2.zero;
-            rootRect.anchorMax = Vector2.zero;
-            rootRect.pivot = new Vector2(0.5f, 0.5f);
-            rootRect.anchoredPosition = new Vector2(100f, 120f);
-            rootRect.sizeDelta = new Vector2(160f, 160f);
+            _rootRect = _root.AddComponent<RectTransform>();
+            _rootRect.anchorMin = Vector2.zero;
+            _rootRect.anchorMax = Vector2.zero;
+            _rootRect.pivot = new Vector2(0.5f, 0.5f);
+            _rootRect.anchoredPosition = new Vector2(100f, 120f);
+            _rootRect.sizeDelta = new Vector2(160f, 160f);
+            _canvas = _root.GetComponentInParent<Canvas>();
 
             var baseImage = _root.AddComponent<Image>();
             baseImage.sprite = PlaceholderFactory.Circle(new Color(0.06f, 0.08f, 0.12f, 0.72f), 64);
@@ -43,7 +45,6 @@ namespace ScrapFishing.Controls
             knobImage.sprite = PlaceholderFactory.Circle(Palette.NeonGreen, 32);
             knobImage.raycastTarget = false;
 
-            _originGame = new Vector2(100f, 120f);
             SetVisible(false);
         }
 
@@ -62,7 +63,7 @@ namespace ScrapFishing.Controls
 
         void Update()
         {
-            if (_root == null || !_root.activeInHierarchy)
+            if (_root == null || !_root.activeInHierarchy || _rootRect == null)
             {
                 return;
             }
@@ -72,8 +73,10 @@ namespace ScrapFishing.Controls
                 return;
             }
 
-            var game = FixedResolution.ToGamePixels(position);
-            if (pressedThisFrame && FixedResolution.ContainsWindowPoint(position) && Vector2.Distance(game, _originGame) <= PadRadius * 1.35f)
+            var origin = (Vector2)RectTransformUtility.WorldToScreenPoint(null, _rootRect.position);
+            var scale = _canvas != null && _canvas.scaleFactor > 0.01f ? _canvas.scaleFactor : 1f;
+            var delta = (position - origin) / scale;
+            if (pressedThisFrame && FixedResolution.ContainsWindowPoint(position) && delta.magnitude <= PadRadius * 1.35f)
             {
                 IsHeld = true;
             }
@@ -89,11 +92,11 @@ namespace ScrapFishing.Controls
                 return;
             }
 
-            var delta = Vector2.ClampMagnitude(game - _originGame, PadRadius);
-            Value = delta / PadRadius;
+            var clamped = Vector2.ClampMagnitude(delta, PadRadius);
+            Value = clamped / PadRadius;
             if (_knob != null)
             {
-                _knob.anchoredPosition = delta;
+                _knob.anchoredPosition = clamped;
             }
         }
 
