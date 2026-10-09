@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Scrap Fishing">
+    <meta name="theme-color" content="#0b1220">
+    <meta name="format-detection" content="telephone=no">
     <title>scrap-fishing</title>
     <link rel="stylesheet" href="style.css">
   </head>
@@ -23,6 +29,7 @@
         <p id="boot-error-detail"></p>
       </div>
     </div>
+    <div id="rotate-hint">세로로 돌려 주세요</div>
     <script>
       var canvas = document.querySelector("#unity-canvas");
       var loading = document.querySelector("#unity-loading");
@@ -30,6 +37,31 @@
       var label = document.querySelector("#unity-progress-label");
       var bootError = document.querySelector("#boot-error");
       var bootDetail = document.querySelector("#boot-error-detail");
+      var shell = document.querySelector("#unity-container");
+
+      function fitShell() {
+        var vv = window.visualViewport;
+        var width = Math.round(vv ? vv.width : window.innerWidth);
+        var height = Math.round(vv ? vv.height : window.innerHeight);
+        document.documentElement.style.setProperty("--app-width", width + "px");
+        document.documentElement.style.setProperty("--app-height", height + "px");
+        if (shell && vv) {
+          shell.style.left = Math.round(vv.offsetLeft) + "px";
+          shell.style.top = Math.round(vv.offsetTop) + "px";
+        }
+      }
+
+      function enterFullscreen() {
+        var root = document.documentElement;
+        var request = root.requestFullscreen || root.webkitRequestFullscreen;
+        if (!request) {
+          return;
+        }
+        var pending = request.call(root, { navigationUI: "hide" });
+        if (pending && pending.catch) {
+          pending.catch(function () {});
+        }
+      }
 
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
@@ -55,6 +87,16 @@
         bootError.hidden = false;
         bootDetail.textContent = message || "잠시 후 다시 시도해 주세요.";
       }
+
+      fitShell();
+      window.addEventListener("resize", fitShell);
+      if (window.visualViewport) {
+        visualViewport.addEventListener("resize", fitShell);
+        visualViewport.addEventListener("scroll", fitShell);
+      }
+      document.addEventListener("gesturestart", function (event) { event.preventDefault(); });
+      document.addEventListener("contextmenu", function (event) { event.preventDefault(); });
+      document.addEventListener("pointerdown", enterFullscreen, { once: true });
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/docs.loader.js";
