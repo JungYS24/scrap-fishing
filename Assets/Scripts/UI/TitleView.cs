@@ -90,6 +90,15 @@ namespace ScrapFishing.UI
             {
                 _howTo = transform.Find("HowTo") as RectTransform;
             }
+
+            if (_howTo != null)
+            {
+                var howTo = _howTo.GetComponent<Text>();
+                if (howTo != null)
+                {
+                    howTo.text = "깊게 탭할수록 고가\n좌우로 스와이프해서 루어 조종\n아래로 스와이프 잠수\n스틱 유영";
+                }
+            }
         }
 
         void PlayIntro()

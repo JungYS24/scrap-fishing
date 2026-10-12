@@ -58,6 +58,12 @@ namespace ScrapFishing.Boat
             RefreshLine();
         }
 
+        public void SetTilt(float degrees)
+        {
+            transform.rotation = Quaternion.Euler(0f, 0f, degrees);
+            RefreshLine();
+        }
+
         void RefreshLine()
         {
             if (_line == null)

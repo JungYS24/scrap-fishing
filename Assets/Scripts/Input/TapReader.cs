@@ -37,6 +37,11 @@ namespace ScrapFishing.Controls
             }
 
             _pressed = false;
+            if (SteerReader.BlocksTapAndSwipe)
+            {
+                return;
+            }
+
             if (Vector2.Distance(FixedResolution.ToGamePixels(_pressPosition), FixedResolution.ToGamePixels(position)) <= slopPixels)
             {
                 OnTap?.Invoke();

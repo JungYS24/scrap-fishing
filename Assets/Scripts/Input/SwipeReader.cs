@@ -92,7 +92,7 @@ namespace ScrapFishing.Controls
             }
 
             _pressed = false;
-            if (_dragging)
+            if (_dragging && !SteerReader.BlocksTapAndSwipe)
             {
                 OnSwipe?.Invoke(Build(cam, _pressPosition, position));
             }

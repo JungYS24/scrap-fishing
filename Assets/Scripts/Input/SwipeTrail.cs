@@ -5,7 +5,8 @@ namespace ScrapFishing.Controls
 {
     public class SwipeTrail : MonoBehaviour
     {
-        const int MaxPoints = 24;
+        [SerializeField] int maxPoints = 10;
+        [SerializeField] float trailSeconds = 0.16f;
 
         readonly List<Vector3> _points = new List<Vector3>();
         LineRenderer _line;
@@ -33,6 +34,13 @@ namespace ScrapFishing.Controls
         public void Begin()
         {
             _points.Clear();
+            if (_line == null)
+            {
+                return;
+            }
+
+            _line.positionCount = 0;
+            _line.enabled = false;
         }
 
         public void Extend(SwipeInfo segment)
@@ -48,7 +56,8 @@ namespace ScrapFishing.Controls
             }
 
             _points.Add(segment.EndWorld);
-            if (_points.Count > MaxPoints)
+            var limit = Mathf.Max(2, maxPoints);
+            while (_points.Count > limit)
             {
                 _points.RemoveAt(0);
             }
@@ -56,7 +65,7 @@ namespace ScrapFishing.Controls
             _line.positionCount = _points.Count;
             _line.SetPositions(_points.ToArray());
             _line.enabled = true;
-            _until = Time.unscaledTime + 0.28f;
+            _until = Time.unscaledTime + Mathf.Max(0.02f, trailSeconds);
         }
 
         void Update()

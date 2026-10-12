@@ -108,13 +108,22 @@ namespace ScrapFishing.Boat
             _castCamera = gameObject.AddComponent<CastCamera>();
             _castCamera.Bind(Camera.main, _hook, _flow, _casting);
 
-            var catcher = gameObject.AddComponent<SwipeCatcher>();
+            var catcher = GetComponent<SwipeCatcher>();
+            if (catcher == null)
+            {
+                catcher = gameObject.AddComponent<SwipeCatcher>();
+            }
+
             catcher.Bind(_hook, _spawner, _session);
 
             var swipe = gameObject.AddComponent<SwipeReader>();
             swipe.Bind(Camera.main);
             _trail = gameObject.AddComponent<SwipeTrail>();
             _trail.Build();
+            var steer = gameObject.AddComponent<SteerReader>();
+            steer.Bind(Camera.main, () => _casting.AcceptsSteer);
+            steer.OnWorldDeltaX += _casting.AddSteerDelta;
+            steer.OnSegment += _trail.Extend;
             var strokeHit = false;
             swipe.OnBegin += () =>
             {
@@ -128,7 +137,6 @@ namespace ScrapFishing.Boat
                     return;
                 }
 
-                _trail.Extend(info);
                 if (!strokeHit && catcher.HandleSwipe(info))
                 {
                     strokeHit = true;
@@ -246,7 +254,7 @@ namespace ScrapFishing.Boat
             _canvasUi.SetReadyVisible(false);
             _results.Hide();
             _flow.StartRun();
-            _casting.ResetHook();
+            _casting.PrepareForRun();
             AudioManager.Ensure().PlayBgm();
         }
 
@@ -398,6 +406,8 @@ namespace ScrapFishing.Boat
             {
                 _gauge.gameObject.SetActive(_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results && _flow.Phase != GamePhase.Diving);
             }
+
+            _hud.SetSteerGuide(_casting != null && _casting.ShowSteerGuide);
         }
 
         static GameObject CreateSprite(string name, Sprite sprite, Vector3 position, Vector3 scale, int order)

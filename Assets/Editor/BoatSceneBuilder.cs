@@ -73,7 +73,7 @@ namespace ScrapFishing.Build
 
             var howTo = UiFonts.CreateText(root, "HowTo", 16, TextAnchor.MiddleCenter);
             Stretch(howTo.rectTransform, new Vector2(0.08f, 0.2f), new Vector2(0.92f, 0.42f));
-            howTo.text = "깊게 탭할수록 고가\n스와이프 포획\n아래로 스와이프 잠수\n스틱 유영";
+            howTo.text = "깊게 탭할수록 고가\n좌우로 스와이프해서 루어 조종\n아래로 스와이프 잠수\n스틱 유영";
             howTo.color = Palette.Cyan;
 
             var view = root.gameObject.AddComponent<TitleView>();

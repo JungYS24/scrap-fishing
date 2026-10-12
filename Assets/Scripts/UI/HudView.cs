@@ -16,6 +16,7 @@ namespace ScrapFishing.UI
         GameObject _cyPanel;
         Text _dive;
         Text _hint;
+        Text _steerGuide;
         GameObject _oxygenBar;
         Image _oxygenFill;
         Text _toast;
@@ -75,6 +76,12 @@ namespace ScrapFishing.UI
             _hint = UiFonts.CreateText(rect, "Hint", 16, TextAnchor.MiddleRight);
             Stretch(_hint.rectTransform, new Vector2(0.36f, 0.06f), new Vector2(0.88f, 0.16f));
             _hint.color = new Color(0.75f, 0.9f, 1f, 0.9f);
+
+            _steerGuide = UiFonts.CreateText(rect, "SteerGuide", 22, TextAnchor.MiddleCenter);
+            Stretch(_steerGuide.rectTransform, new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.54f));
+            _steerGuide.color = Palette.Cyan;
+            _steerGuide.text = "<     좌우로 스와이프     >";
+            _steerGuide.gameObject.SetActive(false);
 
             BuildToast(rect);
             var banner = UiFonts.CreateText(rect, "MutantBanner", 28, TextAnchor.MiddleCenter);
@@ -164,6 +171,16 @@ namespace ScrapFishing.UI
                 _oxygenFill.fillAmount = oxygen;
                 _oxygenFill.color = Color.Lerp(Palette.Magenta, Palette.Cyan, oxygen);
             }
+        }
+
+        public void SetSteerGuide(bool visible)
+        {
+            if (_steerGuide == null || _steerGuide.gameObject.activeSelf == visible)
+            {
+                return;
+            }
+
+            _steerGuide.gameObject.SetActive(visible);
         }
 
         public void Notify(string message)
@@ -500,9 +517,9 @@ namespace ScrapFishing.UI
                 case GamePhase.Aiming:
                     return session.CanDive ? "깊게 탭할수록 고가!\n아래로 스와이프: 잠수" : "깊게 탭할수록 고가!";
                 case GamePhase.Casting:
-                    return "훅 하강 중";
+                    return "좌우로 스와이프해서 루어 조종";
                 case GamePhase.Reeling:
-                    return "스와이프로 낚아채기!";
+                    return "좌우로 스와이프해서 루어 조종";
                 case GamePhase.CastComplete:
                     return session.CanDive ? "탭: 재캐스팅\n아래로 스와이프: 잠수" : "탭해서 다시 캐스팅";
                 case GamePhase.Diving:

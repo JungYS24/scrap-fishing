@@ -6,6 +6,7 @@ namespace ScrapFishing.Boat
 {
     public class SwipeCatcher : MonoBehaviour
     {
+        [SerializeField] bool catchOnSwipe;
         [SerializeField] float hookHitRadius = 1.35f;
         [SerializeField] float catchRadius = 1.05f;
 
@@ -22,7 +23,7 @@ namespace ScrapFishing.Boat
 
         public bool HandleSwipe(SwipeInfo swipe)
         {
-            if (_hook == null || _spawner == null)
+            if (!catchOnSwipe || _hook == null || _spawner == null)
             {
                 return false;
             }
