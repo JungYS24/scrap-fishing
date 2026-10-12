@@ -60,11 +60,23 @@ namespace ScrapFishing.UI
             var cost = Progression.Cost(kind);
             if (nameText != null)
             {
-                nameText.text = Progression.DisplayName(kind);
+                var unlock = Progression.ZoneUnlockLabel(kind);
+                nameText.supportRichText = true;
+                if (string.IsNullOrEmpty(unlock))
+                {
+                    nameText.lineSpacing = 1f;
+                    nameText.text = Progression.DisplayName(kind);
+                }
+                else
+                {
+                    nameText.lineSpacing = 0.65f;
+                    nameText.text = Progression.DisplayName(kind) + "\n<size=14>" + unlock + "</size>";
+                }
             }
 
             if (levelText != null)
             {
+                levelText.horizontalOverflow = HorizontalWrapMode.Overflow;
                 levelText.text = $"Lv {level}/{Progression.MaxLevel(kind)}";
             }
 

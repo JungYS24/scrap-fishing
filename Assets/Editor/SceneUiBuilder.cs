@@ -87,16 +87,11 @@ namespace ScrapFishing.Build
             Debug.Log("Dollars: " + Progression.Dollars);
         }
 
+        [MenuItem("Scrap Fishing/Reset Progress")]
         [MenuItem("Scrap Fishing/Debug/Reset Progress")]
         static void ResetProgress()
         {
-            PlayerPrefs.DeleteKey("Dollar");
-            foreach (UpgradeKind kind in System.Enum.GetValues(typeof(UpgradeKind)))
-            {
-                PlayerPrefs.DeleteKey("Upgrade" + kind);
-            }
-
-            PlayerPrefs.Save();
+            Progression.ResetProgress();
             Debug.Log("Dollar and upgrade levels reset.");
         }
 
@@ -219,10 +214,11 @@ namespace ScrapFishing.Build
             var nameText = CreateText(rect, "NameText", 18, TextAnchor.MiddleCenter, new Vector2(0f, 0.62f), new Vector2(1f, 1f), Palette.Text);
             nameText.text = Progression.DisplayName(kind);
             var levelText = CreateText(rect, "LevelText", 18, TextAnchor.MiddleCenter, new Vector2(0f, 0.36f), new Vector2(1f, 0.62f), Palette.Cyan);
+            levelText.horizontalOverflow = HorizontalWrapMode.Overflow;
             levelText.text = "Lv 0/" + Progression.MaxLevel(kind);
             var costRow = CreateRect(rect, "CostRow", new Vector2(0f, 0.04f), new Vector2(1f, 0.36f));
             var costText = CreateText(costRow, "CostText", 18, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.NeonGreen);
-            costText.text = "0";
+            costText.text = Progression.Cost(kind).ToString();
             var costIcon = BuildCostRow(costRow, costText);
 
             var upgrade = go.AddComponent<UpgradeButton>();
