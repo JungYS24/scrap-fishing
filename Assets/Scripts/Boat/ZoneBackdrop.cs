@@ -7,7 +7,7 @@ namespace ScrapFishing.Boat
     [DefaultExecutionOrder(200)]
     public class ZoneBackdrop : MonoBehaviour
     {
-        [SerializeField] [Range(0f, 1f)] float bandAlpha = 0.3f;
+        [SerializeField] [Range(0f, 1f)] float bandAlpha;
         [SerializeField] Sprite[] zones;
 
         SpriteRenderer _current;
@@ -43,36 +43,30 @@ namespace ScrapFishing.Boat
             }
 
             var camY = cam.transform.position.y;
-            var half = GameView.OrthoSize;
+            var half = cam.orthographicSize;
             var ceiling = SurfaceLayout.WaterlineY - half;
             _parallax += (_lastCamY - camY) * 0.1f;
             _parallax = Mathf.Clamp(_parallax, -0.35f, 0.35f);
             _lastCamY = camY;
-            var y = Mathf.Min(camY, ceiling) + _parallax;
-            var pos = new Vector3(0f, y, 0f);
-            _current.transform.position = pos;
-            _next.transform.position = pos;
 
             var depth = DepthZone.FromWorldY(camY);
             var zone = DepthZone.Index(depth);
             if (_zone < 0)
             {
                 Show(zone, true);
-                return;
             }
-
-            if (zone == _zone)
+            else if (zone != _zone)
             {
-                return;
+                var edge = zone > _zone ? _zone * 0.25f + 0.25f : _zone * 0.25f;
+                if (Mathf.Abs(depth - edge) >= 0.04f)
+                {
+                    Show(zone, false);
+                }
             }
 
-            var edge = zone > _zone ? _zone * 0.25f + 0.25f : _zone * 0.25f;
-            if (Mathf.Abs(depth - edge) < 0.04f)
-            {
-                return;
-            }
-
-            Show(zone, false);
+            var y = Mathf.Min(camY, ceiling) + _parallax;
+            FitAndPlace(_current, cam, y);
+            FitAndPlace(_next, cam, y);
         }
 
         void OnDisable()
@@ -163,6 +157,28 @@ namespace ScrapFishing.Boat
                 color.a = a;
                 renderer.color = color;
             }, alpha, dur).SetTarget(renderer).SetUpdate(true).SetLink(renderer.gameObject);
+        }
+
+        static void FitAndPlace(SpriteRenderer layer, Camera cam, float y)
+        {
+            var sprite = layer.sprite;
+            if (sprite == null)
+            {
+                return;
+            }
+
+            var size = sprite.bounds.size;
+            if (size.x < 0.001f || size.y < 0.001f)
+            {
+                return;
+            }
+
+            var worldH = cam.orthographicSize * 2f;
+            var worldW = worldH * cam.aspect;
+            var s = Mathf.Max(worldW / size.x, worldH / size.y);
+            layer.transform.localScale = new Vector3(s, s, 1f);
+            var offset = sprite.bounds.center * s;
+            layer.transform.position = new Vector3(cam.transform.position.x, y, 0f) - offset;
         }
 
         SpriteRenderer MakeLayer(string name, int order)

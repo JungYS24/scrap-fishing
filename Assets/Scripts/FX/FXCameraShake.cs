@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace ScrapFishing.FX
 {
+    [DefaultExecutionOrder(50)]
     public class FXCameraShake : MonoBehaviour
     {
         float _remain;

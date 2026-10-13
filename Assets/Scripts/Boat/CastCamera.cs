@@ -64,7 +64,9 @@ namespace ScrapFishing.Boat
         void MoveTo(float y, float rate)
         {
             var pos = _camera.transform.position;
+            pos.x = _rest.x;
             pos.y = Mathf.Lerp(pos.y, y, 1f - Mathf.Exp(-rate * Time.deltaTime));
+            pos.z = _rest.z;
             _camera.transform.position = pos;
         }
     }

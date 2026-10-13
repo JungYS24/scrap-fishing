@@ -198,7 +198,7 @@ namespace ScrapFishing.Boat
                     band.transform.SetParent(root.transform, true);
                 }
 
-                SetSpriteAlpha(band, 0.3f);
+                SetSpriteAlpha(band, 0f);
             }
 
             var padTransform = root.transform.Find("ZoneWaterPad");
@@ -218,7 +218,7 @@ namespace ScrapFishing.Boat
                 pad.transform.SetParent(root.transform, true);
             }
 
-            SetSpriteAlpha(pad, 0.3f);
+            SetSpriteAlpha(pad, 0f);
             if (!root.TryGetComponent<ZoneBackdrop>(out _))
             {
                 root.AddComponent<ZoneBackdrop>();
