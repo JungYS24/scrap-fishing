@@ -1,3 +1,4 @@
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Fishing
@@ -6,13 +7,13 @@ namespace ScrapFishing.Fishing
     {
         public const string LevelKey = "RodLevel";
 
-        static readonly int[] CapacityByLevel = { 4, 6, 8, 10, 12 };
+        static readonly int[] CapacityByLevel = { 4, 5, 6, 7, 8, 9 };
 
         public static int Level => Mathf.Max(0, PlayerPrefs.GetInt(LevelKey, 0));
 
         public static int MaxLevel => CapacityByLevel.Length - 1;
 
-        public static int MaxAttach => LureLoad.CapacityForLevel(Level, CapacityByLevel);
+        public static int MaxAttach => LureLoad.CapacityForLevel(Progression.Level(UpgradeKind.Reel), CapacityByLevel);
 
         public static bool TryUpgrade()
         {

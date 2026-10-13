@@ -17,3 +17,8 @@ MonoBehaviour:
   - {fileID: -2100014169251582375, guid: 57f90d24f380aa248a4955711536c522, type: 3}
   - {fileID: 6502459215341580156, guid: 6b6ff661e889b124ba632a9c77dee084, type: 3}
   - {fileID: -3186898304510177512, guid: 37e04aec35cf9144d953dc716bbd1e3e, type: 3}
+  zoneTextures:
+  - {fileID: 2800000, guid: 8f093548c3da03f43a7f51c8cbde93b7, type: 3}
+  - {fileID: 2800000, guid: 57f90d24f380aa248a4955711536c522, type: 3}
+  - {fileID: 2800000, guid: 6b6ff661e889b124ba632a9c77dee084, type: 3}
+  - {fileID: 2800000, guid: 37e04aec35cf9144d953dc716bbd1e3e, type: 3}

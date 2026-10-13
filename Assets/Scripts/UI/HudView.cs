@@ -63,11 +63,6 @@ namespace ScrapFishing.UI
             _cy = chipText;
             _cyPanel = chipPanel;
 
-            if (chipText != null && chipText.fontSize < 16)
-            {
-                chipText.fontSize = 22;
-            }
-
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
             Stretch(_depth.rectTransform, new Vector2(0.06f, 0.80f), new Vector2(0.5f, 0.88f));
 

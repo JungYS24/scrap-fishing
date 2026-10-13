@@ -7,11 +7,13 @@ namespace ScrapFishing.Boat
     [DefaultExecutionOrder(200)]
     public class ZoneBackdrop : MonoBehaviour
     {
-        [SerializeField] [Range(0f, 1f)] float bandAlpha;
         [SerializeField] Sprite[] zones;
 
         SpriteRenderer _current;
         SpriteRenderer _next;
+        ZoneBackdropArt _art;
+        Sprite[] _baked;
+        Material _shared;
         int _zone = -1;
         float _lastCamY;
         float _parallax;
@@ -19,19 +21,22 @@ namespace ScrapFishing.Boat
 
         void Awake()
         {
-            if (zones == null || zones.Length < 4)
+            _art = Resources.Load<ZoneBackdropArt>("Backgrounds/ZoneBackdropArt");
+            if ((zones == null || zones.Length < 4) && _art != null)
             {
-                var art = Resources.Load<ZoneBackdropArt>("Backgrounds/ZoneBackdropArt");
-                if (art != null)
-                {
-                    zones = art.Zones;
-                }
+                zones = _art.Zones;
             }
 
-            _current = MakeLayer("ZoneBackdropA", -20);
-            _next = MakeLayer("ZoneBackdropB", -19);
+            var city = GameObject.Find("Neocity");
+            if (city != null && city.TryGetComponent<SpriteRenderer>(out var cityRenderer))
+            {
+                _shared = cityRenderer.sharedMaterial;
+            }
+
+            _current = MakeLayer("ZoneBackdropA", -15);
+            _next = MakeLayer("ZoneBackdropB", -14);
             _next.color = new Color(1f, 1f, 1f, 0f);
-            ApplyBandAlpha();
+            HideColorBands();
         }
 
         void LateUpdate()
@@ -80,13 +85,13 @@ namespace ScrapFishing.Boat
         void Show(int zone, bool instant)
         {
             zone = Mathf.Clamp(zone, 0, 3);
-            var sprite = SpriteAt(zone);
+            var sprite = Resolve(zone);
             if (sprite == null)
             {
                 _current.sprite = null;
                 _next.sprite = null;
                 _zone = zone;
-                ApplyBandAlpha();
+                HideColorBands();
                 return;
             }
 
@@ -96,7 +101,7 @@ namespace ScrapFishing.Boat
                 _current.color = Color.white;
                 _next.color = new Color(1f, 1f, 1f, 0f);
                 _zone = zone;
-                ApplyBandAlpha();
+                HideColorBands();
                 return;
             }
 
@@ -119,22 +124,65 @@ namespace ScrapFishing.Boat
                     _next.color = new Color(1f, 1f, 1f, 0f);
                 });
             _zone = zone;
-            ApplyBandAlpha();
+            HideColorBands();
         }
 
-        void ApplyBandAlpha()
+        Sprite Resolve(int index)
         {
-            var hasArt = SpriteAt(0) != null || SpriteAt(1) != null || SpriteAt(2) != null || SpriteAt(3) != null;
-            var alpha = hasArt ? bandAlpha : 1f;
-            var parent = transform;
+            var assigned = SpriteAt(index);
+            if (assigned != null)
+            {
+                return assigned;
+            }
+
+            var tex = _art != null ? _art.TextureAt(index) : null;
+            if (tex == null)
+            {
+                return null;
+            }
+
+            if (_baked == null)
+            {
+                _baked = new Sprite[4];
+            }
+
+            if (_baked[index] != null)
+            {
+                return _baked[index];
+            }
+
+            var loaded = Resources.FindObjectsOfTypeAll<Sprite>();
+            for (var i = 0; i < loaded.Length; i++)
+            {
+                if (loaded[i] != null && loaded[i].texture == tex)
+                {
+                    _baked[index] = loaded[i];
+                    return loaded[i];
+                }
+            }
+
+            _baked[index] = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+            return _baked[index];
+        }
+
+        static void HideColorBands()
+        {
+            var surface = GameObject.Find("SurfaceProps");
+            if (surface == null)
+            {
+                return;
+            }
+
+            var parent = surface.transform;
             for (var i = 0; i < parent.childCount; i++)
             {
                 var child = parent.GetChild(i);
                 if (child.name.StartsWith("ZoneWater") && child.TryGetComponent<SpriteRenderer>(out var renderer))
                 {
                     var color = renderer.color;
-                    color.a = alpha;
+                    color.a = 0f;
                     renderer.color = color;
+                    renderer.enabled = false;
                 }
             }
         }
@@ -190,6 +238,11 @@ namespace ScrapFishing.Boat
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sortingOrder = order;
             renderer.color = Color.white;
+            if (_shared != null)
+            {
+                renderer.sharedMaterial = _shared;
+            }
+
             return renderer;
         }
     }

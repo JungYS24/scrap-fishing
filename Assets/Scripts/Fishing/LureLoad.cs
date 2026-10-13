@@ -6,7 +6,7 @@ namespace ScrapFishing.Fishing
     {
         public const int ChipToGoldRatio = 20;
 
-        static readonly int[] DefaultCapacity = { 4, 6, 8, 10, 12 };
+        static readonly int[] DefaultCapacity = { 4, 5, 6, 7, 8, 9 };
 
         readonly List<int> _attached = new List<int>();
         readonly HashSet<int> _cashed = new HashSet<int>();

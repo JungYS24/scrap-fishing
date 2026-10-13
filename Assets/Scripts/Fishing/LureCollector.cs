@@ -49,12 +49,28 @@ namespace ScrapFishing.Fishing
         public bool HasAttached => _load.Count > 0;
         public bool IsSettling => _settling;
 
+        void OnEnable()
+        {
+            Progression.Changed += HandleProgression;
+        }
+
+        void OnDisable()
+        {
+            Progression.Changed -= HandleProgression;
+        }
+
         public void Bind(RunSession session, Transform point, HudView hud)
         {
             _session = session;
             settlePoint = point;
             _hud = hud;
             _lureRenderer = GetComponent<SpriteRenderer>();
+            RefreshCapacity();
+            Notify();
+        }
+
+        void HandleProgression()
+        {
             RefreshCapacity();
             Notify();
         }

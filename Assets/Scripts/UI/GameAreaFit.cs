@@ -233,10 +233,12 @@ namespace ScrapFishing.UI
             var texts = root.GetComponentsInChildren<Text>(true);
             for (var i = 0; i < texts.Length; i++)
             {
-                if (texts[i] != null && texts[i].fontSize < 16)
+                if (texts[i] == null || texts[i].name == "ChipText" || texts[i].fontSize >= 16)
                 {
-                    texts[i].fontSize = 22;
+                    continue;
                 }
+
+                texts[i].fontSize = 22;
             }
         }
     }

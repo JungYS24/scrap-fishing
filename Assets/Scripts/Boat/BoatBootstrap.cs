@@ -198,7 +198,7 @@ namespace ScrapFishing.Boat
                     band.transform.SetParent(root.transform, true);
                 }
 
-                SetSpriteAlpha(band, 0f);
+                HideColorBand(band);
             }
 
             var padTransform = root.transform.Find("ZoneWaterPad");
@@ -218,10 +218,24 @@ namespace ScrapFishing.Boat
                 pad.transform.SetParent(root.transform, true);
             }
 
-            SetSpriteAlpha(pad, 0f);
-            if (!root.TryGetComponent<ZoneBackdrop>(out _))
+            HideColorBand(pad);
+            if (root.TryGetComponent<ZoneBackdrop>(out var leftover))
             {
-                root.AddComponent<ZoneBackdrop>();
+                Destroy(leftover);
+            }
+
+            var host = GameObject.Find("ZoneBackdropRoot");
+            if (host == null)
+            {
+                host = new GameObject("ZoneBackdropRoot");
+            }
+
+            host.transform.SetParent(null);
+            host.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            host.transform.localScale = Vector3.one;
+            if (!host.TryGetComponent<ZoneBackdrop>(out _))
+            {
+                host.AddComponent<ZoneBackdrop>();
             }
         }
 
@@ -499,6 +513,15 @@ namespace ScrapFishing.Boat
             var color = renderer.color;
             color.a = alpha;
             renderer.color = color;
+        }
+
+        static void HideColorBand(GameObject go)
+        {
+            SetSpriteAlpha(go, 0f);
+            if (go != null && go.TryGetComponent<SpriteRenderer>(out var renderer))
+            {
+                renderer.enabled = false;
+            }
         }
 
         static GameObject CreateSprite(string name, Sprite sprite, Vector3 position, Vector3 scale, int order)

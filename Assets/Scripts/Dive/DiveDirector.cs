@@ -32,6 +32,7 @@ namespace ScrapFishing.Dive
         GameObject _player;
         GameObject _mineTemplate;
         GameObject _surfaceProps;
+        GameObject _zoneBackdrop;
         GameObject _hook;
         DepthGauge _gauge;
         ScrapSpawner _spawner;
@@ -67,6 +68,7 @@ namespace ScrapFishing.Dive
             _player = FindInWorld(world, "Player");
             _mineTemplate = FindInWorld(world, "Mine");
             _surfaceProps = GameObject.Find("SurfaceProps");
+            _zoneBackdrop = GameObject.Find("ZoneBackdropRoot");
             if (_player != null)
             {
                 _diver = _player.GetComponent<DiverController>();
@@ -213,6 +215,7 @@ namespace ScrapFishing.Dive
             SetActive(_player, false);
             SetActive(_mineTemplate, false);
             SetActive(_surfaceProps, true);
+            SetActive(_zoneBackdrop, true);
             SetActive(_hook, true);
             if (_gauge != null)
             {
@@ -227,6 +230,7 @@ namespace ScrapFishing.Dive
             SetActive(_midground, true);
             SetActive(_player, true);
             SetActive(_surfaceProps, false);
+            SetActive(_zoneBackdrop, false);
             SetActive(_hook, false);
             if (_gauge != null)
             {

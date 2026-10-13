@@ -54,18 +54,27 @@ namespace ScrapFishing.Tests
         }
 
         [Test]
-        public void RodStats_OverflowUsesLastCapacity()
+        public void RodStats_ReelLevelAddsOneSlot()
         {
-            var previous = PlayerPrefs.GetInt(RodStats.LevelKey, 0);
+            var previous = PlayerPrefs.GetInt("UpgradeReel", 0);
             try
             {
-                PlayerPrefs.SetInt(RodStats.LevelKey, 99);
+                PlayerPrefs.SetInt("UpgradeReel", 0);
                 PlayerPrefs.Save();
-                Assert.AreEqual(12, RodStats.MaxAttach);
+                Assert.AreEqual(4, RodStats.MaxAttach);
+                PlayerPrefs.SetInt("UpgradeReel", 1);
+                PlayerPrefs.Save();
+                Assert.AreEqual(5, RodStats.MaxAttach);
+                PlayerPrefs.SetInt("UpgradeReel", 5);
+                PlayerPrefs.Save();
+                Assert.AreEqual(9, RodStats.MaxAttach);
+                PlayerPrefs.SetInt("UpgradeReel", 99);
+                PlayerPrefs.Save();
+                Assert.AreEqual(9, RodStats.MaxAttach);
             }
             finally
             {
-                PlayerPrefs.SetInt(RodStats.LevelKey, previous);
+                PlayerPrefs.SetInt("UpgradeReel", previous);
                 PlayerPrefs.Save();
             }
         }
