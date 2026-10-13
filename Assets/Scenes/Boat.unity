@@ -871,6 +871,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1890490909}
+  - {fileID: 538433822}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &183761597
@@ -2027,7 +2028,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "\uAE4A\uAC8C \uD0ED\uD560\uC218\uB85D \uACE0\uAC00\n\uC88C\uC6B0\uB85C \uC2A4\uC640\uC774\uD504\uD574\uC11C \uB8E8\uC5B4 \uC870\uC885\n\uC544\uB798\uB85C \uC2A4\uC640\uC774\uD504 \uC7A0\uC218\n\uC2A4\uD2F1 \uC720\uC601"
+  m_Text: "\uAE4A\uAC8C \uD0ED\uD560\uC218\uB85D \uACE0\uAC00\n\uC88C\uC6B0\uB85C
+    \uC2A4\uC640\uC774\uD504\uD574\uC11C \uB8E8\uC5B4 \uC870\uC885\n\uC544\uB798\uB85C
+    \uC2A4\uC640\uC774\uD504 \uC7A0\uC218\n\uC2A4\uD2F1 \uC720\uC601"
 --- !u!222 &474020570
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2268,6 +2271,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &538433821
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 538433822}
+  m_Layer: 0
+  m_Name: SettlePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &538433822
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 538433821}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.85, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 116372979}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &586449668
 GameObject:
@@ -4736,6 +4770,7 @@ GameObject:
   - component: {fileID: 1758004821}
   - component: {fileID: 1758004820}
   - component: {fileID: 1758004819}
+  - component: {fileID: 1758004822}
   m_Layer: 0
   m_Name: Lure
   m_TagString: Untagged
@@ -4832,6 +4867,27 @@ Transform:
   - {fileID: 80954139}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1758004822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1758004818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5916f04d9c3a95b4f9a42d7b9bf634fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Fishing.LureCollector
+  attachAlpha: 0.8
+  attachScale: 0.75
+  followSmooth: 0.12
+  swayAmount: 0.05
+  swaySpeed: 2.4
+  jumpPower: 1.5
+  jumpDuration: 0.55
+  stagger: 0.07
+  settlePoint: {fileID: 538433822}
 --- !u!1 &1839503159
 GameObject:
   m_ObjectHideFlags: 0
