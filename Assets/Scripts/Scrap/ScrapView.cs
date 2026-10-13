@@ -11,7 +11,26 @@ namespace ScrapFishing.Scrap
         SpriteRenderer _renderer;
         int amount;
 
-        public int Amount => data != null ? data.Chip : amount;
+        public bool Attached { get; set; }
+        public SpriteRenderer Renderer => _renderer != null ? _renderer : GetComponent<SpriteRenderer>();
+        public int Amount => ChipValue;
+        public int ChipValue
+        {
+            get
+            {
+                if (data != null)
+                {
+                    return data.Chip;
+                }
+
+                if (Definition != null)
+                {
+                    return Definition.Value;
+                }
+
+                return amount;
+            }
+        }
 
         void Awake()
         {
@@ -38,6 +57,32 @@ namespace ScrapFishing.Scrap
                 ? Color.Lerp(Color.white, definition.PlaceholderColor, 0.25f)
                 : Color.white;
             _renderer.sortingOrder = 2;
+        }
+
+        public void ApplyHang(float alpha, Vector3 scale, int sortingOrder)
+        {
+            _renderer = Renderer;
+            if (_renderer != null)
+            {
+                var color = _renderer.color;
+                color.a = alpha;
+                _renderer.color = color;
+                _renderer.sortingOrder = sortingOrder;
+            }
+
+            transform.localScale = scale;
+        }
+
+        public void RestoreLook(Color color, Vector3 scale, int sortingOrder)
+        {
+            _renderer = Renderer;
+            if (_renderer != null)
+            {
+                _renderer.color = color;
+                _renderer.sortingOrder = sortingOrder;
+            }
+
+            transform.localScale = scale;
         }
     }
 }

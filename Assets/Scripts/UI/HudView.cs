@@ -12,6 +12,7 @@ namespace ScrapFishing.UI
 
         Text _time;
         Text _depth;
+        Text _load;
         Text _cy;
         GameObject _cyPanel;
         Text _dive;
@@ -66,6 +67,9 @@ namespace ScrapFishing.UI
 
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
             Stretch(_depth.rectTransform, new Vector2(0.06f, 0.80f), new Vector2(0.5f, 0.88f));
+
+            _load = UiFonts.CreateText(rect, "ScrapLoad", 18, TextAnchor.UpperLeft);
+            Stretch(_load.rectTransform, new Vector2(0.06f, 0.74f), new Vector2(0.55f, 0.80f));
 
             _time = UiFonts.CreateText(rect, "Time", 18, TextAnchor.UpperRight);
             Stretch(_time.rectTransform, new Vector2(0.5f, 0.88f), new Vector2(0.94f, 0.96f));
@@ -164,6 +168,14 @@ namespace ScrapFishing.UI
             }
 
             RefreshOxygen(diving);
+            if (!playing || diving)
+            {
+                SetLoad(0, 0);
+                if (_load != null)
+                {
+                    _load.text = string.Empty;
+                }
+            }
 
             if (_oxygenFill != null)
             {
@@ -171,6 +183,24 @@ namespace ScrapFishing.UI
                 _oxygenFill.fillAmount = oxygen;
                 _oxygenFill.color = Color.Lerp(Palette.Magenta, Palette.Cyan, oxygen);
             }
+        }
+
+        public void SetLoad(int count, int max)
+        {
+            if (_load == null)
+            {
+                return;
+            }
+
+            if (!_playing)
+            {
+                _load.text = string.Empty;
+                return;
+            }
+
+            var full = max > 0 && count >= max;
+            _load.text = full ? $"SCRAP {count}/{max} FULL" : $"SCRAP {count}/{max}";
+            _load.color = full ? Palette.Magenta : Palette.Text;
         }
 
         public void SetSteerGuide(bool visible)

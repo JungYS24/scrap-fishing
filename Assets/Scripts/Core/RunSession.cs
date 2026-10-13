@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ScrapFishing.Data;
+using ScrapFishing.Fishing;
 using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -138,6 +139,38 @@ namespace ScrapFishing.Core
 
             AddCY(d.Chip);
             Gold = Mathf.Max(0, Gold + d.Gold);
+        }
+
+        public void AddSettledCatch(ScrapDefinition definition, ItemData data, Vector3 worldPos, out int chip, out int gold)
+        {
+            chip = 0;
+            gold = 0;
+            if (definition == null && data == null)
+            {
+                return;
+            }
+
+            if (data != null)
+            {
+                chip = Mathf.RoundToInt(data.Chip * _chipMultiplier);
+                gold = data.Gold;
+                if (definition == null)
+                {
+                    definition = ScrapDefinition.CreateRuntime(data.DisplayName, ScrapGrade.Common, data.Chip, Color.white);
+                }
+            }
+            else
+            {
+                chip = Mathf.RoundToInt(definition.Value * _chipMultiplier);
+                gold = LureLoad.GoldFromAmount(definition.Value);
+            }
+
+            _caught.Add(definition);
+            LastGain = chip;
+            AddCY(chip);
+            Gold = Mathf.Max(0, Gold + gold);
+            CaughtItem?.Invoke();
+            CaughtAt?.Invoke(definition, worldPos, LastGain);
         }
 
         public void AddCatch(ScrapDefinition definition)

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.Fishing;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
@@ -40,6 +41,7 @@ namespace ScrapFishing.Boat
         DepthGauge _gauge;
         HookMover _hook;
         ScrapSpawner _spawner;
+        LureCollector _collector;
 
         float _targetY;
         bool _descending;
@@ -51,6 +53,7 @@ namespace ScrapFishing.Boat
         float _steerVelocity;
         float _tilt;
         int _castSerial;
+        bool _settling;
 
         public bool IsLaunching => _launch != null;
 
@@ -68,13 +71,14 @@ namespace ScrapFishing.Boat
             && _flow.Phase == GamePhase.Reeling
             && _hook.Position.y >= SurfaceLayout.WaterlineY - surfaceReturnDistance;
 
-        public void Bind(GameFlow flow, RunSession session, DepthGauge gauge, HookMover hook, ScrapSpawner spawner)
+        public void Bind(GameFlow flow, RunSession session, DepthGauge gauge, HookMover hook, ScrapSpawner spawner, LureCollector collector)
         {
             _flow = flow;
             _session = session;
             _gauge = gauge;
             _hook = hook;
             _spawner = spawner;
+            _collector = collector;
             ResetSteer();
         }
 
@@ -119,11 +123,17 @@ namespace ScrapFishing.Boat
             StopLaunch();
             _descending = false;
             _dwell = 0f;
+            _settling = false;
             _gauge.SetLocked(false);
             ResetSteer();
             _hook.Place(EntryPoint);
             _hook.SetTilt(0f);
             _hook.Tint(Palette.NeonGreen);
+            if (_collector != null)
+            {
+                _collector.DiscardAttached();
+            }
+
             _spawner.Clear();
         }
 
@@ -213,10 +223,10 @@ namespace ScrapFishing.Boat
                     _flow.BeginReeling();
                 }
             }
-            else if (_flow.Phase == GamePhase.Reeling)
+            else if (_flow.Phase == GamePhase.Reeling && !_settling)
             {
                 TickHook();
-                StepToward(SurfaceLayout.WaterlineY, Mathf.Lerp(4.1f, 2.35f, _session.CastDepth), () => _flow.CompleteCast());
+                StepToward(SurfaceLayout.WaterlineY, Mathf.Lerp(4.1f, 2.35f, _session.CastDepth), BeginSurfaceSettle);
             }
         }
 
@@ -232,7 +242,32 @@ namespace ScrapFishing.Boat
 
             _hook.Tint(DepthZone.MarkerColor(DepthZone.FromWorldY(hook.y)));
             _spawner.AttractToward(hook, attractRadius, attractSpeed);
-            _spawner.CollectNear(hook, collectRadius + Progression.CatchRadiusBonus, _session);
+            if (!_settling)
+            {
+                _spawner.CollectNear(hook, collectRadius + Progression.CatchRadiusBonus, _session, _collector);
+            }
+        }
+
+        void BeginSurfaceSettle()
+        {
+            if (_settling)
+            {
+                return;
+            }
+
+            _settling = true;
+            if (_collector != null)
+            {
+                _collector.SettleAll(() =>
+                {
+                    _settling = false;
+                    _flow.CompleteCast();
+                });
+                return;
+            }
+
+            _settling = false;
+            _flow.CompleteCast();
         }
 
         void StepToward(float y, float speed, Action arrived)

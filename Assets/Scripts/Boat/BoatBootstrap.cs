@@ -2,6 +2,7 @@ using ScrapFishing.Audio;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
 using ScrapFishing.Dive;
+using ScrapFishing.Fishing;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace ScrapFishing.Boat
         HookMover _hook;
         ScrapSpawner _spawner;
         CastingController _casting;
+        LureCollector _collector;
         DiveDirector _dive;
         VirtualJoystick _stick;
         TitleView _title;
@@ -103,7 +105,14 @@ namespace ScrapFishing.Boat
                 _casting = gameObject.AddComponent<CastingController>();
             }
 
-            _casting.Bind(_flow, _session, _gauge, _hook, _spawner);
+            _collector = _hook.GetComponent<LureCollector>();
+            if (_collector == null)
+            {
+                _collector = _hook.gameObject.AddComponent<LureCollector>();
+            }
+
+            _collector.SetSettlePoint(EnsureSettlePoint());
+            _casting.Bind(_flow, _session, _gauge, _hook, _spawner, _collector);
 
             _castCamera = gameObject.AddComponent<CastCamera>();
             _castCamera.Bind(Camera.main, _hook, _flow, _casting);
@@ -114,7 +123,7 @@ namespace ScrapFishing.Boat
                 catcher = gameObject.AddComponent<SwipeCatcher>();
             }
 
-            catcher.Bind(_hook, _spawner, _session);
+            catcher.Bind(_hook, _spawner, _session, _collector);
 
             var swipe = gameObject.AddComponent<SwipeReader>();
             swipe.Bind(Camera.main);
@@ -219,6 +228,10 @@ namespace ScrapFishing.Boat
             _hud = canvas.gameObject.AddComponent<HudView>();
             _hud.Build(area.Area, _canvasUi.ChipText, _canvasUi.ChipPanel);
             _hud.Bind(_session);
+            if (_collector != null)
+            {
+                _collector.Bind(_session, EnsureSettlePoint(), _hud);
+            }
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(area.Area);
             _title = _canvasUi.Title;
@@ -377,6 +390,11 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            if (_collector != null)
+            {
+                _collector.SettleImmediate();
+            }
+
             _session.EndRun();
             if (_dive != null && _dive.IsActive)
             {
@@ -408,6 +426,29 @@ namespace ScrapFishing.Boat
             }
 
             _hud.SetSteerGuide(_casting != null && _casting.ShowSteerGuide);
+            if (_collector != null && _flow.Phase != GamePhase.Diving && _flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results)
+            {
+                _hud.SetLoad(_collector.Count, _collector.MaxAttach);
+            }
+        }
+
+        Transform EnsureSettlePoint()
+        {
+            var existing = GameObject.Find("SettlePoint");
+            if (existing != null)
+            {
+                return existing.transform;
+            }
+
+            var parent = GameObject.Find("SurfaceProps");
+            var point = new GameObject("SettlePoint");
+            if (parent != null)
+            {
+                point.transform.SetParent(parent.transform, true);
+            }
+
+            point.transform.position = new Vector3(0f, 0.85f, 0f);
+            return point.transform;
         }
 
         static GameObject CreateSprite(string name, Sprite sprite, Vector3 position, Vector3 scale, int order)

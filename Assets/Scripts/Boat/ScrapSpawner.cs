@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ScrapFishing.Core;
 using ScrapFishing.Dive;
+using ScrapFishing.Fishing;
 using ScrapFishing.Scrap;
 using UnityEngine;
 
@@ -74,20 +75,31 @@ namespace ScrapFishing.Boat
             return view;
         }
 
-        public void CollectNear(Vector3 hook, float radius, RunSession session)
+        public void CollectNear(Vector3 hook, float radius, RunSession session, LureCollector collector)
         {
             for (var i = _live.Count - 1; i >= 0; i--)
             {
                 var scrap = _live[i];
-                if (scrap == null)
+                if (scrap == null || scrap.Attached)
                 {
                     continue;
                 }
 
-                if (Vector3.Distance(scrap.transform.position, hook) <= radius)
+                if (Vector3.Distance(scrap.transform.position, hook) > radius)
+                {
+                    continue;
+                }
+
+                if (LureLoad.IsHazard(scrap.ChipValue))
                 {
                     session.AddCatch(scrap.Definition, scrap.transform.position);
                     Remove(scrap);
+                    continue;
+                }
+
+                if (collector != null && collector.TryAttach(scrap))
+                {
+                    _live.RemoveAt(i);
                 }
             }
         }
@@ -97,7 +109,7 @@ namespace ScrapFishing.Boat
             for (var i = 0; i < _live.Count; i++)
             {
                 var scrap = _live[i];
-                if (scrap == null)
+                if (scrap == null || scrap.Attached)
                 {
                     continue;
                 }
@@ -114,6 +126,11 @@ namespace ScrapFishing.Boat
                     drift.PullOrigin(hook, speed * Time.deltaTime);
                 }
             }
+        }
+
+        public void Unregister(ScrapView view)
+        {
+            _live.Remove(view);
         }
 
         public void Remove(ScrapView view)
