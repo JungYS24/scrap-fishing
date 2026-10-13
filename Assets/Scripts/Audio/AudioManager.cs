@@ -21,6 +21,16 @@ namespace ScrapFishing.Audio
         const float FullCooldown = 0.5f;
 
         static readonly float[] ZonePitch = { 1f, 0.94f, 0.88f, 0.82f };
+        static readonly Dictionary<string, string> Aliases = new Dictionary<string, string>
+        {
+            { "sfx_catch_mutant", "sfx_catch_rare" },
+            { "sfx_dive_enter", "sfx_dive_ready" },
+            { "sfx_hazard", "sfx_upgrade_denied" },
+            { "sfx_mine_hit", "sfx_upgrade_denied" },
+            { "sfx_oxygen_warn", "sfx_timer_tick" },
+            { "sfx_surface", "sfx_splash" },
+            { "sfx_new_best", "sfx_dive_ready" }
+        };
 
         public static AudioManager Instance { get; private set; }
 
@@ -345,13 +355,23 @@ namespace ScrapFishing.Audio
                 return list[Random.Range(0, list.Count)];
             }
 
+            if (Aliases.TryGetValue(key, out var alias) && _clips.TryGetValue(alias, out var mapped) && mapped.Count > 0)
+            {
+                return mapped[Random.Range(0, mapped.Count)];
+            }
+
             _fallback.TryGetValue(key, out var tone);
             return tone;
         }
 
         bool HasClip(string key)
         {
-            return _clips.TryGetValue(key, out var list) && list.Count > 0;
+            if (_clips.TryGetValue(key, out var list) && list.Count > 0)
+            {
+                return true;
+            }
+
+            return Aliases.TryGetValue(key, out var alias) && _clips.TryGetValue(alias, out var mapped) && mapped.Count > 0;
         }
 
         AudioSource NextVoice()
@@ -426,6 +446,9 @@ namespace ScrapFishing.Audio
                 return true;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return false;
+#else
             if (!clip.LoadAudioData())
             {
                 return false;
@@ -448,6 +471,7 @@ namespace ScrapFishing.Audio
             }
 
             return peak < QuietPeak;
+#endif
         }
 
         void BuildFallbacks()

@@ -62,6 +62,7 @@ namespace ScrapFishing.UI
 
             _cy = chipText;
             _cyPanel = chipPanel;
+            FitChipTextInPanel(chipText, chipPanel);
 
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
             Stretch(_depth.rectTransform, new Vector2(0.06f, 0.80f), new Vector2(0.5f, 0.88f));
@@ -642,6 +643,31 @@ namespace ScrapFishing.UI
                 default:
                     return string.Empty;
             }
+        }
+
+        static void FitChipTextInPanel(Text chipText, GameObject chipPanel)
+        {
+            if (chipText == null)
+            {
+                return;
+            }
+
+            var tr = chipText.rectTransform;
+            if (chipPanel != null)
+            {
+                tr.SetParent(chipPanel.transform, false);
+            }
+
+            tr.localScale = Vector3.one * 4f;
+            tr.localRotation = Quaternion.identity;
+            tr.anchorMin = new Vector2(0.3f, 0.12f);
+            tr.anchorMax = new Vector2(0.96f, 0.68f);
+            tr.pivot = new Vector2(0f, 0.5f);
+            tr.offsetMin = new Vector2(-1.343147f, 18f);
+            tr.offsetMax = new Vector2(1.345147f, -4f);
+            chipText.alignment = TextAnchor.MiddleLeft;
+            chipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            chipText.verticalOverflow = VerticalWrapMode.Truncate;
         }
 
         static void Stretch(RectTransform rect, Vector2 min, Vector2 max)

@@ -59,6 +59,7 @@
       var inappOpen = document.querySelector("#inapp-open");
       var iosInstall = document.querySelector("#ios-install");
       var iosInstallTimer = 0;
+      var fsUnlocked = false;
 
       function fitShell() {
         var vv = window.visualViewport;
@@ -100,8 +101,11 @@
         fsButton.hidden = !show;
       }
 
-      function enterFullscreen() {
+      function enterFullscreen(fromButton) {
         if (fullscreenElement() || !canRequestFullscreen()) {
+          return;
+        }
+        if (fsUnlocked && !fromButton) {
           return;
         }
         var root = document.documentElement;
@@ -113,12 +117,18 @@
           return;
         }
         if (pending && pending.then) {
-          pending.then(lockPortrait).catch(function () {});
+          pending.then(function () {
+            if (fullscreenElement()) {
+              fsUnlocked = true;
+            }
+            lockPortrait();
+          }).catch(function () {});
         }
       }
 
       function onFullscreenChange() {
         if (fullscreenElement()) {
+          fsUnlocked = true;
           lockPortrait();
         }
         fitShell();
@@ -134,10 +144,12 @@
       }
 
       function onUserActivate(event) {
-        if (isOverlayEvent(event)) {
+        if (isOverlayEvent(event) || fsUnlocked) {
           return;
         }
-        enterFullscreen();
+        window.setTimeout(function () {
+          enterFullscreen(false);
+        }, 0);
       }
 
       function blockUnityPassThrough(element) {
@@ -254,7 +266,7 @@
       if (fsButton) {
         fsButton.addEventListener("click", function (event) {
           event.preventDefault();
-          enterFullscreen();
+          enterFullscreen(true);
         });
       }
       var inappClose = document.querySelector("#inapp-close");

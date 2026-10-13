@@ -216,6 +216,7 @@ namespace ScrapFishing.Dive
             SetActive(_mineTemplate, false);
             SetActive(_surfaceProps, true);
             SetActive(_zoneBackdrop, true);
+            SetBackdropDive(false);
             SetActive(_hook, true);
             if (_gauge != null)
             {
@@ -230,7 +231,8 @@ namespace ScrapFishing.Dive
             SetActive(_midground, true);
             SetActive(_player, true);
             SetActive(_surfaceProps, false);
-            SetActive(_zoneBackdrop, false);
+            SetActive(_zoneBackdrop, true);
+            SetBackdropDive(true);
             SetActive(_hook, false);
             if (_gauge != null)
             {
@@ -430,6 +432,14 @@ namespace ScrapFishing.Dive
 
             var child = world.transform.Find(name);
             return child != null ? child.gameObject : null;
+        }
+
+        void SetBackdropDive(bool dive)
+        {
+            if (_zoneBackdrop != null && _zoneBackdrop.TryGetComponent<ZoneBackdrop>(out var backdrop))
+            {
+                backdrop.SetDiveMode(dive);
+            }
         }
 
         static void SetActive(GameObject go, bool active)

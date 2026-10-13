@@ -156,20 +156,44 @@ namespace ScrapFishing.Fishing
             KillSettle();
             var target = SettleWorld();
             var remaining = _attached.Count;
-            _settleSeq = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
+            var finished = false;
+            void OneDone()
+            {
+                remaining--;
+                if (remaining > 0 || finished)
+                {
+                    return;
+                }
+
+                finished = true;
+                FinishSettle(onDone);
+            }
+
+            _settleSeq = DOTween.Sequence().SetAutoKill(true).SetUpdate(true).SetLink(gameObject).Pause();
             for (var i = 0; i < _attached.Count; i++)
             {
                 var item = _attached[i];
                 var delay = i * stagger;
-                _settleSeq.InsertCallback(delay, () => Launch(item, target, () =>
-                {
-                    remaining--;
-                    if (remaining <= 0)
-                    {
-                        FinishSettle(onDone);
-                    }
-                }));
+                _settleSeq.InsertCallback(delay, () => Launch(item, target, OneDone));
             }
+
+            var timeout = jumpDuration + 0.35f + Mathf.Max(0, _attached.Count - 1) * stagger;
+            _settleSeq.InsertCallback(timeout, () =>
+            {
+                if (finished)
+                {
+                    return;
+                }
+
+                finished = true;
+                for (var i = 0; i < _attached.Count; i++)
+                {
+                    Cash(_attached[i], true);
+                }
+
+                FinishSettle(onDone);
+            });
+            _settleSeq.Play();
         }
 
         public void SettleImmediate()
@@ -261,43 +285,43 @@ namespace ScrapFishing.Fishing
 
         void Launch(AttachedScrap item, Vector3 target, Action arrived)
         {
+            var done = false;
+            void Finish()
+            {
+                if (done)
+                {
+                    return;
+                }
+
+                done = true;
+                Cash(item, true);
+                arrived?.Invoke();
+            }
+
             if (item.View == null)
             {
-                arrived?.Invoke();
+                Finish();
                 return;
             }
 
             item.View.RestoreLook(item.RestColor, item.RestScale, item.RestOrder);
             var body = item.View.transform;
             body.DOKill(false);
-            var jump = body.DOJump(target, jumpPower, 1, jumpDuration)
+            body.DOJump(target, jumpPower, 1, jumpDuration)
                 .SetEase(Ease.OutQuad)
                 .SetUpdate(true)
-                .SetLink(item.View.gameObject);
-            jump.OnComplete(() =>
-            {
-                if (item.View == null)
+                .SetLink(item.View.gameObject)
+                .OnComplete(() =>
                 {
-                    arrived?.Invoke();
-                    return;
-                }
+                    if (item.View != null && FXConfig.Enabled)
+                    {
+                        body.DOPunchScale(Vector3.one * 0.18f, 0.14f, 6, 0.6f)
+                            .SetUpdate(true)
+                            .SetLink(item.View.gameObject);
+                    }
 
-                if (FXConfig.Enabled)
-                {
-                    body.DOPunchScale(Vector3.one * 0.18f, 0.14f, 6, 0.6f)
-                        .SetUpdate(true)
-                        .SetLink(item.View.gameObject)
-                        .OnComplete(() =>
-                        {
-                            Cash(item, true);
-                            arrived?.Invoke();
-                        });
-                    return;
-                }
-
-                Cash(item, true);
-                arrived?.Invoke();
-            });
+                    Finish();
+                });
         }
 
         void Cash(AttachedScrap item, bool popup)

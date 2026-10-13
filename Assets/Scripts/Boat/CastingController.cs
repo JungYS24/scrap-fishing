@@ -54,6 +54,7 @@ namespace ScrapFishing.Boat
         float _tilt;
         int _castSerial;
         bool _settling;
+        float _surfaceHold;
 
         public bool IsLaunching => _launch != null;
 
@@ -124,6 +125,7 @@ namespace ScrapFishing.Boat
             _descending = false;
             _dwell = 0f;
             _settling = false;
+            _surfaceHold = 0f;
             _gauge.SetLocked(false);
             ResetSteer();
             _hook.Place(EntryPoint);
@@ -203,6 +205,16 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            if (_flow.Phase == GamePhase.Casting && IsLaunching)
+            {
+                return;
+            }
+
+            if (_flow.Phase == GamePhase.Casting && !_descending && _dwell <= 0f)
+            {
+                _descending = true;
+            }
+
             if (_flow.Phase == GamePhase.Casting && _descending)
             {
                 TickHook();
@@ -227,6 +239,18 @@ namespace ScrapFishing.Boat
             {
                 TickHook();
                 StepToward(SurfaceLayout.WaterlineY, Mathf.Lerp(4.1f, 2.35f, _session.CastDepth), BeginSurfaceSettle);
+                if (_hook.Position.y >= SurfaceLayout.WaterlineY - surfaceReturnDistance)
+                {
+                    _surfaceHold += Time.deltaTime;
+                    if (_surfaceHold >= 0.35f)
+                    {
+                        BeginSurfaceSettle();
+                    }
+                }
+                else
+                {
+                    _surfaceHold = 0f;
+                }
             }
         }
 
@@ -256,6 +280,7 @@ namespace ScrapFishing.Boat
             }
 
             _settling = true;
+            _surfaceHold = 0f;
             SplashBurst.SpawnWeak(EntryPoint);
             if (_collector != null)
             {

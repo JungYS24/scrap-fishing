@@ -15,9 +15,27 @@ namespace ScrapFishing.Boat
         Sprite[] _baked;
         Material _shared;
         int _zone = -1;
-        float _lastCamY;
-        float _parallax;
+        float _followY;
+        float _followVel;
+        bool _followInit;
+        bool _diveMode;
         Tween _fade;
+
+        public void SetDiveMode(bool dive)
+        {
+            _diveMode = dive;
+            _followInit = false;
+            var order = dive ? -21 : -15;
+            if (_current != null)
+            {
+                _current.sortingOrder = order;
+            }
+
+            if (_next != null)
+            {
+                _next.sortingOrder = order + 1;
+            }
+        }
 
         void Awake()
         {
@@ -50,9 +68,14 @@ namespace ScrapFishing.Boat
             var camY = cam.transform.position.y;
             var half = cam.orthographicSize;
             var ceiling = SurfaceLayout.WaterlineY - half;
-            _parallax += (_lastCamY - camY) * 0.1f;
-            _parallax = Mathf.Clamp(_parallax, -0.35f, 0.35f);
-            _lastCamY = camY;
+            var desired = _diveMode ? camY : Mathf.Min(camY, ceiling);
+            if (!_followInit)
+            {
+                _followY = desired;
+                _followInit = true;
+            }
+
+            _followY = Mathf.SmoothDamp(_followY, desired, ref _followVel, 0.32f, Mathf.Infinity, Time.unscaledDeltaTime);
 
             var depth = DepthZone.FromWorldY(camY);
             var zone = DepthZone.Index(depth);
@@ -69,9 +92,8 @@ namespace ScrapFishing.Boat
                 }
             }
 
-            var y = Mathf.Min(camY, ceiling) + _parallax;
-            FitAndPlace(_current, cam, y);
-            FitAndPlace(_next, cam, y);
+            FitAndPlace(_current, cam, _followY);
+            FitAndPlace(_next, cam, _followY);
         }
 
         void OnDisable()
