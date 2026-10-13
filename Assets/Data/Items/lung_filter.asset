@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: lung_filter
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: lung_filter
+  displayName: "\uD3D0 \uD544\uD130"
+  category: 1
+  rarity: 1
+  zone: scrap_items
+  chip: 300
+  gold: 15
+  icon: {fileID: -3858056900211215435, guid: fda1e1a37f150804fb81fac5d5db222e, type: 3}
+  hasAnimation: 0
+  animationClip: {fileID: 0}
+  animatorController: {fileID: 0}
+  prefab: {fileID: 1996607241141532131, guid: 8e6e5d9bee4cf2e4f984e94bd0a2c0a7, type: 3}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: sandcastle_crab
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: sandcastle_crab
+  displayName: Sandcastle Crab
+  category: 0
+  rarity: 1
+  zone: 10_Beach
+  chip: 140
+  gold: 7
+  icon: {fileID: -7363067482195545722, guid: 4beb1f9ea28e8da43a90bba4f15a6a27, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: dc6f7e6d81ef9004cb578ada49eee72c, type: 2}
+  animatorController: {fileID: 9100000, guid: 2f08a04f62146f149b82f72b48fe56aa, type: 2}
+  prefab: {fileID: 8479359865302684524, guid: cd4b380d568949446af730f7ca96f878, type: 3}

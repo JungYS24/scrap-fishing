@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: frigate
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: frigate
+  displayName: Frigate
+  category: 0
+  rarity: 1
+  zone: 11_Ocean
+  chip: 360
+  gold: 18
+  icon: {fileID: -8496456226791334773, guid: 12d7551ba561b3a4ebfb4ce03a0f1f17, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 494194fc0cd588742a54a9cd1b1a9ca3, type: 2}
+  animatorController: {fileID: 9100000, guid: 84b319e6dc5376c4fb97a5690b4245f4, type: 2}
+  prefab: {fileID: 1744440405423407510, guid: 81ecc4aaf1b388a4e90bb53e0465c850, type: 3}

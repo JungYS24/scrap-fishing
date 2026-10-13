@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: cyber_cat_plush
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: cyber_cat_plush
+  displayName: "\uC0AC\uC774\uBC84 \uACE0\uC591\uC774 \uC778\uD615"
+  category: 1
+  rarity: 0
+  zone: scrap_items
+  chip: 80
+  gold: 4
+  icon: {fileID: -1351618530506611429, guid: 04e134e11d497954e9d1b9767b9d8515, type: 3}
+  hasAnimation: 0
+  animationClip: {fileID: 0}
+  animatorController: {fileID: 0}
+  prefab: {fileID: 3743575920830407217, guid: a3cca3efcdbedd044ae464a6075c313b, type: 3}

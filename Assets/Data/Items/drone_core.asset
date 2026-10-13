@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: drone_core
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: drone_core
+  displayName: "\uB4DC\uB860 \uCF54\uC5B4"
+  category: 1
+  rarity: 2
+  zone: scrap_items
+  chip: 500
+  gold: 25
+  icon: {fileID: -6298936980773593275, guid: f7ff45e9684d26e479174536e4ece542, type: 3}
+  hasAnimation: 0
+  animationClip: {fileID: 0}
+  animatorController: {fileID: 0}
+  prefab: {fileID: 5532131021162328842, guid: 3c5aa260395fe2e40b0a4b81f65c209a, type: 3}
