@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.FX;
 using ScrapFishing.Scrap;
@@ -79,6 +80,8 @@ namespace ScrapFishing.Fishing
                     {
                         _hud.NudgeLoad();
                     }
+
+                    AudioManager.Ensure().PlayFull();
                 }
 
                 return false;
@@ -105,6 +108,7 @@ namespace ScrapFishing.Fishing
             }
 
             Fx.Punch(transform, 0.1f + slot * 0.015f, 0.16f);
+            AudioManager.Ensure().PlayCatch(scrap);
 
             _attached.Add(new AttachedScrap
             {

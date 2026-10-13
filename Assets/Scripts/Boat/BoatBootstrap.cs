@@ -48,7 +48,6 @@ namespace ScrapFishing.Boat
             BuildUi();
             BindInput();
             BindDive();
-            _session.CaughtItem += AudioManager.Ensure().PlayCatch;
             _session.DiveCharged += AudioManager.Ensure().PlayDiveReady;
             _flow.PhaseChanged += HandlePhaseChanged;
         }
@@ -56,6 +55,7 @@ namespace ScrapFishing.Boat
         void Start()
         {
             Fx.FadeIn(0.22f);
+            AudioManager.Ensure().PlayTitleBgm();
             _title.SetVisible(true);
             _canvasUi.SetReadyVisible(true);
             _results.Hide();
@@ -264,6 +264,7 @@ namespace ScrapFishing.Boat
             }
 
             Fx.PulseFade(0.22f);
+            AudioManager.Ensure().PlayStart();
             _session.StartRun();
             _hud.NotifyRunReset();
             _gauge.SetMaxDepth(Progression.MaxDepth);
@@ -327,6 +328,7 @@ namespace ScrapFishing.Boat
             _castCamera.SnapRest();
             _casting.ResetHook();
             AudioManager.Ensure().PlayDive();
+            AudioManager.Ensure().SetDiveMix(true);
             _flow.BeginDive();
             _dive.Begin();
         }
@@ -346,6 +348,7 @@ namespace ScrapFishing.Boat
             }
 
             Fx.PulseFade(0.25f);
+            AudioManager.Ensure().SetDiveMix(false);
             _casting.ResetHook();
             _flow.ReturnToAiming();
         }
@@ -401,6 +404,8 @@ namespace ScrapFishing.Boat
                 _collector.SettleImmediate();
             }
 
+            AudioManager.Ensure().PlayTimeUp();
+            AudioManager.Ensure().DuckResults();
             _session.EndRun();
             if (_dive != null && _dive.IsActive)
             {

@@ -162,7 +162,7 @@ namespace ScrapFishing.Dive
                     Fx.FloatText(_diver.Position, mine.Amount.ToString(), Palette.Magenta);
                 }
 
-                AudioManager.Ensure().PlayHurt();
+                AudioManager.Ensure().PlayMineHit();
             }
 
             TickBubbles();
@@ -186,6 +186,7 @@ namespace ScrapFishing.Dive
                 _diver.BeginForcedAscent();
             }
 
+            AudioManager.Ensure().PlayOxygenWarn();
             _stick.SetVisible(false);
         }
 
@@ -197,6 +198,7 @@ namespace ScrapFishing.Dive
             ClearMines();
             ClearEffects();
             ShowSurface();
+            AudioManager.Ensure().PlaySurface();
             if (notify)
             {
                 Finished?.Invoke();

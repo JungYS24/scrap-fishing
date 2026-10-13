@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.FX;
 using UnityEngine;
@@ -131,6 +132,11 @@ namespace ScrapFishing.UI
             _readyAt = Time.unscaledTime + InputLock;
             _restart.interactable = false;
             _root.SetActive(true);
+            if (session.IsNewBest)
+            {
+                AudioManager.Ensure().PlayNewBest();
+            }
+
             PlayIntro(session);
         }
 

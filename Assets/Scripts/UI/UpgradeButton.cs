@@ -44,11 +44,12 @@ namespace ScrapFishing.UI
         {
             if (Progression.TryBuy(kind))
             {
-                AudioManager.Ensure().PlayCatch();
+                AudioManager.Ensure().PlayUpgradeBuy();
                 Punch();
             }
             else
             {
+                AudioManager.Ensure().PlayUpgradeDenied();
                 Shake();
             }
         }

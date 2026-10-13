@@ -1,4 +1,5 @@
 using DG.Tweening;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.FX;
 using ScrapFishing.Scrap;
@@ -462,6 +463,11 @@ namespace ScrapFishing.UI
 
             _lastTime = remaining;
             _time.text = remaining >= 0 ? $"TIME {remaining}" : string.Empty;
+            if (remaining >= 1 && remaining <= 10)
+            {
+                var pitch = remaining <= 3 ? 1f + (4 - remaining) * 0.1f : 1f;
+                AudioManager.Ensure().PlayTimerTick(pitch);
+            }
         }
 
         void SetDepth(string depth)

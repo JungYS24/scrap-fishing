@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using ScrapFishing.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -183,6 +184,7 @@ namespace ScrapFishing.UI
 
         void HandleStart()
         {
+            AudioManager.Ensure().Unlock();
             _onStart?.Invoke();
         }
 

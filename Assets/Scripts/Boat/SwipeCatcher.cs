@@ -1,3 +1,4 @@
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Controls;
 using ScrapFishing.Fishing;
@@ -55,6 +56,7 @@ namespace ScrapFishing.Boat
                 if (LureLoad.IsHazard(scrap.ChipValue))
                 {
                     _session.AddCatch(scrap.Definition, scrap.transform.position);
+                    AudioManager.Ensure().PlayHazard();
                     _spawner.Remove(scrap);
                     continue;
                 }

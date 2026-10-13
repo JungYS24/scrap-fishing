@@ -1,5 +1,7 @@
+using ScrapFishing.Audio;
 using ScrapFishing.Boat;
 using ScrapFishing.Core;
+using ScrapFishing.Fishing;
 using ScrapFishing.FX;
 using UnityEngine;
 
@@ -47,6 +49,15 @@ namespace ScrapFishing.Dive
                     var sprite = scrap.Renderer != null ? scrap.Renderer.sprite : null;
                     var scale = scrap.transform.localScale;
                     _session.AddCatch(scrap.Definition, from);
+                    if (LureLoad.IsHazard(n))
+                    {
+                        AudioManager.Ensure().PlayHazard();
+                    }
+                    else
+                    {
+                        AudioManager.Ensure().PlayCatch(scrap);
+                    }
+
                     _spawner.Remove(scrap);
                     Fx.SuckIn(from, _diver.position, sprite, scale, n);
                 }

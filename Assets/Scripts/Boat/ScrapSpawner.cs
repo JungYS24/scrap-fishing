@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Dive;
 using ScrapFishing.Fishing;
@@ -93,6 +94,7 @@ namespace ScrapFishing.Boat
                 if (LureLoad.IsHazard(scrap.ChipValue))
                 {
                     session.AddCatch(scrap.Definition, scrap.transform.position);
+                    AudioManager.Ensure().PlayHazard();
                     Remove(scrap);
                     continue;
                 }
