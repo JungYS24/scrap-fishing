@@ -1,12 +1,25 @@
+using ScrapFishing.Data;
 using UnityEngine;
 
 namespace ScrapFishing.Scrap
 {
     public class ScrapView : MonoBehaviour
     {
+        public ItemData data;
         public ScrapDefinition Definition { get; private set; }
 
         SpriteRenderer _renderer;
+        int amount;
+
+        public int Amount => data != null ? data.Chip : amount;
+
+        void Awake()
+        {
+            if (data != null)
+            {
+                amount = data.Chip;
+            }
+        }
 
         public void Bind(ScrapDefinition definition, Sprite spriteOverride = null)
         {
