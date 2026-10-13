@@ -1,5 +1,6 @@
 using ScrapFishing.Boat;
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using UnityEngine;
 
 namespace ScrapFishing.Dive
@@ -41,8 +42,13 @@ namespace ScrapFishing.Dive
 
                 if (Vector3.Distance(scrap.transform.position, _diver.position) <= radius)
                 {
-                    _session.AddCatch(scrap.Definition, scrap.transform.position);
+                    var from = scrap.transform.position;
+                    var n = scrap.ChipValue;
+                    var sprite = scrap.Renderer != null ? scrap.Renderer.sprite : null;
+                    var scale = scrap.transform.localScale;
+                    _session.AddCatch(scrap.Definition, from);
                     _spawner.Remove(scrap);
+                    Fx.SuckIn(from, _diver.position, sprite, scale, n);
                 }
             }
         }

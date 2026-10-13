@@ -3,6 +3,7 @@ using ScrapFishing.Controls;
 using ScrapFishing.Core;
 using ScrapFishing.Dive;
 using ScrapFishing.Fishing;
+using ScrapFishing.FX;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -32,6 +33,7 @@ namespace ScrapFishing.Boat
 
         void Awake()
         {
+            Fx.Ensure();
             AudioManager.Ensure();
             _flow = gameObject.AddComponent<GameFlow>();
             _session = gameObject.AddComponent<RunSession>();
@@ -53,6 +55,7 @@ namespace ScrapFishing.Boat
 
         void Start()
         {
+            Fx.FadeIn(0.22f);
             _title.SetVisible(true);
             _canvasUi.SetReadyVisible(true);
             _results.Hide();
@@ -260,6 +263,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            Fx.PulseFade(0.22f);
             _session.StartRun();
             _hud.NotifyRunReset();
             _gauge.SetMaxDepth(Progression.MaxDepth);
@@ -319,6 +323,7 @@ namespace ScrapFishing.Boat
 
         void StartDive()
         {
+            Fx.PulseFade(0.25f);
             _castCamera.SnapRest();
             _casting.ResetHook();
             AudioManager.Ensure().PlayDive();
@@ -340,6 +345,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            Fx.PulseFade(0.25f);
             _casting.ResetHook();
             _flow.ReturnToAiming();
         }

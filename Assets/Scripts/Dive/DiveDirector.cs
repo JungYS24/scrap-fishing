@@ -4,6 +4,7 @@ using ScrapFishing.Audio;
 using ScrapFishing.Boat;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -156,6 +157,9 @@ namespace ScrapFishing.Dive
                 if (_diver != null)
                 {
                     _diver.FlashHurt();
+                    Fx.ShakeCamera(FXConfig.Current.hurtShake, FXConfig.Current.hurtShakeDur);
+                    Fx.FlashColor(_diver.GetComponent<SpriteRenderer>(), Color.red, 0.18f);
+                    Fx.FloatText(_diver.Position, mine.Amount.ToString(), Palette.Magenta);
                 }
 
                 AudioManager.Ensure().PlayHurt();

@@ -1,4 +1,5 @@
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,6 +35,25 @@ namespace ScrapFishing.Boat
             if (markerImage != null)
             {
                 markerImage.color = locked ? Palette.Magenta : DepthZone.MarkerColor(Normalized);
+            }
+
+            if (locked)
+            {
+                var rod = GameObject.Find("Nomad");
+                if (rod != null)
+                {
+                    Fx.Punch(rod.transform, 0.12f, 0.18f);
+                }
+
+                if (marker != null)
+                {
+                    Fx.Punch(marker, 0.18f, 0.16f);
+                }
+
+                if (markerImage != null)
+                {
+                    Fx.FlashColor(markerImage, Color.white, 0.12f);
+                }
             }
         }
 

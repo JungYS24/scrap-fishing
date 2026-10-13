@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace ScrapFishing.Fishing
 {
@@ -36,10 +36,10 @@ namespace ScrapFishing.Fishing
 
         RunSession _session;
         HudView _hud;
-        Canvas _canvas;
         SpriteRenderer _lureRenderer;
         bool _settling;
         Sequence _settleSeq;
+        Vector3 _lastLurePos;
 
         public event Action Changed;
 
@@ -53,7 +53,6 @@ namespace ScrapFishing.Fishing
             _session = session;
             settlePoint = point;
             _hud = hud;
-            _canvas = hud != null ? hud.GetComponentInParent<Canvas>() : FindFirstObjectByType<Canvas>();
             _lureRenderer = GetComponent<SpriteRenderer>();
             RefreshCapacity();
             Notify();
@@ -74,6 +73,14 @@ namespace ScrapFishing.Fishing
             RefreshCapacity();
             if (!_load.TryAttach(scrap.GetInstanceID(), scrap.ChipValue))
             {
+                if (_load.IsFull)
+                {
+                    if (Fx.TryFullReject(scrap.transform.position, scrap.transform) && _hud != null)
+                    {
+                        _hud.NudgeLoad();
+                    }
+                }
+
                 return false;
             }
 
@@ -91,6 +98,13 @@ namespace ScrapFishing.Fishing
             var slot = _attached.Count;
             scrap.Attached = true;
             scrap.ApplyHang(attachAlpha, restScale * attachScale, lureOrder - 1 - slot);
+            Fx.Punch(scrap.transform, 0.3f + slot * 0.02f, 0.18f);
+            if (renderer != null)
+            {
+                Fx.FlashColor(renderer, Color.white, 0.1f);
+            }
+
+            Fx.Punch(transform, 0.1f + slot * 0.015f, 0.16f);
 
             _attached.Add(new AttachedScrap
             {
@@ -175,6 +189,12 @@ namespace ScrapFishing.Fishing
                 return;
             }
 
+            var dt = Mathf.Max(Time.unscaledDeltaTime, 0.0001f);
+            var lureSpeed = ((Vector2)(transform.position - _lastLurePos)).magnitude / dt;
+            _lastLurePos = transform.position;
+            var boost = FXConfig.Enabled
+                ? 1f + Mathf.Clamp(lureSpeed * 0.08f, 0f, 1.1f) * FXConfig.Current.swayBoost
+                : 1f;
             var t = Time.unscaledTime * swaySpeed;
             for (var i = 0; i < _attached.Count; i++)
             {
@@ -184,12 +204,39 @@ namespace ScrapFishing.Fishing
                     continue;
                 }
 
-                var goal = SlotWorld(item.Slot, t);
-                var pos = Vector3.SmoothDamp(item.View.transform.position, goal, ref item.Velocity, followSmooth, Mathf.Infinity, Time.unscaledDeltaTime);
+                var goal = SlotWorld(item.Slot, t, boost);
+                var pos = Vector3.SmoothDamp(item.View.transform.position, goal, ref item.Velocity, followSmooth, Mathf.Infinity, dt);
                 item.View.transform.position = pos;
                 var tilt = Mathf.Sin(t + item.Slot) * 8f;
                 item.View.transform.rotation = Quaternion.Euler(0f, 0f, tilt);
+                PulseRare(item, t);
             }
+        }
+
+        static void PulseRare(AttachedScrap item, float time)
+        {
+            if (!FXConfig.Enabled || item.View == null)
+            {
+                return;
+            }
+
+            var grade = item.View.Definition != null ? item.View.Definition.Grade : ScrapGrade.Junk;
+            if (grade < ScrapGrade.Rare)
+            {
+                return;
+            }
+
+            var renderer = item.View.Renderer;
+            if (renderer == null)
+            {
+                return;
+            }
+
+            var cfg = FXConfig.Current;
+            var wave = 0.5f + 0.5f * Mathf.Sin(time * 1.6f + item.Slot);
+            var color = renderer.color;
+            color.a = Mathf.Lerp(cfg.rarePulseMin, cfg.rarePulseMax, wave);
+            renderer.color = color;
         }
 
         void Launch(AttachedScrap item, Vector3 target, Action arrived)
@@ -215,14 +262,21 @@ namespace ScrapFishing.Fishing
                     return;
                 }
 
-                body.DOPunchScale(Vector3.one * 0.18f, 0.14f, 6, 0.6f)
-                    .SetUpdate(true)
-                    .SetLink(item.View.gameObject)
-                    .OnComplete(() =>
-                    {
-                        Cash(item, true);
-                        arrived?.Invoke();
-                    });
+                if (FXConfig.Enabled)
+                {
+                    body.DOPunchScale(Vector3.one * 0.18f, 0.14f, 6, 0.6f)
+                        .SetUpdate(true)
+                        .SetLink(item.View.gameObject)
+                        .OnComplete(() =>
+                        {
+                            Cash(item, true);
+                            arrived?.Invoke();
+                        });
+                    return;
+                }
+
+                Cash(item, true);
+                arrived?.Invoke();
             });
         }
 
@@ -248,7 +302,20 @@ namespace ScrapFishing.Fishing
 
             if (popup)
             {
-                SpawnFloat(pos, chip, gold);
+                Fx.FloatText(pos + Vector3.up * 0.12f, "+" + chip, Palette.Cyan);
+                Fx.FloatText(pos, "+" + gold + "G", Palette.Gold);
+                var grade = item.View.Definition != null ? item.View.Definition.Grade : ScrapGrade.Common;
+                var bits = grade >= ScrapGrade.Rare ? 10 : 5;
+                Fx.Burst(pos, null, bits, Palette.Gold);
+                if (grade >= ScrapGrade.Rare)
+                {
+                    Fx.Ring(pos, Palette.Cyan, 0.32f);
+                }
+
+                if (grade >= ScrapGrade.Mutant)
+                {
+                    Fx.ScreenFlash(Color.white, 0.08f);
+                }
             }
 
             Destroy(item.View.gameObject);
@@ -257,11 +324,23 @@ namespace ScrapFishing.Fishing
 
         void FinishSettle(Action onDone)
         {
+            var had = _attached.Count > 0;
             KillSettle();
             _attached.Clear();
             _load.Clear();
             _settling = false;
             Notify();
+            if (had)
+            {
+                var boat = GameObject.Find("Nomad");
+                if (boat != null)
+                {
+                    Fx.Punch(boat.transform, 0.22f, 0.22f);
+                }
+
+                Fx.ShakeCamera(FXConfig.Current.finaleShake, FXConfig.Current.finaleShakeDur);
+            }
+
             onDone?.Invoke();
         }
 
@@ -296,11 +375,11 @@ namespace ScrapFishing.Fishing
             }
         }
 
-        Vector3 SlotWorld(int slot, float time)
+        Vector3 SlotWorld(int slot, float time, float boost = 1f)
         {
             var offset = OffsetFor(slot);
-            offset.x += Mathf.Sin(time + slot) * swayAmount;
-            offset.y += Mathf.Cos(time * 0.7f + slot) * swayAmount * 0.35f;
+            offset.x += Mathf.Sin(time + slot) * swayAmount * boost;
+            offset.y += Mathf.Cos(time * 0.7f + slot) * swayAmount * 0.35f * boost;
             return transform.position + transform.rotation * (Vector3)offset;
         }
 
@@ -320,41 +399,6 @@ namespace ScrapFishing.Fishing
         Vector3 SettleWorld()
         {
             return settlePoint != null ? settlePoint.position : new Vector3(0f, 0.85f, 0f);
-        }
-
-        void SpawnFloat(Vector3 world, int chip, int gold)
-        {
-            if (_canvas == null)
-            {
-                _canvas = FindFirstObjectByType<Canvas>();
-            }
-
-            if (_canvas == null)
-            {
-                return;
-            }
-
-            var text = UiFonts.CreateText(_canvas.transform, "SettleFloat", 22, TextAnchor.MiddleCenter);
-            text.color = Palette.Gold;
-            text.text = $"+{chip} / +{gold}G";
-            var rect = text.rectTransform;
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(280f, 48f);
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _canvas.transform as RectTransform,
-                    RectTransformUtility.WorldToScreenPoint(Camera.main, world),
-                    _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main,
-                    out var local))
-            {
-                rect.anchoredPosition = local;
-            }
-
-            var group = text.gameObject.AddComponent<CanvasGroup>();
-            var seq = DOTween.Sequence().SetUpdate(true).SetLink(text.gameObject);
-            seq.Append(rect.DOAnchorPos(rect.anchoredPosition + Vector2.up * 56f, 0.55f).SetEase(Ease.OutQuad));
-            seq.Join(group.DOFade(0f, 0.55f));
-            seq.OnComplete(() => Destroy(text.gameObject));
         }
 
         class AttachedScrap

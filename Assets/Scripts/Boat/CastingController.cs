@@ -256,6 +256,7 @@ namespace ScrapFishing.Boat
             }
 
             _settling = true;
+            SplashBurst.SpawnWeak(EntryPoint);
             if (_collector != null)
             {
                 _collector.SettleAll(() =>
