@@ -1,3 +1,4 @@
+using ScrapFishing.Data;
 using UnityEngine;
 
 namespace ScrapFishing.Scrap
@@ -19,6 +20,34 @@ namespace ScrapFishing.Scrap
             definition.Value = value;
             definition.PlaceholderColor = color;
             return definition;
+        }
+
+        public static ScrapDefinition FromItem(ItemData data)
+        {
+            if (data == null)
+            {
+                return CreateRuntime("scrap", ScrapGrade.Junk, 8, Color.white);
+            }
+
+            var definition = CreateRuntime(data.DisplayName, GradeOf(data.Rarity), data.Chip, Color.white);
+            definition.Sprite = data.Icon;
+            return definition;
+        }
+
+        static ScrapGrade GradeOf(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Rare:
+                    return ScrapGrade.Rare;
+                case ItemRarity.Epic:
+                case ItemRarity.Legendary:
+                    return ScrapGrade.Mutant;
+                case ItemRarity.Uncommon:
+                    return ScrapGrade.Common;
+                default:
+                    return ScrapGrade.Junk;
+            }
         }
     }
 }

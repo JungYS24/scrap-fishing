@@ -177,25 +177,52 @@ namespace ScrapFishing.Boat
 
             for (var i = 0; i < 4; i++)
             {
-                var top = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, i / 4f);
-                var bottom = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, (i + 1) / 4f);
-                var height = top - bottom;
-                var band = CreateSprite(
-                    "ZoneWater" + i,
-                    PlaceholderFactory.Square(DepthZone.WaterColor(i)),
-                    new Vector3(0f, (top + bottom) * 0.5f, 0f),
-                    new Vector3(5.6f, height + 0.08f, 1f),
-                    -12 + i);
-                band.transform.SetParent(root.transform, true);
+                var name = "ZoneWater" + i;
+                var existing = root.transform.Find(name);
+                GameObject band;
+                if (existing != null)
+                {
+                    band = existing.gameObject;
+                }
+                else
+                {
+                    var top = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, i / 4f);
+                    var bottom = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, (i + 1) / 4f);
+                    var height = top - bottom;
+                    band = CreateSprite(
+                        name,
+                        PlaceholderFactory.Square(DepthZone.WaterColor(i)),
+                        new Vector3(0f, (top + bottom) * 0.5f, 0f),
+                        new Vector3(5.6f, height + 0.08f, 1f),
+                        -12 + i);
+                    band.transform.SetParent(root.transform, true);
+                }
+
+                SetSpriteAlpha(band, 0.3f);
             }
 
-            var pad = CreateSprite(
-                "ZoneWaterPad",
-                PlaceholderFactory.Square(DepthZone.WaterColor(3)),
-                new Vector3(0f, SurfaceLayout.MaxDepthY - 2f, 0f),
-                new Vector3(5.6f, 4f, 1f),
-                -9);
-            pad.transform.SetParent(root.transform, true);
+            var padTransform = root.transform.Find("ZoneWaterPad");
+            GameObject pad;
+            if (padTransform != null)
+            {
+                pad = padTransform.gameObject;
+            }
+            else
+            {
+                pad = CreateSprite(
+                    "ZoneWaterPad",
+                    PlaceholderFactory.Square(DepthZone.WaterColor(3)),
+                    new Vector3(0f, SurfaceLayout.MaxDepthY - 2f, 0f),
+                    new Vector3(5.6f, 4f, 1f),
+                    -9);
+                pad.transform.SetParent(root.transform, true);
+            }
+
+            SetSpriteAlpha(pad, 0.3f);
+            if (!root.TryGetComponent<ZoneBackdrop>(out _))
+            {
+                root.AddComponent<ZoneBackdrop>();
+            }
         }
 
         void BuildUi()
@@ -460,6 +487,18 @@ namespace ScrapFishing.Boat
 
             point.transform.position = new Vector3(0f, 0.85f, 0f);
             return point.transform;
+        }
+
+        static void SetSpriteAlpha(GameObject go, float alpha)
+        {
+            if (go == null || !go.TryGetComponent<SpriteRenderer>(out var renderer))
+            {
+                return;
+            }
+
+            var color = renderer.color;
+            color.a = alpha;
+            renderer.color = color;
         }
 
         static GameObject CreateSprite(string name, Sprite sprite, Vector3 position, Vector3 scale, int order)

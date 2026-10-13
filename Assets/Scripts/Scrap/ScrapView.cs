@@ -49,14 +49,23 @@ namespace ScrapFishing.Scrap
                 _renderer = gameObject.AddComponent<SpriteRenderer>();
             }
 
-            var sprite = spriteOverride != null ? spriteOverride : definition.Sprite;
+            var sprite = spriteOverride != null ? spriteOverride : definition != null ? definition.Sprite : null;
+            if (sprite == null && data != null)
+            {
+                sprite = data.Icon;
+            }
+
             _renderer.sprite = sprite != null
                 ? sprite
-                : PlaceholderFactory.Square(definition.PlaceholderColor);
-            _renderer.color = sprite != null
-                ? Color.Lerp(Color.white, definition.PlaceholderColor, 0.25f)
-                : Color.white;
+                : PlaceholderFactory.Square(definition != null ? definition.PlaceholderColor : Color.white);
+            _renderer.color = Color.white;
             _renderer.sortingOrder = 2;
+        }
+
+        public void Bind(ItemData item)
+        {
+            data = item;
+            Bind(ScrapDefinition.FromItem(item), item != null ? item.Icon : null);
         }
 
         public void ApplyHang(float alpha, Vector3 scale, int sortingOrder)

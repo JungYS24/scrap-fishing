@@ -2,6 +2,7 @@ using DG.Tweening;
 using ScrapFishing.Core;
 using ScrapFishing.UI;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace ScrapFishing.FX
@@ -37,6 +38,20 @@ namespace ScrapFishing.FX
             DOTween.Init(true, true, LogBehaviour.ErrorsOnly);
             DOTween.SetTweensCapacity(Mathf.Max(200, tweens), Mathf.Max(50, seq));
             DOTween.defaultAutoKill = true;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            _lockUntil = 0f;
+            if (_canvas == null)
+            {
+                _fade = null;
+                _fadeGroup = null;
+                _layer = null;
+                _shake = null;
+            }
         }
 
         public static void Ensure()
@@ -55,7 +70,7 @@ namespace ScrapFishing.FX
                 _host.AddComponent<FXRuntimeHost>();
             }
 
-            if (_canvas == null)
+            if (_canvas == null || _fade == null)
             {
                 BindCanvas();
             }
@@ -90,8 +105,7 @@ namespace ScrapFishing.FX
 
             _fade = ChildImage(_layer, "FXFade", new Color(0f, 0f, 0f, 0f));
             _fadeGroup = GetOrAdd<CanvasGroup>(_fade.gameObject);
-            _fadeGroup.alpha = 0f;
-            _fadeGroup.blocksRaycasts = false;
+            ResetFadeVisual();
             _vignette = ChildImage(_layer, "FXVignette", new Color(0.7f, 0.05f, 0.12f, 0f));
             _vignette.raycastTarget = false;
             _vignetteGroup = GetOrAdd<CanvasGroup>(_vignette.gameObject);
@@ -417,8 +431,12 @@ namespace ScrapFishing.FX
 
             _fade.color = Color.black;
             _fadeGroup.DOKill(false);
+            _lockUntil = 0f;
             _fadeGroup.DOFade(0f, dur).SetUpdate(true).SetLink(_fade.gameObject)
-                .OnComplete(UnlockFade);
+                .OnComplete(() =>
+                {
+                    ResetFadeVisual();
+                });
         }
 
         public static void PulseFade(float dur)
@@ -454,12 +472,35 @@ namespace ScrapFishing.FX
             }
         }
 
+        static void ResetFadeVisual()
+        {
+            UnlockFade();
+            if (_fadeGroup != null)
+            {
+                _fadeGroup.DOKill(false);
+                _fadeGroup.alpha = 0f;
+            }
+
+            if (_fade != null)
+            {
+                _fade.color = new Color(0f, 0f, 0f, 0f);
+            }
+        }
+
         internal static void TickLockWatchdog()
         {
-            if (_lockUntil > 0f && Time.unscaledTime >= _lockUntil)
+            if (_lockUntil <= 0f || Time.unscaledTime < _lockUntil)
             {
-                UnlockFade();
+                return;
             }
+
+            if (_fadeGroup != null && _fadeGroup.alpha > 0.05f)
+            {
+                FadeIn(0.12f);
+                return;
+            }
+
+            ResetFadeVisual();
         }
 
         static T GetOrAdd<T>(GameObject go) where T : Component
@@ -582,12 +623,7 @@ namespace ScrapFishing.FX
         {
             FXPool.RecycleAll();
             ClearVignette();
-            if (_fadeGroup != null)
-            {
-                _fadeGroup.DOKill(false);
-                _fadeGroup.alpha = 0f;
-                UnlockFade();
-            }
+            ResetFadeVisual();
         }
 
         static bool WorldToLocal(Vector3 world, out Vector2 local)
