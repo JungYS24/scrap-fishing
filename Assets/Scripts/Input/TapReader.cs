@@ -10,8 +10,14 @@ namespace ScrapFishing.Controls
 
         public event Action OnTap;
 
+        GameFlow _flow;
         Vector2 _pressPosition;
         bool _pressed;
+
+        void Awake()
+        {
+            _flow = GetComponent<GameFlow>();
+        }
 
         void Update()
         {
@@ -22,7 +28,12 @@ namespace ScrapFishing.Controls
 
             if (pressedThisFrame)
             {
-                if (!FixedResolution.ContainsWindowPoint(position) || PointerUtil.IsOverUi(position))
+                var inGame = FixedResolution.ContainsWindowPoint(position);
+                var overUi = PointerUtil.IsOverUi(position);
+#if UNITY_EDITOR
+                Log("press", position, inGame, overUi, false);
+#endif
+                if (!inGame || overUi)
                 {
                     return;
                 }
@@ -37,15 +48,31 @@ namespace ScrapFishing.Controls
             }
 
             _pressed = false;
-            if (SteerReader.BlocksTapAndSwipe)
-            {
-                return;
-            }
-
-            if (Vector2.Distance(FixedResolution.ToGamePixels(_pressPosition), FixedResolution.ToGamePixels(position)) <= slopPixels)
+            var blocked = SteerReader.BlocksTapAndSwipe;
+            var slopOk = Vector2.Distance(FixedResolution.ToGamePixels(_pressPosition), FixedResolution.ToGamePixels(position)) <= slopPixels;
+            var fired = !blocked && slopOk;
+#if UNITY_EDITOR
+            Log("release", position, FixedResolution.ContainsWindowPoint(position), PointerUtil.IsOverUi(position), fired);
+#endif
+            if (fired)
             {
                 OnTap?.Invoke();
             }
         }
+
+#if UNITY_EDITOR
+        void Log(string stage, Vector2 position, bool inGame, bool overUi, bool fired)
+        {
+            var phase = _flow != null ? _flow.Phase.ToString() : "?";
+            Debug.Log(
+                "[Tap] " + stage
+                + " phase=" + phase
+                + " inGame=" + inGame
+                + " overUi=" + overUi
+                + " hits=[" + PointerUtil.HitNames(position) + "]"
+                + " blockSteer=" + SteerReader.BlocksTapAndSwipe
+                + " onTap=" + fired);
+        }
+#endif
     }
 }

@@ -19,6 +19,7 @@ namespace ScrapFishing.FX
         static float _fullAt;
         static Tween _vignettePulse;
         static bool _booted;
+        static float _lockUntil;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -49,6 +50,11 @@ namespace ScrapFishing.FX
                 bits.transform.SetParent(_host.transform, false);
             }
 
+            if (!_host.TryGetComponent<FXRuntimeHost>(out _))
+            {
+                _host.AddComponent<FXRuntimeHost>();
+            }
+
             if (_canvas == null)
             {
                 BindCanvas();
@@ -56,11 +62,7 @@ namespace ScrapFishing.FX
 
             if (_shake == null && Camera.main != null)
             {
-                _shake = Camera.main.GetComponent<FXCameraShake>();
-                if (_shake == null)
-                {
-                    _shake = Camera.main.gameObject.AddComponent<FXCameraShake>();
-                }
+                _shake = GetOrAdd<FXCameraShake>(Camera.main.gameObject);
             }
         }
 
@@ -87,12 +89,12 @@ namespace ScrapFishing.FX
             }
 
             _fade = ChildImage(_layer, "FXFade", new Color(0f, 0f, 0f, 0f));
-            _fadeGroup = _fade.GetComponent<CanvasGroup>() ?? _fade.gameObject.AddComponent<CanvasGroup>();
+            _fadeGroup = GetOrAdd<CanvasGroup>(_fade.gameObject);
             _fadeGroup.alpha = 0f;
             _fadeGroup.blocksRaycasts = false;
             _vignette = ChildImage(_layer, "FXVignette", new Color(0.7f, 0.05f, 0.12f, 0f));
             _vignette.raycastTarget = false;
-            _vignetteGroup = _vignette.GetComponent<CanvasGroup>() ?? _vignette.gameObject.AddComponent<CanvasGroup>();
+            _vignetteGroup = GetOrAdd<CanvasGroup>(_vignette.gameObject);
             _vignetteGroup.alpha = 0f;
             FXPool.Bind(_host != null ? _host.transform.Find("FXBits") : null, _layer);
         }
@@ -184,7 +186,7 @@ namespace ScrapFishing.FX
             Ensure();
             if (_shake == null && Camera.main != null)
             {
-                _shake = Camera.main.GetComponent<FXCameraShake>() ?? Camera.main.gameObject.AddComponent<FXCameraShake>();
+                _shake = GetOrAdd<FXCameraShake>(Camera.main.gameObject);
             }
 
             if (_shake != null)
@@ -363,8 +365,8 @@ namespace ScrapFishing.FX
 
             _fade.color = c;
             _fadeGroup.DOKill(false);
+            UnlockFade();
             _fadeGroup.alpha = 0.55f;
-            _fadeGroup.blocksRaycasts = false;
             _fadeGroup.DOFade(0f, dur).SetUpdate(true).SetLink(_fade.gameObject);
         }
 
@@ -390,6 +392,7 @@ namespace ScrapFishing.FX
             _fade.raycastTarget = lockInput;
             _fadeGroup.DOKill(false);
             _fadeGroup.blocksRaycasts = lockInput;
+            _lockUntil = lockInput ? Time.unscaledTime + 0.6f : 0f;
             _fadeGroup.DOFade(1f, dur).SetUpdate(true).SetLink(_fade.gameObject);
         }
 
@@ -439,6 +442,7 @@ namespace ScrapFishing.FX
 
         static void UnlockFade()
         {
+            _lockUntil = 0f;
             if (_fadeGroup != null)
             {
                 _fadeGroup.blocksRaycasts = false;
@@ -448,6 +452,24 @@ namespace ScrapFishing.FX
             {
                 _fade.raycastTarget = false;
             }
+        }
+
+        internal static void TickLockWatchdog()
+        {
+            if (_lockUntil > 0f && Time.unscaledTime >= _lockUntil)
+            {
+                UnlockFade();
+            }
+        }
+
+        static T GetOrAdd<T>(GameObject go) where T : Component
+        {
+            if (go.TryGetComponent<T>(out var existing))
+            {
+                return existing;
+            }
+
+            return go.AddComponent<T>();
         }
 
         public static void SetVignette(float alpha, float pulse)
@@ -582,6 +604,14 @@ namespace ScrapFishing.FX
                 RectTransformUtility.WorldToScreenPoint(Camera.main, world),
                 cam,
                 out local);
+        }
+    }
+
+    sealed class FXRuntimeHost : MonoBehaviour
+    {
+        void Update()
+        {
+            Fx.TickLockWatchdog();
         }
     }
 }

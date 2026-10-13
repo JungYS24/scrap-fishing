@@ -117,7 +117,7 @@ namespace ScrapFishing.FX
                 rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
                 rect.sizeDelta = new Vector2(240f, 48f);
-                if (label.GetComponent<CanvasGroup>() == null)
+                if (!label.TryGetComponent<CanvasGroup>(out _))
                 {
                     label.gameObject.AddComponent<CanvasGroup>();
                 }
