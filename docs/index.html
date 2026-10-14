@@ -29,6 +29,7 @@
       <div id="boot-error" hidden>
         <p>게임을 불러오지 못했습니다.</p>
         <p id="boot-error-detail"></p>
+        <button type="button" id="boot-reload" hidden>새로고침</button>
       </div>
     </div>
     <button type="button" id="fs-button" aria-label="전체화면" hidden>
@@ -47,12 +48,46 @@
     </div>
     <div id="rotate-hint">세로로 돌려 주세요</div>
     <script>
+      window.addEventListener("error", function (event) {
+        if (window.__scrapFishingReady) {
+          return;
+        }
+        var target = event && event.target;
+        var isElement = target && target !== window && target.tagName;
+        if (isElement && String(target.tagName).toUpperCase() !== "SCRIPT") {
+          return;
+        }
+        var loadingEl = document.querySelector("#unity-loading");
+        var bootErrorEl = document.querySelector("#boot-error");
+        var bootDetailEl = document.querySelector("#boot-error-detail");
+        if (!bootErrorEl) {
+          return;
+        }
+        var message = "스크립트 오류가 발생했습니다.";
+        if (isElement) {
+          message = "로더를 받지 못했습니다. 네트워크를 확인해 주세요.";
+        } else if (event && event.message) {
+          message = event.message;
+        } else if (event && event.error && event.error.message) {
+          message = event.error.message;
+        }
+        if (loadingEl) {
+          loadingEl.style.display = "none";
+        }
+        bootErrorEl.hidden = false;
+        if (bootDetailEl) {
+          bootDetailEl.textContent = message;
+        }
+      }, true);
+    </script>
+    <script>
       var canvas = document.querySelector("#unity-canvas");
       var loading = document.querySelector("#unity-loading");
       var bar = document.querySelector("#unity-progress-bar");
       var label = document.querySelector("#unity-progress-label");
       var bootError = document.querySelector("#boot-error");
       var bootDetail = document.querySelector("#boot-error-detail");
+      var bootReload = document.querySelector("#boot-reload");
       var shell = document.querySelector("#unity-container");
       var fsButton = document.querySelector("#fs-button");
       var inappBanner = document.querySelector("#inapp-banner");
@@ -279,6 +314,11 @@
       if (iosClose) {
         iosClose.addEventListener("click", hideIosInstallHint);
       }
+      if (bootReload) {
+        bootReload.addEventListener("click", function () {
+          window.location.reload();
+        });
+      }
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/docs.loader.js";
@@ -301,14 +341,35 @@
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = function () {
+        var sawProgress = false;
+        var stallTimer = window.setTimeout(function () {
+          if (sawProgress || window.__scrapFishingReady) {
+            return;
+          }
+          showBootError("네트워크가 느리거나 로딩에 실패했습니다. 새로고침해 주세요");
+          if (bootReload) {
+            bootReload.hidden = false;
+          }
+        }, 20000);
         createUnityInstance(canvas, config, function (progress) {
+          if (progress > 0) {
+            sawProgress = true;
+            window.clearTimeout(stallTimer);
+          }
           var percent = Math.round(100 * progress);
           bar.style.width = percent + "%";
           label.textContent = percent + "%";
         }).then(function () {
+          window.__scrapFishingReady = true;
+          window.clearTimeout(stallTimer);
+          bootError.hidden = true;
+          if (bootReload) {
+            bootReload.hidden = true;
+          }
           loading.style.display = "none";
           showIosInstallHint();
         }).catch(function (message) {
+          window.clearTimeout(stallTimer);
           showBootError(message);
         });
       };
