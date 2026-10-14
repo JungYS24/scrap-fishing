@@ -157,12 +157,12 @@ namespace ScrapFishing.FX
             Ensure();
             var rest = FxRest.Capture(t);
             t.DOKill(false);
-            rest.Restore();
+            rest.RestoreScale();
             t.DOPunchScale(Vector3.one * scale, dur, 8, 0.6f)
                 .SetUpdate(true)
                 .SetLink(t.gameObject)
-                .OnComplete(rest.Restore)
-                .OnKill(rest.Restore);
+                .OnComplete(rest.RestoreScale)
+                .OnKill(rest.RestoreScale);
         }
 
         public static void Pop(Transform t)
@@ -176,14 +176,14 @@ namespace ScrapFishing.FX
             var cfg = FXConfig.Current;
             var rest = FxRest.Capture(t);
             t.DOKill(false);
-            rest.Restore();
+            rest.RestoreScale();
             var baseScale = rest.Scale;
             t.localScale = Vector3.zero;
             var seq = DOTween.Sequence().SetUpdate(true).SetLink(t.gameObject);
             seq.Append(t.DOScale(baseScale * cfg.popOvershoot, cfg.popDuration * 0.65f).SetEase(Ease.OutBack));
             seq.Append(t.DOScale(baseScale, cfg.popDuration * 0.35f));
-            seq.OnComplete(rest.Restore);
-            seq.OnKill(rest.Restore);
+            seq.OnComplete(rest.RestoreScale);
+            seq.OnKill(rest.RestoreScale);
         }
 
         public static void Shake(Transform t, float strength, float dur)
@@ -288,6 +288,12 @@ namespace ScrapFishing.FX
             label.text = text;
             label.color = c;
             var group = label.GetComponent<CanvasGroup>();
+            if (group == null)
+            {
+                FXPool.ReturnLabel(label);
+                return;
+            }
+
             group.alpha = 1f;
             var rect = label.rectTransform;
             if (WorldToLocal(worldPos, out var local))
@@ -692,7 +698,7 @@ namespace ScrapFishing.FX
             return rest;
         }
 
-        public void Restore()
+        public void RestoreScale()
         {
             if (!_captured || this == null)
             {
@@ -700,6 +706,16 @@ namespace ScrapFishing.FX
             }
 
             transform.localScale = Scale;
+        }
+
+        public void Restore()
+        {
+            RestoreScale();
+            if (!_captured || this == null)
+            {
+                return;
+            }
+
             if (_rect)
             {
                 ((RectTransform)transform).anchoredPosition = _anchored;

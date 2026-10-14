@@ -39,7 +39,12 @@ namespace ScrapFishing.Fishing
         HudView _hud;
         SpriteRenderer _lureRenderer;
         bool _settling;
-        Sequence _settleSeq;
+        bool _settleFinished;
+        Action _settleDone;
+        float _settleStart;
+        float _settleDeadline;
+        int _settleLaunched;
+        int _settleRemaining;
         Vector3 _lastLurePos;
 
         public event Action Changed;
@@ -153,59 +158,27 @@ namespace ScrapFishing.Fishing
             }
 
             _settling = true;
+            _settleFinished = false;
+            _settleDone = onDone;
+            _settleLaunched = 0;
+            _settleRemaining = _attached.Count;
+            _settleStart = Time.unscaledTime;
+            _settleDeadline = _settleStart + jumpDuration + 0.45f + Mathf.Max(0, _attached.Count - 1) * stagger;
             KillSettle();
-            var target = SettleWorld();
-            var remaining = _attached.Count;
-            var finished = false;
-            void OneDone()
-            {
-                remaining--;
-                if (remaining > 0 || finished)
-                {
-                    return;
-                }
-
-                finished = true;
-                FinishSettle(onDone);
-            }
-
-            _settleSeq = DOTween.Sequence().SetAutoKill(true).SetUpdate(true).SetLink(gameObject).Pause();
-            for (var i = 0; i < _attached.Count; i++)
-            {
-                var item = _attached[i];
-                var delay = i * stagger;
-                _settleSeq.InsertCallback(delay, () => Launch(item, target, OneDone));
-            }
-
-            var timeout = jumpDuration + 0.35f + Mathf.Max(0, _attached.Count - 1) * stagger;
-            _settleSeq.InsertCallback(timeout, () =>
-            {
-                if (finished)
-                {
-                    return;
-                }
-
-                finished = true;
-                for (var i = 0; i < _attached.Count; i++)
-                {
-                    Cash(_attached[i], true);
-                }
-
-                FinishSettle(onDone);
-            });
-            _settleSeq.Play();
         }
 
         public void SettleImmediate()
         {
             KillSettle();
+            _settleDone = null;
             _settling = true;
+            _settleFinished = false;
             for (var i = 0; i < _attached.Count; i++)
             {
                 Cash(_attached[i], false);
             }
 
-            FinishSettle(null);
+            FinishSettle();
         }
 
         public void DiscardAttached()
@@ -223,6 +196,8 @@ namespace ScrapFishing.Fishing
             _attached.Clear();
             _load.Clear();
             _settling = false;
+            _settleFinished = true;
+            _settleDone = null;
             Notify();
         }
 
@@ -230,6 +205,7 @@ namespace ScrapFishing.Fishing
         {
             if (_settling)
             {
+                TickSettle();
                 return;
             }
 
@@ -283,6 +259,51 @@ namespace ScrapFishing.Fishing
             renderer.color = color;
         }
 
+        void TickSettle()
+        {
+            if (_settleFinished)
+            {
+                return;
+            }
+
+            var elapsed = Time.unscaledTime - _settleStart;
+            var target = SettleWorld();
+            while (_settleLaunched < _attached.Count && elapsed + 0.0001f >= _settleLaunched * stagger)
+            {
+                var item = _attached[_settleLaunched];
+                _settleLaunched++;
+                Launch(item, target, OnOneSettled);
+            }
+
+            if (Time.unscaledTime < _settleDeadline)
+            {
+                return;
+            }
+
+            try
+            {
+                for (var i = 0; i < _attached.Count; i++)
+                {
+                    Cash(_attached[i], true);
+                }
+            }
+            finally
+            {
+                FinishSettle();
+            }
+        }
+
+        void OnOneSettled()
+        {
+            _settleRemaining--;
+            if (_settleRemaining > 0 || _settleFinished)
+            {
+                return;
+            }
+
+            FinishSettle();
+        }
+
         void Launch(AttachedScrap item, Vector3 target, Action arrived)
         {
             var done = false;
@@ -294,8 +315,14 @@ namespace ScrapFishing.Fishing
                 }
 
                 done = true;
-                Cash(item, true);
-                arrived?.Invoke();
+                try
+                {
+                    Cash(item, true);
+                }
+                finally
+                {
+                    arrived?.Invoke();
+                }
             }
 
             if (item.View == null)
@@ -366,9 +393,17 @@ namespace ScrapFishing.Fishing
             item.View = null;
         }
 
-        void FinishSettle(Action onDone)
+        void FinishSettle()
         {
+            if (_settleFinished)
+            {
+                return;
+            }
+
             var had = _attached.Count > 0;
+            var done = _settleDone;
+            _settleDone = null;
+            _settleFinished = true;
             KillSettle();
             _attached.Clear();
             _load.Clear();
@@ -385,17 +420,11 @@ namespace ScrapFishing.Fishing
                 Fx.ShakeCamera(FXConfig.Current.finaleShake, FXConfig.Current.finaleShakeDur);
             }
 
-            onDone?.Invoke();
+            done?.Invoke();
         }
 
         void KillSettle()
         {
-            if (_settleSeq != null && _settleSeq.IsActive())
-            {
-                _settleSeq.Kill(false);
-            }
-
-            _settleSeq = null;
             for (var i = 0; i < _attached.Count; i++)
             {
                 if (_attached[i].View != null)

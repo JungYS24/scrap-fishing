@@ -304,7 +304,7 @@ namespace ScrapFishing.UI
 
             if (_chipGroup != null)
             {
-                _chipGroup.alpha = 0f;
+                _chipGroup.alpha = 1f;
             }
 
             if (_cyPanel != null)
@@ -373,9 +373,9 @@ namespace ScrapFishing.UI
 
         void RefreshChipPanel(RunSession session, bool playing)
         {
-            if (_cyPanel != null && _cyPanel.activeSelf != playing)
+            if (_cyPanel != null && !_cyPanel.activeSelf)
             {
-                _cyPanel.SetActive(playing);
+                _cyPanel.SetActive(true);
             }
 
             if (!playing)

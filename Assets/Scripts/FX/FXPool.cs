@@ -49,8 +49,14 @@ namespace ScrapFishing.FX
 
         public static void Bind(Transform bitRoot, RectTransform labelRoot)
         {
+            if (_labelRoot != labelRoot)
+            {
+                Labels.Clear();
+                _labelRoot = labelRoot;
+            }
+
             _bitRoot = bitRoot;
-            _labelRoot = labelRoot;
+            DropDestroyedBits();
         }
 
         public static SpriteRenderer TakeBit()
@@ -60,12 +66,13 @@ namespace ScrapFishing.FX
                 return null;
             }
 
-            SpriteRenderer bit;
-            if (Bits.Count > 0)
+            SpriteRenderer bit = null;
+            while (Bits.Count > 0 && bit == null)
             {
                 bit = Bits.Dequeue();
             }
-            else
+
+            if (bit == null)
             {
                 var go = new GameObject("FXBit");
                 if (_bitRoot != null)
@@ -104,12 +111,13 @@ namespace ScrapFishing.FX
                 return null;
             }
 
-            Text label;
-            if (Labels.Count > 0)
+            Text label = null;
+            while (Labels.Count > 0 && label == null)
             {
                 label = Labels.Dequeue();
             }
-            else
+
+            if (label == null)
             {
                 label = UiFonts.CreateText(_labelRoot, "FXFloat", 22, TextAnchor.MiddleCenter);
                 var rect = label.rectTransform;
@@ -151,6 +159,27 @@ namespace ScrapFishing.FX
             for (var i = LiveBits.Count - 1; i >= 0; i--)
             {
                 ReturnBit(LiveBits[i]);
+            }
+        }
+
+        static void DropDestroyedBits()
+        {
+            for (var i = LiveBits.Count - 1; i >= 0; i--)
+            {
+                if (LiveBits[i] == null)
+                {
+                    LiveBits.RemoveAt(i);
+                }
+            }
+
+            var count = Bits.Count;
+            for (var i = 0; i < count; i++)
+            {
+                var bit = Bits.Dequeue();
+                if (bit != null)
+                {
+                    Bits.Enqueue(bit);
+                }
             }
         }
     }

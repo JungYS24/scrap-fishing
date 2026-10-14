@@ -26,6 +26,9 @@ namespace ScrapFishing.UI
         Vector3 _bestScale = Vector3.one;
         Button _restart;
         RectTransform _restartRect;
+        Action _onRestart;
+        bool _restartArmed;
+        float _restartAt;
         Vector3 _restartScale = Vector3.one;
         UiFxSettings _settings;
         Sequence _intro;
@@ -35,6 +38,7 @@ namespace ScrapFishing.UI
 
         public void Build(Transform canvas, Action onRestart)
         {
+            _onRestart = onRestart;
             _settings = Resources.Load<UiFxSettings>("UiFxSettings");
             _root = new GameObject("Results");
             _root.transform.SetParent(canvas, false);
@@ -78,13 +82,20 @@ namespace ScrapFishing.UI
 
             _restart = UiButton.Create(rect, "RestartButton", "재도전", new Vector2(0.25f, 0.18f), new Vector2(0.75f, 0.28f), () =>
             {
+                if (_restartArmed)
+                {
+                    return;
+                }
+
+                _restartArmed = true;
                 if (_restartRect != null)
                 {
                     Fx.Punch(_restartRect, 0.18f, 0.15f);
                 }
 
-                Fx.FadeOut(FXConfig.Current.fadeDuration, true);
-                DOVirtual.DelayedCall(FXConfig.Current.fadeDuration, () => onRestart?.Invoke()).SetUpdate(true);
+                var dur = FXConfig.Current.fadeDuration;
+                Fx.FadeOut(dur, true);
+                _restartAt = Time.unscaledTime + dur;
             });
             _restartRect = _restart.transform as RectTransform;
             _restartScale = _restartRect.localScale;
@@ -94,6 +105,12 @@ namespace ScrapFishing.UI
 
         void Update()
         {
+            if (_restartArmed && Time.unscaledTime >= _restartAt)
+            {
+                _restartArmed = false;
+                _onRestart?.Invoke();
+            }
+
             if (_restart != null && _root.activeSelf)
             {
                 _restart.interactable = Time.unscaledTime >= _readyAt;

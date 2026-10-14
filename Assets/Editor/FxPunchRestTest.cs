@@ -31,15 +31,28 @@ public static class FxPunchRestTest
                 Step(0.02f);
             }
 
+            var moved = new Vector2(12f, -40f);
+            rect.anchoredPosition = moved;
+            Fx.Punch(rect, 0.2f, 0.2f);
+            for (var i = 0; i < 20; i++)
+            {
+                Step(0.02f);
+            }
+
             var scale = rect.localScale;
             if ((scale - original).sqrMagnitude > 0.0001f)
             {
                 Debug.LogError("FxPunchRestTest FAIL scale=" + scale + " expected=" + original);
                 failed = true;
             }
+            else if ((rect.anchoredPosition - moved).sqrMagnitude > 0.0001f)
+            {
+                Debug.LogError("FxPunchRestTest FAIL position=" + rect.anchoredPosition + " expected=" + moved);
+                failed = true;
+            }
             else
             {
-                Debug.Log("FxPunchRestTest PASS scale=" + scale);
+                Debug.Log("FxPunchRestTest PASS scale=" + scale + " position=" + rect.anchoredPosition);
             }
         }
         catch (Exception ex)

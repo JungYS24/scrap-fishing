@@ -106,12 +106,20 @@ namespace ScrapFishing.UI
                 return;
             }
 
+            var strip = new Vector2(Mathf.Abs(max.x - min.x), Mathf.Abs(max.y - min.y));
+            var scale = Mathf.Min(strip.x / GameView.Width, strip.y / GameView.Height);
+            if (scale < 0.01f)
+            {
+                return;
+            }
+
             _area.anchorMin = new Vector2(0.5f, 0.5f);
             _area.anchorMax = new Vector2(0.5f, 0.5f);
             _area.pivot = new Vector2(0.5f, 0.5f);
-            _area.sizeDelta = new Vector2(Mathf.Abs(max.x - min.x), Mathf.Abs(max.y - min.y));
+            _area.sizeDelta = new Vector2(GameView.Width, GameView.Height);
+            _area.localScale = new Vector3(scale, scale, 1f);
             _area.anchoredPosition = (min + max) * 0.5f;
-            FitBars(canvasSize, _area.sizeDelta, _area.anchoredPosition);
+            FitBars(canvasSize, _area.sizeDelta * scale, _area.anchoredPosition);
         }
 
         void FitBars(Vector2 canvas, Vector2 area, Vector2 center)
