@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,7 +26,11 @@ namespace ScrapFishing.UI
 
             var button = go.AddComponent<Button>();
             button.targetGraphic = image;
-            button.onClick.AddListener(() => onClick?.Invoke());
+            button.onClick.AddListener(() =>
+            {
+                AudioManager.Ensure().PlayUiTap();
+                onClick?.Invoke();
+            });
 
             var text = UiFonts.CreateText(rect, "Label", 28, TextAnchor.MiddleCenter);
             text.rectTransform.anchorMin = Vector2.zero;

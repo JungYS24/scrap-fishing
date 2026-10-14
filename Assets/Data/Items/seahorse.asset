@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: seahorse
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: seahorse
+  displayName: Seahorse
+  category: 0
+  rarity: 1
+  zone: 12_Abyss
+  chip: 600
+  gold: 30
+  icon: {fileID: -6786877694667150010, guid: de6da5f786568714793a71a654a05847, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: e79f4c4fad2107548a503ca0b42803da, type: 2}
+  animatorController: {fileID: 9100000, guid: 08ef227c3ad6fa74c97a0679e2fc40f6, type: 2}
+  prefab: {fileID: 6849289029644228810, guid: 397cf62a70b182f4fac51af00fae41ba, type: 3}

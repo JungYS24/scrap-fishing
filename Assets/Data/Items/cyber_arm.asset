@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: cyber_arm
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: cyber_arm
+  displayName: "\uC0AC\uC774\uBC84 \uC758\uC218"
+  category: 1
+  rarity: 1
+  zone: scrap_items
+  chip: 150
+  gold: 7
+  icon: {fileID: -4156380772830196519, guid: d8a647549bdf59349939db3ccf91a1ac, type: 3}
+  hasAnimation: 0
+  animationClip: {fileID: 0}
+  animatorController: {fileID: 0}
+  prefab: {fileID: 6353419601831093871, guid: f2cf77037dc58184e85fd781bbd5a555, type: 3}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: scrap_pile
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: scrap_pile
+  displayName: "\uACE0\uCCA0 \uB354\uBBF8"
+  category: 1
+  rarity: 0
+  zone: scrap_items
+  chip: 50
+  gold: 2
+  icon: {fileID: 1605352379628694286, guid: 46e55f1630ad45745b77788325ab8035, type: 3}
+  hasAnimation: 0
+  animationClip: {fileID: 0}
+  animatorController: {fileID: 0}
+  prefab: {fileID: 4332111736659127519, guid: abda84ec4c0fc004299a4a0d14e5cbd8, type: 3}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: coconut_ape
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: coconut_ape
+  displayName: Coconut Ape
+  category: 0
+  rarity: 0
+  zone: 10_Beach
+  chip: 80
+  gold: 4
+  icon: {fileID: -8147334946655624064, guid: 1cbd7d1b0fb25c14291c320e9604c88e, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 3ad53a7efd6b2c34ab218cfb45326a31, type: 2}
+  animatorController: {fileID: 9100000, guid: 52ba0c223233f1145ad53ba47451e973, type: 2}
+  prefab: {fileID: 162796083049472249, guid: ca2448bfb10dd9945b9aab2728b9d6a2, type: 3}

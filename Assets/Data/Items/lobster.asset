@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: lobster
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: lobster
+  displayName: Lobster
+  category: 0
+  rarity: 1
+  zone: 10_Beach
+  chip: 120
+  gold: 6
+  icon: {fileID: 5071766062666551965, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: a7df9dbde1f6b0b428e27fe1bd5b8bfb, type: 2}
+  animatorController: {fileID: 9100000, guid: d308b5d52b55dd24ab1292eafc443265, type: 2}
+  prefab: {fileID: 8415360637457281991, guid: 54cba6a4577f2fc4a9f6bac6d77b1c13, type: 3}

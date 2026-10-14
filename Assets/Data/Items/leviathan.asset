@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: leviathan
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: leviathan
+  displayName: Leviathan
+  category: 0
+  rarity: 4
+  zone: 12_Abyss
+  chip: 2000
+  gold: 100
+  icon: {fileID: -8808785127103365754, guid: d1c2042fe997f5f4b9201179877e0711, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 357031577ddbee846964d21ce20b82a4, type: 2}
+  animatorController: {fileID: 9100000, guid: 192ffc94a54d90743802817a0886fab5, type: 2}
+  prefab: {fileID: 3083113172552625511, guid: ab6798e57c5f8b941bafc0a0bf2356fe, type: 3}

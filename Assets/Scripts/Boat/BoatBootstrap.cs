@@ -2,6 +2,8 @@ using ScrapFishing.Audio;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
 using ScrapFishing.Dive;
+using ScrapFishing.Fishing;
+using ScrapFishing.FX;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -19,6 +21,7 @@ namespace ScrapFishing.Boat
         HookMover _hook;
         ScrapSpawner _spawner;
         CastingController _casting;
+        LureCollector _collector;
         DiveDirector _dive;
         VirtualJoystick _stick;
         TitleView _title;
@@ -30,6 +33,7 @@ namespace ScrapFishing.Boat
 
         void Awake()
         {
+            Fx.Ensure();
             AudioManager.Ensure();
             _flow = gameObject.AddComponent<GameFlow>();
             _session = gameObject.AddComponent<RunSession>();
@@ -44,13 +48,14 @@ namespace ScrapFishing.Boat
             BuildUi();
             BindInput();
             BindDive();
-            _session.CaughtItem += AudioManager.Ensure().PlayCatch;
             _session.DiveCharged += AudioManager.Ensure().PlayDiveReady;
             _flow.PhaseChanged += HandlePhaseChanged;
         }
 
         void Start()
         {
+            Fx.FadeIn(0.22f);
+            AudioManager.Ensure().PlayTitleBgm();
             _title.SetVisible(true);
             _canvasUi.SetReadyVisible(true);
             _results.Hide();
@@ -103,7 +108,14 @@ namespace ScrapFishing.Boat
                 _casting = gameObject.AddComponent<CastingController>();
             }
 
-            _casting.Bind(_flow, _session, _gauge, _hook, _spawner);
+            _collector = _hook.GetComponent<LureCollector>();
+            if (_collector == null)
+            {
+                _collector = _hook.gameObject.AddComponent<LureCollector>();
+            }
+
+            _collector.SetSettlePoint(EnsureSettlePoint());
+            _casting.Bind(_flow, _session, _gauge, _hook, _spawner, _collector);
 
             _castCamera = gameObject.AddComponent<CastCamera>();
             _castCamera.Bind(Camera.main, _hook, _flow, _casting);
@@ -114,7 +126,7 @@ namespace ScrapFishing.Boat
                 catcher = gameObject.AddComponent<SwipeCatcher>();
             }
 
-            catcher.Bind(_hook, _spawner, _session);
+            catcher.Bind(_hook, _spawner, _session, _collector);
 
             var swipe = gameObject.AddComponent<SwipeReader>();
             swipe.Bind(Camera.main);
@@ -165,25 +177,66 @@ namespace ScrapFishing.Boat
 
             for (var i = 0; i < 4; i++)
             {
-                var top = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, i / 4f);
-                var bottom = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, (i + 1) / 4f);
-                var height = top - bottom;
-                var band = CreateSprite(
-                    "ZoneWater" + i,
-                    PlaceholderFactory.Square(DepthZone.WaterColor(i)),
-                    new Vector3(0f, (top + bottom) * 0.5f, 0f),
-                    new Vector3(5.6f, height + 0.08f, 1f),
-                    -12 + i);
-                band.transform.SetParent(root.transform, true);
+                var name = "ZoneWater" + i;
+                var existing = root.transform.Find(name);
+                GameObject band;
+                if (existing != null)
+                {
+                    band = existing.gameObject;
+                }
+                else
+                {
+                    var top = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, i / 4f);
+                    var bottom = Mathf.Lerp(SurfaceLayout.WaterlineY, SurfaceLayout.MaxDepthY, (i + 1) / 4f);
+                    var height = top - bottom;
+                    band = CreateSprite(
+                        name,
+                        PlaceholderFactory.Square(DepthZone.WaterColor(i)),
+                        new Vector3(0f, (top + bottom) * 0.5f, 0f),
+                        new Vector3(5.6f, height + 0.08f, 1f),
+                        -12 + i);
+                    band.transform.SetParent(root.transform, true);
+                }
+
+                HideColorBand(band);
             }
 
-            var pad = CreateSprite(
-                "ZoneWaterPad",
-                PlaceholderFactory.Square(DepthZone.WaterColor(3)),
-                new Vector3(0f, SurfaceLayout.MaxDepthY - 2f, 0f),
-                new Vector3(5.6f, 4f, 1f),
-                -9);
-            pad.transform.SetParent(root.transform, true);
+            var padTransform = root.transform.Find("ZoneWaterPad");
+            GameObject pad;
+            if (padTransform != null)
+            {
+                pad = padTransform.gameObject;
+            }
+            else
+            {
+                pad = CreateSprite(
+                    "ZoneWaterPad",
+                    PlaceholderFactory.Square(DepthZone.WaterColor(3)),
+                    new Vector3(0f, SurfaceLayout.MaxDepthY - 2f, 0f),
+                    new Vector3(5.6f, 4f, 1f),
+                    -9);
+                pad.transform.SetParent(root.transform, true);
+            }
+
+            HideColorBand(pad);
+            if (root.TryGetComponent<ZoneBackdrop>(out var leftover))
+            {
+                Destroy(leftover);
+            }
+
+            var host = GameObject.Find("ZoneBackdropRoot");
+            if (host == null)
+            {
+                host = new GameObject("ZoneBackdropRoot");
+            }
+
+            host.transform.SetParent(null);
+            host.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            host.transform.localScale = Vector3.one;
+            if (!host.TryGetComponent<ZoneBackdrop>(out _))
+            {
+                host.AddComponent<ZoneBackdrop>();
+            }
         }
 
         void BuildUi()
@@ -219,6 +272,10 @@ namespace ScrapFishing.Boat
             _hud = canvas.gameObject.AddComponent<HudView>();
             _hud.Build(area.Area, _canvasUi.ChipText, _canvasUi.ChipPanel);
             _hud.Bind(_session);
+            if (_collector != null)
+            {
+                _collector.Bind(_session, EnsureSettlePoint(), _hud);
+            }
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(area.Area);
             _title = _canvasUi.Title;
@@ -247,6 +304,8 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            Fx.PulseFade(0.22f);
+            AudioManager.Ensure().PlayStart();
             _session.StartRun();
             _hud.NotifyRunReset();
             _gauge.SetMaxDepth(Progression.MaxDepth);
@@ -306,9 +365,11 @@ namespace ScrapFishing.Boat
 
         void StartDive()
         {
+            Fx.PulseFade(0.25f);
             _castCamera.SnapRest();
             _casting.ResetHook();
             AudioManager.Ensure().PlayDive();
+            AudioManager.Ensure().SetDiveMix(true);
             _flow.BeginDive();
             _dive.Begin();
         }
@@ -327,6 +388,8 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            Fx.PulseFade(0.25f);
+            AudioManager.Ensure().SetDiveMix(false);
             _casting.ResetHook();
             _flow.ReturnToAiming();
         }
@@ -377,6 +440,13 @@ namespace ScrapFishing.Boat
                 return;
             }
 
+            if (_collector != null)
+            {
+                _collector.SettleImmediate();
+            }
+
+            AudioManager.Ensure().PlayTimeUp();
+            AudioManager.Ensure().DuckResults();
             _session.EndRun();
             if (_dive != null && _dive.IsActive)
             {
@@ -408,6 +478,50 @@ namespace ScrapFishing.Boat
             }
 
             _hud.SetSteerGuide(_casting != null && _casting.ShowSteerGuide);
+            if (_collector != null && _flow.Phase != GamePhase.Diving && _flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results)
+            {
+                _hud.SetLoad(_collector.Count, _collector.MaxAttach);
+            }
+        }
+
+        Transform EnsureSettlePoint()
+        {
+            var existing = GameObject.Find("SettlePoint");
+            if (existing != null)
+            {
+                return existing.transform;
+            }
+
+            var parent = GameObject.Find("SurfaceProps");
+            var point = new GameObject("SettlePoint");
+            if (parent != null)
+            {
+                point.transform.SetParent(parent.transform, true);
+            }
+
+            point.transform.position = new Vector3(0f, 0.85f, 0f);
+            return point.transform;
+        }
+
+        static void SetSpriteAlpha(GameObject go, float alpha)
+        {
+            if (go == null || !go.TryGetComponent<SpriteRenderer>(out var renderer))
+            {
+                return;
+            }
+
+            var color = renderer.color;
+            color.a = alpha;
+            renderer.color = color;
+        }
+
+        static void HideColorBand(GameObject go)
+        {
+            SetSpriteAlpha(go, 0f);
+            if (go != null && go.TryGetComponent<SpriteRenderer>(out var renderer))
+            {
+                renderer.enabled = false;
+            }
         }
 
         static GameObject CreateSprite(string name, Sprite sprite, Vector3 position, Vector3 scale, int order)

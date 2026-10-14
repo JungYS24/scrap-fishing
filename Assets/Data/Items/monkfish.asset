@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: monkfish
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: monkfish
+  displayName: Monkfish
+  category: 0
+  rarity: 2
+  zone: 12_Abyss
+  chip: 900
+  gold: 45
+  icon: {fileID: -8273791922294155748, guid: 190a1739a2f0e2440ae9f385f239b859, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 3e2476bcfe95b46499c93fa67944104d, type: 2}
+  animatorController: {fileID: 9100000, guid: 6b972187b9622ae47815b83ba8933839, type: 2}
+  prefab: {fileID: 5306524849179802880, guid: 5bc00e9702cbfcb4d8ecc305dd03ab93, type: 3}

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9e8d7c6b5a44321b0c1d2e3f4051628, type: 3}
+  m_Name: AudioMix
+  m_EditorClassIdentifier: ScrapFishing.Audio::ScrapFishing.Audio.AudioMix
+  masterSfx: 1
+  masterBgm: 1
+  titleBgm: 0.5
+  playBgm: 0.55
+  resultsDuck: 0.5
+  diveDuck: 0.72
+  crossfade: 0.6
+  uiTap: 0.6
+  start: 0.5
+  castWhoosh: 0.55
+  splash: 0.65
+  reel: 1
+  zoneEnter: 0.5
+  catchCommon: 0.5
+  catchRare: 0.8
+  catchMutant: 0.85
+  chipTick: 0.35
+  diveReady: 0.45
+  timeUp: 0.5
+  timerTick: 0.35
+  upgradeBuy: 0.65
+  upgradeDenied: 0.8
+  fullDenied: 0.3
+  hazard: 0.5
+  diveEnter: 0.4
+  mineHit: 0.5
+  oxygenWarn: 0.45
+  surface: 0.4
+  newBest: 0.5

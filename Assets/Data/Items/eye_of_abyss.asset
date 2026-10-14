@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: eye_of_abyss
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: eye_of_abyss
+  displayName: Eye of Abyss
+  category: 0
+  rarity: 3
+  zone: 12_Abyss
+  chip: 1200
+  gold: 60
+  icon: {fileID: -659277301720478471, guid: 5543f103ed3e0114a98ec40975471a97, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 85df4c388d513054fbcf36cb833d14e0, type: 2}
+  animatorController: {fileID: 9100000, guid: 0a0041273eb6ceb4bb09a8e08560343e, type: 2}
+  prefab: {fileID: 3430263313561545377, guid: dcf4655a329a44443a9d341e7d8f3f68, type: 3}

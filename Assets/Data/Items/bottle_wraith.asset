@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: bottle_wraith
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: bottle_wraith
+  displayName: Bottle Wraith
+  category: 0
+  rarity: 0
+  zone: 10_Beach
+  chip: 60
+  gold: 3
+  icon: {fileID: 4119510136400756509, guid: c4b0460193ff27142a4fb84f45c6ea00, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 8f5e10adb64643b4db8c7cea9493a099, type: 2}
+  animatorController: {fileID: 9100000, guid: 3e4782e4c5e082445934fa2884cb2c7e, type: 2}
+  prefab: {fileID: 4156802689852932417, guid: 93d689d1a0dbe7142a355ba7ae5b4757, type: 3}

@@ -1,5 +1,7 @@
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Controls;
+using ScrapFishing.Fishing;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
@@ -13,17 +15,19 @@ namespace ScrapFishing.Boat
         HookMover _hook;
         ScrapSpawner _spawner;
         RunSession _session;
+        LureCollector _collector;
 
-        public void Bind(HookMover hook, ScrapSpawner spawner, RunSession session)
+        public void Bind(HookMover hook, ScrapSpawner spawner, RunSession session, LureCollector collector)
         {
             _hook = hook;
             _spawner = spawner;
             _session = session;
+            _collector = collector;
         }
 
         public bool HandleSwipe(SwipeInfo swipe)
         {
-            if (!catchOnSwipe || _hook == null || _spawner == null)
+            if (!catchOnSwipe || _hook == null || _spawner == null || (_collector != null && _collector.IsSettling))
             {
                 return false;
             }
@@ -44,10 +48,22 @@ namespace ScrapFishing.Boat
                     continue;
                 }
 
-                if (Vector3.Distance(scrap.transform.position, hookPos) <= radius)
+                if (scrap.Attached || Vector3.Distance(scrap.transform.position, hookPos) > radius)
+                {
+                    continue;
+                }
+
+                if (LureLoad.IsHazard(scrap.ChipValue))
                 {
                     _session.AddCatch(scrap.Definition, scrap.transform.position);
+                    AudioManager.Ensure().PlayHazard();
                     _spawner.Remove(scrap);
+                    continue;
+                }
+
+                if (_collector != null && _collector.TryAttach(scrap))
+                {
+                    _spawner.Unregister(scrap);
                 }
             }
 

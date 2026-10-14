@@ -1,20 +1,54 @@
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 using UnityEngine;
 
 namespace ScrapFishing.Scrap
 {
     public static class ScrapCatalog
     {
+        static readonly string[] FishZones = { "10_Beach", "11_Ocean", "12_Abyss", "12_Abyss" };
         static ScrapDefinition[][] _zones;
 
         public static ScrapDefinition Pick(float depth)
         {
+            var item = PickItem(depth);
+            if (item != null)
+            {
+                return ScrapDefinition.FromItem(item);
+            }
+
             Ensure();
             var table = _zones[DepthZone.Index(depth)];
             var roll = Random.value;
             if (roll < 0.52f) return table[0];
             if (roll < 0.86f) return table[1];
             return table[2];
+        }
+
+        public static ItemData PickItem(float depth)
+        {
+            var db = ItemDatabase.Instance;
+            if (db == null || db.Items == null || db.Items.Count == 0)
+            {
+                return null;
+            }
+
+            var index = Mathf.Clamp(DepthZone.Index(depth), 0, FishZones.Length - 1);
+            var fish = db.GetByZone(FishZones[index]);
+            var scrap = db.GetByZone("scrap_items");
+            var count = fish.Count + scrap.Count;
+            if (count <= 0)
+            {
+                return db.Items[Random.Range(0, db.Items.Count)];
+            }
+
+            var pick = Random.Range(0, count);
+            if (pick < fish.Count)
+            {
+                return fish[pick];
+            }
+
+            return scrap[pick - fish.Count];
         }
 
         static void Ensure()

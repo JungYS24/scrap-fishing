@@ -150,3 +150,111 @@ html, body {
     display: flex;
   }
 }
+
+#fs-button,
+#inapp-banner,
+#ios-install {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+}
+
+#fs-button {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 17vh);
+  right: calc(env(safe-area-inset-right, 0px) + 8px);
+  z-index: 20;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(89, 217, 255, 0.7);
+  border-radius: 8px;
+  background: rgba(11, 18, 32, 0.78);
+  color: #59d9ff;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(11, 18, 32, 0.45);
+}
+
+#fs-button svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+#fs-button[hidden] {
+  display: none;
+}
+
+#inapp-banner,
+#ios-install {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 420px);
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: rgba(11, 18, 32, 0.92);
+  color: #ffffff;
+  border: 1px solid rgba(89, 217, 255, 0.45);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+#inapp-banner {
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  z-index: 22;
+}
+
+#ios-install {
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 21;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+}
+
+#inapp-banner[hidden],
+#ios-install[hidden] {
+  display: none;
+}
+
+#inapp-banner p,
+#ios-install p {
+  margin: 0 0 8px;
+}
+
+#ios-install p {
+  margin: 0;
+  flex: 1;
+}
+
+#inapp-open,
+#inapp-close,
+#ios-install-close {
+  display: inline-block;
+  margin: 0 4px 0 0;
+  padding: 6px 10px;
+  border: 1px solid #59d9ff;
+  border-radius: 6px;
+  background: transparent;
+  color: #59d9ff;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#inapp-open[hidden] {
+  display: none;
+}
+
+#ios-install-close {
+  flex: 0 0 auto;
+  margin: 0;
+}

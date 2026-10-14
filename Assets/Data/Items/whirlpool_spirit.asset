@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: whirlpool_spirit
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: whirlpool_spirit
+  displayName: Whirlpool Spirit
+  category: 0
+  rarity: 1
+  zone: 11_Ocean
+  chip: 300
+  gold: 15
+  icon: {fileID: 1428630873093061989, guid: d6072bb8b8fb11c4694ecb470a5aa200, type: 3}
+  hasAnimation: 1
+  animationClip: {fileID: 7400000, guid: 5c516efab0fadef4c906d2b8de8d9dd7, type: 2}
+  animatorController: {fileID: 9100000, guid: 77ee28dbb059c4347a2fbbff77737c32, type: 2}
+  prefab: {fileID: 1826704744537707436, guid: aefe63a5ef68a324c8baccae5055ff9f, type: 3}

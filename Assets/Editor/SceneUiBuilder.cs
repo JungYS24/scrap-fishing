@@ -169,7 +169,7 @@ namespace ScrapFishing.Build
         {
             var background = CreateImage(parent, "Chip_Panel", new Vector2(0.04f, 0.85f), new Vector2(0.4f, 0.89f), Palette.Panel);
             CreateIcon(background.rectTransform, "ChipIcon", ChipIconPath, new Vector2(0.02f, 0.1f), new Vector2(0.24f, 0.9f));
-            var text = CreateText(background.rectTransform, "ChipText", 18, TextAnchor.MiddleLeft, new Vector2(0.3f, 0f), new Vector2(0.98f, 1f), Palette.NeonGreen);
+            var text = CreateText(background.rectTransform, "ChipText", 18, TextAnchor.MiddleLeft, new Vector2(0.3f, 0.1f), new Vector2(0.96f, 0.7f), Palette.NeonGreen);
             text.text = "0";
             panel = background.gameObject;
             SetLayer(background.transform);

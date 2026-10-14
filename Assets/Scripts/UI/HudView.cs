@@ -1,5 +1,7 @@
 using DG.Tweening;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +14,7 @@ namespace ScrapFishing.UI
 
         Text _time;
         Text _depth;
+        Text _load;
         Text _cy;
         GameObject _cyPanel;
         Text _dive;
@@ -39,6 +42,7 @@ namespace ScrapFishing.UI
         int _lastCY;
         bool _playing;
         bool _oxygenShown;
+        int _oxygenBand;
 
         public void Build(Transform canvas, Text chipText, GameObject chipPanel)
         {
@@ -58,14 +62,13 @@ namespace ScrapFishing.UI
 
             _cy = chipText;
             _cyPanel = chipPanel;
-
-            if (chipText != null && chipText.fontSize < 16)
-            {
-                chipText.fontSize = 22;
-            }
+            FitChipTextInPanel(chipText, chipPanel);
 
             _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
             Stretch(_depth.rectTransform, new Vector2(0.06f, 0.80f), new Vector2(0.5f, 0.88f));
+
+            _load = UiFonts.CreateText(rect, "ScrapLoad", 18, TextAnchor.UpperLeft);
+            Stretch(_load.rectTransform, new Vector2(0.06f, 0.74f), new Vector2(0.55f, 0.80f));
 
             _time = UiFonts.CreateText(rect, "Time", 18, TextAnchor.UpperRight);
             Stretch(_time.rectTransform, new Vector2(0.5f, 0.88f), new Vector2(0.94f, 0.96f));
@@ -116,6 +119,7 @@ namespace ScrapFishing.UI
                 _session.CaughtAt -= HandleCaught;
             }
 
+            StopOxygenWarn();
             KillHudIntro();
         }
 
@@ -164,12 +168,50 @@ namespace ScrapFishing.UI
             }
 
             RefreshOxygen(diving);
+            if (!playing || diving)
+            {
+                SetLoad(0, 0);
+                if (_load != null)
+                {
+                    _load.text = string.Empty;
+                }
+            }
 
             if (_oxygenFill != null)
             {
                 var oxygen = 1f - diveFill;
                 _oxygenFill.fillAmount = oxygen;
-                _oxygenFill.color = Color.Lerp(Palette.Magenta, Palette.Cyan, oxygen);
+                TickOxygenWarn(oxygen, diving);
+                if (_oxygenBand == 0)
+                {
+                    _oxygenFill.color = Color.Lerp(Palette.Magenta, Palette.Cyan, oxygen);
+                }
+            }
+        }
+
+        public void SetLoad(int count, int max)
+        {
+            if (_load == null)
+            {
+                return;
+            }
+
+            if (!_playing)
+            {
+                _load.text = string.Empty;
+                return;
+            }
+
+            var full = max > 0 && count >= max;
+            _load.text = full ? $"SCRAP {count}/{max} FULL" : $"SCRAP {count}/{max}";
+            _load.color = full ? Palette.Magenta : Palette.Text;
+        }
+
+        public void NudgeLoad()
+        {
+            if (_load != null)
+            {
+                Fx.Shake(_load.transform, 10f, 0.18f);
             }
         }
 
@@ -253,6 +295,7 @@ namespace ScrapFishing.UI
 
         void HideHud()
         {
+            StopOxygenWarn();
             KillHudIntro();
             if (_hudGroup != null)
             {
@@ -317,6 +360,15 @@ namespace ScrapFishing.UI
             _lastCY = _session != null ? _session.CY : _lastCY + gain;
             var signed = gain > 0 ? "+" + gain : gain.ToString();
             PlayToast(signed + " " + definition.DisplayName, definition.PlaceholderColor);
+            if (gain > 0 && _cyPanel != null)
+            {
+                Fx.Punch(_cyPanel.transform, 0.12f, 0.16f);
+            }
+            else if (gain < 0 && _cy != null)
+            {
+                Fx.FlashColor(_cy, Palette.Magenta, 0.14f);
+                Fx.Shake(_cy.transform, 8f, 0.2f);
+            }
             if (_chipFx != null)
             {
                 var total = _session != null ? _session.CY : gain;
@@ -407,6 +459,11 @@ namespace ScrapFishing.UI
 
             _lastTime = remaining;
             _time.text = remaining >= 0 ? $"TIME {remaining}" : string.Empty;
+            if (remaining >= 1 && remaining <= 10)
+            {
+                var pitch = remaining <= 3 ? 1f + (4 - remaining) * 0.1f : 1f;
+                AudioManager.Ensure().PlayTimerTick(pitch);
+            }
         }
 
         void SetDepth(string depth)
@@ -477,6 +534,7 @@ namespace ScrapFishing.UI
             {
                 _oxygenShown = false;
                 _oxygenBar.SetActive(false);
+                StopOxygenWarn();
                 return;
             }
 
@@ -495,6 +553,64 @@ namespace ScrapFishing.UI
                     .SetUpdate(true)
                     .SetLink(_oxygenBar);
             }
+        }
+
+        void TickOxygenWarn(float remaining, bool diving)
+        {
+            if (!diving || remaining > FXConfig.Current.oxygenWarn || !FXConfig.Enabled)
+            {
+                StopOxygenWarn();
+                return;
+            }
+
+            var band = remaining <= FXConfig.Current.oxygenCritical ? 2 : 1;
+            if (band == _oxygenBand)
+            {
+                return;
+            }
+
+            StopOxygenWarn();
+            _oxygenBand = band;
+            var pulse = band == 2 ? 0.16f : 0.32f;
+            var punch = band == 2 ? 0.14f : 0.1f;
+            if (_oxygenFill != null)
+            {
+                var t = _oxygenFill.transform;
+                t.DOKill(false);
+                _oxygenFill.DOKill(false);
+                t.localScale = Vector3.one;
+                t.DOScale(1f + punch, pulse)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetEase(Ease.InOutSine)
+                    .SetUpdate(true)
+                    .SetLink(_oxygenFill.gameObject);
+                _oxygenFill.color = Palette.Magenta;
+                _oxygenFill.DOColor(new Color(1f, 0.25f, 0.2f, 1f), pulse)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetEase(Ease.InOutSine)
+                    .SetUpdate(true)
+                    .SetLink(_oxygenFill.gameObject);
+            }
+
+            Fx.SetVignette(band == 2 ? 0.48f : 0.3f, pulse);
+        }
+
+        void StopOxygenWarn()
+        {
+            if (_oxygenBand == 0)
+            {
+                return;
+            }
+
+            _oxygenBand = 0;
+            if (_oxygenFill != null)
+            {
+                _oxygenFill.transform.DOKill(false);
+                _oxygenFill.DOKill(false);
+                _oxygenFill.transform.localScale = Vector3.one;
+            }
+
+            Fx.ClearVignette();
         }
 
         void RefreshDive(RunSession session, bool visible)
@@ -527,6 +643,31 @@ namespace ScrapFishing.UI
                 default:
                     return string.Empty;
             }
+        }
+
+        static void FitChipTextInPanel(Text chipText, GameObject chipPanel)
+        {
+            if (chipText == null)
+            {
+                return;
+            }
+
+            var tr = chipText.rectTransform;
+            if (chipPanel != null)
+            {
+                tr.SetParent(chipPanel.transform, false);
+            }
+
+            tr.localScale = Vector3.one * 4f;
+            tr.localRotation = Quaternion.identity;
+            tr.anchorMin = new Vector2(0.3f, 0.12f);
+            tr.anchorMax = new Vector2(0.96f, 0.68f);
+            tr.pivot = new Vector2(0f, 0.5f);
+            tr.offsetMin = new Vector2(-1.343147f, 18f);
+            tr.offsetMax = new Vector2(1.345147f, -4f);
+            chipText.alignment = TextAnchor.MiddleLeft;
+            chipText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            chipText.verticalOverflow = VerticalWrapMode.Truncate;
         }
 
         static void Stretch(RectTransform rect, Vector2 min, Vector2 max)

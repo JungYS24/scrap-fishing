@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2a3b4c5d6e74890a1b2c3d4e5f60719, type: 3}
+  m_Name: ZoneBackdropArt
+  m_EditorClassIdentifier: ScrapFishing.Boat::ScrapFishing.Boat.ZoneBackdropArt
+  zones:
+  - {fileID: 4515673323476528907, guid: 8f093548c3da03f43a7f51c8cbde93b7, type: 3}
+  - {fileID: -2100014169251582375, guid: 57f90d24f380aa248a4955711536c522, type: 3}
+  - {fileID: 6502459215341580156, guid: 6b6ff661e889b124ba632a9c77dee084, type: 3}
+  - {fileID: -3186898304510177512, guid: 37e04aec35cf9144d953dc716bbd1e3e, type: 3}
+  zoneTextures:
+  - {fileID: 2800000, guid: 8f093548c3da03f43a7f51c8cbde93b7, type: 3}
+  - {fileID: 2800000, guid: 57f90d24f380aa248a4955711536c522, type: 3}
+  - {fileID: 2800000, guid: 6b6ff661e889b124ba632a9c77dee084, type: 3}
+  - {fileID: 2800000, guid: 37e04aec35cf9144d953dc716bbd1e3e, type: 3}

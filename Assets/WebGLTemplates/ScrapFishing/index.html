@@ -11,6 +11,8 @@
     <meta name="theme-color" content="#0b1220">
     <meta name="format-detection" content="telephone=no">
     <title>{{{ PRODUCT_NAME }}}</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
@@ -29,6 +31,20 @@
         <p id="boot-error-detail"></p>
       </div>
     </div>
+    <button type="button" id="fs-button" aria-label="전체화면" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M7 3H3v4h2V5h2V3zm10 0v2h2v2h2V3h-4zM5 17H3v4h4v-2H5v-2zm16 0h-2v2h-2v2h4v-4z"/>
+      </svg>
+    </button>
+    <div id="inapp-banner" hidden>
+      <p>인앱 브라우저에서는 전체화면이 제한될 수 있습니다. 외부 브라우저로 열면 더 잘 플레이할 수 있습니다.</p>
+      <a id="inapp-open" hidden>외부 브라우저로 열기</a>
+      <button type="button" id="inapp-close">닫기</button>
+    </div>
+    <div id="ios-install" hidden>
+      <p>공유 → 홈 화면에 추가하면 전체화면으로 플레이</p>
+      <button type="button" id="ios-install-close" aria-label="닫기">닫기</button>
+    </div>
     <div id="rotate-hint">세로로 돌려 주세요</div>
     <script>
       var canvas = document.querySelector("#unity-canvas");
@@ -38,6 +54,12 @@
       var bootError = document.querySelector("#boot-error");
       var bootDetail = document.querySelector("#boot-error-detail");
       var shell = document.querySelector("#unity-container");
+      var fsButton = document.querySelector("#fs-button");
+      var inappBanner = document.querySelector("#inapp-banner");
+      var inappOpen = document.querySelector("#inapp-open");
+      var iosInstall = document.querySelector("#ios-install");
+      var iosInstallTimer = 0;
+      var fsUnlocked = false;
 
       function fitShell() {
         var vv = window.visualViewport;
@@ -51,15 +73,150 @@
         }
       }
 
-      function enterFullscreen() {
+      function fullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+      }
+
+      function canRequestFullscreen() {
         var root = document.documentElement;
-        var request = root.requestFullscreen || root.webkitRequestFullscreen;
-        if (!request) {
+        return typeof (root.requestFullscreen || root.webkitRequestFullscreen) === "function";
+      }
+
+      function lockPortrait() {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            var pending = screen.orientation.lock("portrait");
+            if (pending && pending.catch) {
+              pending.catch(function () {});
+            }
+          }
+        } catch (err) {}
+      }
+
+      function updateFullscreenButton() {
+        if (!fsButton) {
           return;
         }
-        var pending = request.call(root, { navigationUI: "hide" });
-        if (pending && pending.catch) {
-          pending.catch(function () {});
+        var show = canRequestFullscreen() && !fullscreenElement();
+        fsButton.hidden = !show;
+      }
+
+      function enterFullscreen(fromButton) {
+        if (fullscreenElement() || !canRequestFullscreen()) {
+          return;
+        }
+        if (fsUnlocked && !fromButton) {
+          return;
+        }
+        var root = document.documentElement;
+        var request = root.requestFullscreen || root.webkitRequestFullscreen;
+        var pending;
+        try {
+          pending = request.call(root, { navigationUI: "hide" });
+        } catch (err) {
+          return;
+        }
+        if (pending && pending.then) {
+          pending.then(function () {
+            if (fullscreenElement()) {
+              fsUnlocked = true;
+            }
+            lockPortrait();
+          }).catch(function () {});
+        }
+      }
+
+      function onFullscreenChange() {
+        if (fullscreenElement()) {
+          fsUnlocked = true;
+          lockPortrait();
+        }
+        fitShell();
+        updateFullscreenButton();
+      }
+
+      function isOverlayEvent(event) {
+        var target = event.target;
+        if (!target || !target.closest) {
+          return false;
+        }
+        return !!target.closest("#fs-button, #inapp-banner, #ios-install");
+      }
+
+      function onUserActivate(event) {
+        if (isOverlayEvent(event) || fsUnlocked) {
+          return;
+        }
+        window.setTimeout(function () {
+          enterFullscreen(false);
+        }, 0);
+      }
+
+      function blockUnityPassThrough(element) {
+        if (!element) {
+          return;
+        }
+        ["pointerdown", "pointerup", "pointermove", "touchstart", "touchend", "touchmove", "click", "mousedown", "mouseup"].forEach(function (type) {
+          element.addEventListener(type, function (event) {
+            event.stopPropagation();
+          });
+        });
+      }
+
+      function inAppKind() {
+        var ua = navigator.userAgent || "";
+        if (/KAKAOTALK/i.test(ua)) {
+          return "kakao";
+        }
+        if (/Instagram/i.test(ua)) {
+          return "instagram";
+        }
+        if (/NAVER/i.test(ua)) {
+          return "naver";
+        }
+        return "";
+      }
+
+      function isIosSafari() {
+        var ua = navigator.userAgent || "";
+        var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        if (!ios || /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) || inAppKind()) {
+          return false;
+        }
+        return /WebKit/i.test(ua);
+      }
+
+      function isStandalone() {
+        return navigator.standalone === true;
+      }
+
+      function showInAppBanner() {
+        var kind = inAppKind();
+        if (!kind || !inappBanner) {
+          return;
+        }
+        inappBanner.hidden = false;
+        if (kind === "kakao" && inappOpen) {
+          inappOpen.hidden = false;
+          inappOpen.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(window.location.href);
+        }
+      }
+
+      function showIosInstallHint() {
+        if (!iosInstall || !isIosSafari() || isStandalone()) {
+          return;
+        }
+        iosInstall.hidden = false;
+        iosInstallTimer = window.setTimeout(hideIosInstallHint, 4000);
+      }
+
+      function hideIosInstallHint() {
+        if (iosInstallTimer) {
+          window.clearTimeout(iosInstallTimer);
+          iosInstallTimer = 0;
+        }
+        if (iosInstall) {
+          iosInstall.hidden = true;
         }
       }
 
@@ -89,6 +246,8 @@
       }
 
       fitShell();
+      updateFullscreenButton();
+      showInAppBanner();
       window.addEventListener("resize", fitShell);
       if (window.visualViewport) {
         visualViewport.addEventListener("resize", fitShell);
@@ -96,14 +255,37 @@
       }
       document.addEventListener("gesturestart", function (event) { event.preventDefault(); });
       document.addEventListener("contextmenu", function (event) { event.preventDefault(); });
-      document.addEventListener("pointerdown", enterFullscreen, { once: true });
+      document.addEventListener("pointerup", onUserActivate);
+      document.addEventListener("touchend", onUserActivate, { passive: true });
+      document.addEventListener("fullscreenchange", onFullscreenChange);
+      document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+
+      blockUnityPassThrough(fsButton);
+      blockUnityPassThrough(inappBanner);
+      blockUnityPassThrough(iosInstall);
+      if (fsButton) {
+        fsButton.addEventListener("click", function (event) {
+          event.preventDefault();
+          enterFullscreen(true);
+        });
+      }
+      var inappClose = document.querySelector("#inapp-close");
+      if (inappClose) {
+        inappClose.addEventListener("click", function () {
+          inappBanner.hidden = true;
+        });
+      }
+      var iosClose = document.querySelector("#ios-install-close");
+      if (iosClose) {
+        iosClose.addEventListener("click", hideIosInstallHint);
+      }
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
       var config = {
         arguments: [],
         dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
-        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}";
         codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
 #if MEMORY_FILENAME
         memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
@@ -135,6 +317,7 @@
           label.textContent = percent + "%";
         }).then(function () {
           loading.style.display = "none";
+          showIosInstallHint();
         }).catch(function (message) {
           showBootError(message);
         });

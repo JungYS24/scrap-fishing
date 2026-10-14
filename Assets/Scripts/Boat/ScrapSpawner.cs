@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 using ScrapFishing.Dive;
+using ScrapFishing.Fishing;
 using ScrapFishing.Scrap;
 using UnityEngine;
 
@@ -26,8 +29,15 @@ namespace ScrapFishing.Boat
             var count = 8 + DepthZone.Index(depth);
             for (var i = 0; i < count; i++)
             {
-                var definition = ScrapCatalog.Pick(depth);
+                var item = ScrapCatalog.PickItem(depth);
+                var definition = item != null ? ScrapDefinition.FromItem(item) : ScrapCatalog.Pick(depth);
                 var position = new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f);
+                if (item != null && item.Icon != null)
+                {
+                    SpawnOne(definition, position, 0.22f, 0.16f, item.Icon, item);
+                    continue;
+                }
+
                 if (_diveArt == null)
                 {
                     SpawnOne(definition, position, 0.22f, 0.16f, null);
@@ -52,8 +62,22 @@ namespace ScrapFishing.Boat
             {
                 var along = Random.value < 0.42f ? Random.Range(0.72f, 1f) : Random.Range(0.12f, 0.72f);
                 var y = Mathf.Lerp(surfaceY - 0.45f, targetY + 0.15f, along);
+                var depthHere = DepthZone.FromWorldY(y);
+                var item = ScrapCatalog.PickItem(depthHere);
+                if (item != null)
+                {
+                    SpawnOne(
+                        ScrapDefinition.FromItem(item),
+                        new Vector3(Random.Range(-1.35f, 1.35f), y, 0f),
+                        0.08f,
+                        0.05f,
+                        item.Icon,
+                        item);
+                    continue;
+                }
+
                 SpawnOne(
-                    ScrapCatalog.Pick(DepthZone.FromWorldY(y)),
+                    ScrapCatalog.Pick(depthHere),
                     new Vector3(Random.Range(-1.35f, 1.35f), y, 0f),
                     0.08f,
                     0.05f,
@@ -61,33 +85,52 @@ namespace ScrapFishing.Boat
             }
         }
 
-        ScrapView SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY, Sprite spriteOverride)
+        ScrapView SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY, Sprite spriteOverride, ItemData item = null)
         {
             var go = new GameObject(definition.DisplayName);
             go.transform.SetParent(transform, false);
             go.transform.position = position;
-            go.transform.localScale = Vector3.one * (0.26f + (int)definition.Grade * 0.055f + Random.Range(-0.02f, 0.03f));
+            var art = spriteOverride != null || (definition != null && definition.Sprite != null) || (item != null && item.Icon != null);
+            var baseScale = art ? 0.4f : 0.26f;
+            go.transform.localScale = Vector3.one * (baseScale + (int)definition.Grade * 0.055f + Random.Range(-0.02f, 0.03f));
             var view = go.AddComponent<ScrapView>();
+            if (item != null)
+            {
+                view.data = item;
+            }
+
             view.Bind(definition, spriteOverride);
             go.AddComponent<AmbientDrift>().Configure(position, rangeX, rangeY, Random.Range(0.45f, 0.85f));
             _live.Add(view);
             return view;
         }
 
-        public void CollectNear(Vector3 hook, float radius, RunSession session)
+        public void CollectNear(Vector3 hook, float radius, RunSession session, LureCollector collector)
         {
             for (var i = _live.Count - 1; i >= 0; i--)
             {
                 var scrap = _live[i];
-                if (scrap == null)
+                if (scrap == null || scrap.Attached)
                 {
                     continue;
                 }
 
-                if (Vector3.Distance(scrap.transform.position, hook) <= radius)
+                if (Vector3.Distance(scrap.transform.position, hook) > radius)
+                {
+                    continue;
+                }
+
+                if (LureLoad.IsHazard(scrap.ChipValue))
                 {
                     session.AddCatch(scrap.Definition, scrap.transform.position);
+                    AudioManager.Ensure().PlayHazard();
                     Remove(scrap);
+                    continue;
+                }
+
+                if (collector != null && collector.TryAttach(scrap))
+                {
+                    _live.RemoveAt(i);
                 }
             }
         }
@@ -97,7 +140,7 @@ namespace ScrapFishing.Boat
             for (var i = 0; i < _live.Count; i++)
             {
                 var scrap = _live[i];
-                if (scrap == null)
+                if (scrap == null || scrap.Attached)
                 {
                     continue;
                 }
@@ -114,6 +157,11 @@ namespace ScrapFishing.Boat
                     drift.PullOrigin(hook, speed * Time.deltaTime);
                 }
             }
+        }
+
+        public void Unregister(ScrapView view)
+        {
+            _live.Remove(view);
         }
 
         public void Remove(ScrapView view)
