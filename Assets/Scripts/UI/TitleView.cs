@@ -8,6 +8,9 @@ namespace ScrapFishing.UI
 {
     public class TitleView : MonoBehaviour
     {
+        const float PulseHalf = 0.6f;
+        const float PulseScale = 1.05f;
+
         [SerializeField] Button startButton;
 
         Action _onStart;
@@ -15,13 +18,16 @@ namespace ScrapFishing.UI
         CanvasGroup _group;
         RectTransform _logo;
         RectTransform _buttonRect;
+        CanvasGroup _buttonGroup;
         RectTransform _howTo;
         Vector3 _logoScale = Vector3.one;
         Vector3 _buttonScale = Vector3.one;
         Vector2 _logoHome;
         Sequence _intro;
-        Tween _pulse;
+        Tween _pulseScale;
+        Tween _pulseAlpha;
         Tween _hide;
+        bool _allowPulse;
 
         public void Bind(Action onStart)
         {
@@ -52,6 +58,7 @@ namespace ScrapFishing.UI
 
         void OnDisable()
         {
+            _allowPulse = false;
             KillAll();
         }
 
@@ -85,6 +92,11 @@ namespace ScrapFishing.UI
             {
                 _buttonRect = startButton.transform as RectTransform;
                 _buttonScale = _buttonRect.localScale;
+                _buttonGroup = startButton.GetComponent<CanvasGroup>();
+                if (_buttonGroup == null)
+                {
+                    _buttonGroup = startButton.gameObject.AddComponent<CanvasGroup>();
+                }
             }
 
             if (_howTo == null)
@@ -105,7 +117,9 @@ namespace ScrapFishing.UI
         void PlayIntro()
         {
             Cache();
+            _allowPulse = false;
             KillAll();
+            _allowPulse = true;
             _group.alpha = 0f;
             _group.blocksRaycasts = true;
             _group.interactable = true;
@@ -127,22 +141,43 @@ namespace ScrapFishing.UI
             if (_buttonRect != null)
             {
                 _buttonRect.localScale = Vector3.zero;
+                if (_buttonGroup != null)
+                {
+                    _buttonGroup.alpha = 1f;
+                }
+
                 _intro.Append(_buttonRect.DOScale(_buttonScale, buttonDur).SetEase(Ease.OutBack));
-                _intro.OnComplete(StartPulse);
             }
+
+            _intro.OnComplete(BeginPulse);
+            _intro.OnKill(BeginPulse);
         }
 
-        void StartPulse()
+        void BeginPulse()
         {
-            if (_buttonRect == null || _settings != null && _settings.Reduced)
+            if (!_allowPulse || _buttonRect == null || !isActiveAndEnabled)
             {
                 return;
             }
 
-            var pulse = _settings != null ? _settings.titlePulseScale : 0.06f;
-            var duration = _settings != null ? _settings.titlePulseDuration : 0.75f;
+            if (_pulseScale != null && _pulseScale.IsActive())
+            {
+                return;
+            }
+
             _buttonRect.localScale = _buttonScale;
-            _pulse = _buttonRect.DOScale(_buttonScale * (1f + pulse), duration)
+            if (_buttonGroup == null)
+            {
+                return;
+            }
+
+            _buttonGroup.alpha = 1f;
+            _pulseScale = _buttonRect.DOScale(_buttonScale * PulseScale, PulseHalf)
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetUpdate(true)
+                .SetLink(_buttonRect.gameObject);
+            _pulseAlpha = _buttonGroup.DOFade(0.45f, PulseHalf)
                 .SetEase(Ease.InOutSine)
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetUpdate(true)
@@ -152,12 +187,9 @@ namespace ScrapFishing.UI
         void HideAnimated()
         {
             Cache();
+            _allowPulse = false;
+            StopPulse();
             KillIntro();
-            if (_pulse != null && _pulse.IsActive())
-            {
-                _pulse.Kill(false);
-            }
-
             if (_buttonRect != null)
             {
                 _buttonRect.localScale = _buttonScale;
@@ -184,8 +216,35 @@ namespace ScrapFishing.UI
 
         void HandleStart()
         {
+            _allowPulse = false;
+            StopPulse();
             AudioManager.Ensure().Unlock();
             _onStart?.Invoke();
+        }
+
+        void StopPulse()
+        {
+            if (_pulseScale != null && _pulseScale.IsActive())
+            {
+                _pulseScale.Kill(false);
+            }
+
+            if (_pulseAlpha != null && _pulseAlpha.IsActive())
+            {
+                _pulseAlpha.Kill(false);
+            }
+
+            _pulseScale = null;
+            _pulseAlpha = null;
+            if (_buttonRect != null)
+            {
+                _buttonRect.localScale = _buttonScale;
+            }
+
+            if (_buttonGroup != null)
+            {
+                _buttonGroup.alpha = 1f;
+            }
         }
 
         void KillIntro()
@@ -201,11 +260,7 @@ namespace ScrapFishing.UI
         void KillAll()
         {
             KillIntro();
-            if (_pulse != null && _pulse.IsActive())
-            {
-                _pulse.Kill(false);
-            }
-
+            StopPulse();
             if (_hide != null && _hide.IsActive())
             {
                 _hide.Kill(false);
