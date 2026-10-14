@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -52,7 +53,62 @@ namespace ScrapFishing.Build
                 return;
             }
 
+            ValidateWebGlOutput(output);
             Debug.Log("WebGL build succeeded: " + output);
+        }
+
+        static void ValidateWebGlOutput(string output)
+        {
+            var indexPath = Path.Combine(output, "index.html");
+            if (!File.Exists(indexPath))
+            {
+                Debug.LogError("WebGL index.html not found: " + indexPath);
+                return;
+            }
+
+            var html = File.ReadAllText(indexPath);
+            var buildDir = Path.Combine(output, "Build");
+            var checks = new[]
+            {
+                new[] { "loaderUrl", "loader" },
+                new[] { "dataUrl", "data" },
+                new[] { "frameworkUrl", "framework" },
+                new[] { "codeUrl", "wasm" }
+            };
+
+            foreach (var check in checks)
+            {
+                var key = check[0];
+                var label = check[1];
+                var match = Regex.Match(html, key + @"\s*[:=]\s*buildUrl\s*\+\s*""/([^""]+)""");
+                if (!match.Success)
+                {
+                    Debug.LogError("WebGL index.html is missing a " + label + " path (" + key + ")");
+                    continue;
+                }
+
+                var filePath = Path.Combine(buildDir, match.Groups[1].Value);
+                if (!File.Exists(filePath))
+                {
+                    Debug.LogError("WebGL " + label + " file missing: " + filePath);
+                }
+            }
+
+            var config = Regex.Match(html, @"var config\s*=\s*\{(?<body>[\s\S]*?)\};");
+            if (!config.Success)
+            {
+                Debug.LogError("WebGL index.html config block was not found");
+                return;
+            }
+
+            var lines = config.Groups["body"].Value.Split('\n');
+            foreach (var line in lines)
+            {
+                if (line.TrimEnd().EndsWith("\";"))
+                {
+                    Debug.LogError("WebGL config line ends with a semicolon: " + line.Trim());
+                }
+            }
         }
     }
 }
