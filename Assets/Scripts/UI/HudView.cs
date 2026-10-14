@@ -364,11 +364,6 @@ namespace ScrapFishing.UI
             {
                 Fx.Punch(_cyPanel.transform, 0.12f, 0.16f);
             }
-            else if (gain < 0 && _cy != null)
-            {
-                Fx.FlashColor(_cy, Palette.Magenta, 0.14f);
-                Fx.Shake(_cy.transform, 8f, 0.2f);
-            }
             if (_chipFx != null)
             {
                 var total = _session != null ? _session.CY : gain;

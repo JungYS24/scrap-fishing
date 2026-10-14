@@ -60,7 +60,10 @@ namespace ScrapFishing.FX
             if (_host == null)
             {
                 _host = new GameObject("FXRuntime");
-                Object.DontDestroyOnLoad(_host);
+                if (Application.isPlaying)
+                {
+                    Object.DontDestroyOnLoad(_host);
+                }
                 var bits = new GameObject("FXBits");
                 bits.transform.SetParent(_host.transform, false);
             }
@@ -152,8 +155,14 @@ namespace ScrapFishing.FX
             }
 
             Ensure();
+            var rest = FxRest.Capture(t);
             t.DOKill(false);
-            t.DOPunchScale(Vector3.one * scale, dur, 8, 0.6f).SetUpdate(true).SetLink(t.gameObject);
+            rest.Restore();
+            t.DOPunchScale(Vector3.one * scale, dur, 8, 0.6f)
+                .SetUpdate(true)
+                .SetLink(t.gameObject)
+                .OnComplete(rest.Restore)
+                .OnKill(rest.Restore);
         }
 
         public static void Pop(Transform t)
@@ -165,10 +174,16 @@ namespace ScrapFishing.FX
 
             Ensure();
             var cfg = FXConfig.Current;
+            var rest = FxRest.Capture(t);
             t.DOKill(false);
+            rest.Restore();
+            var baseScale = rest.Scale;
             t.localScale = Vector3.zero;
-            t.DOScale(cfg.popOvershoot, cfg.popDuration * 0.65f).SetEase(Ease.OutBack).SetUpdate(true).SetLink(t.gameObject)
-                .OnComplete(() => t.DOScale(1f, cfg.popDuration * 0.35f).SetUpdate(true).SetLink(t.gameObject));
+            var seq = DOTween.Sequence().SetUpdate(true).SetLink(t.gameObject);
+            seq.Append(t.DOScale(baseScale * cfg.popOvershoot, cfg.popDuration * 0.65f).SetEase(Ease.OutBack));
+            seq.Append(t.DOScale(baseScale, cfg.popDuration * 0.35f));
+            seq.OnComplete(rest.Restore);
+            seq.OnKill(rest.Restore);
         }
 
         public static void Shake(Transform t, float strength, float dur)
@@ -179,15 +194,28 @@ namespace ScrapFishing.FX
             }
 
             Ensure();
+            var rest = FxRest.Capture(t);
             t.DOKill(false);
+            rest.Restore();
             var rect = t as RectTransform;
-            if (rect != null)
+            Tween tween = rect != null
+                ? rect.DOShakeAnchorPos(dur, strength, 12, 90f, false, true)
+                : t.DOShakePosition(dur, strength, 12, 90f, false, true);
+            tween.SetUpdate(true).SetLink(t.gameObject).OnComplete(rest.Restore).OnKill(rest.Restore);
+        }
+
+        public static void Restore(Transform t)
+        {
+            if (t == null)
             {
-                rect.DOShakeAnchorPos(dur, strength, 12, 90f, false, true).SetUpdate(true).SetLink(t.gameObject);
                 return;
             }
 
-            t.DOShakePosition(dur, strength, 12, 90f, false, true).SetUpdate(true).SetLink(t.gameObject);
+            var rest = t.GetComponent<FxRest>();
+            if (rest != null)
+            {
+                rest.Restore();
+            }
         }
 
         public static void ShakeCamera(float strength, float dur)
@@ -640,6 +668,67 @@ namespace ScrapFishing.FX
                 RectTransformUtility.WorldToScreenPoint(Camera.main, world),
                 cam,
                 out local);
+        }
+    }
+
+    sealed class FxRest : MonoBehaviour
+    {
+        public Vector3 Scale { get; private set; }
+        bool _captured;
+        bool _rect;
+        Vector2 _anchored;
+        Vector3 _position;
+
+        public static FxRest Capture(Transform target)
+        {
+            var rest = target.GetComponent<FxRest>();
+            if (rest == null)
+            {
+                rest = target.gameObject.AddComponent<FxRest>();
+                rest.hideFlags = HideFlags.HideInInspector;
+            }
+
+            rest.CaptureOnce();
+            return rest;
+        }
+
+        public void Restore()
+        {
+            if (!_captured || this == null)
+            {
+                return;
+            }
+
+            transform.localScale = Scale;
+            if (_rect)
+            {
+                ((RectTransform)transform).anchoredPosition = _anchored;
+            }
+            else
+            {
+                transform.localPosition = _position;
+            }
+        }
+
+        void CaptureOnce()
+        {
+            if (_captured)
+            {
+                return;
+            }
+
+            Scale = transform.localScale;
+            if (transform is RectTransform rect)
+            {
+                _rect = true;
+                _anchored = rect.anchoredPosition;
+            }
+            else
+            {
+                _position = transform.localPosition;
+            }
+
+            _captured = true;
         }
     }
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.UI;
@@ -117,12 +118,9 @@ namespace ScrapFishing.UI
                 return;
             }
 
-            if (chipPanel != null && !settings.Reduced)
+            if (chipPanel != null)
             {
-                chipPanel.DOKill(false);
-                chipPanel.DOShakePosition(settings.shakeDuration, settings.shakeStrength, 14, 90f, false, true)
-                    .SetUpdate(true)
-                    .SetLink(chipPanel.gameObject);
+                Fx.Shake(chipPanel, settings.shakeStrength, settings.shakeDuration);
             }
 
             if (!settings.Reduced)
@@ -250,12 +248,14 @@ namespace ScrapFishing.UI
             if (chipIcon != null)
             {
                 chipIcon.DOKill(false);
+                Fx.Restore(chipIcon);
                 chipIcon.localScale = _iconScale;
             }
 
             if (chipPanel != null)
             {
                 chipPanel.DOKill(false);
+                Fx.Restore(chipPanel);
             }
         }
 
@@ -293,13 +293,9 @@ namespace ScrapFishing.UI
         void Arrive(int amount)
         {
             _inFlight = Mathf.Max(0, _inFlight - 1);
-            if (chipIcon != null && !settings.Reduced)
+            if (chipIcon != null && chipIcon != chipPanel)
             {
-                chipIcon.DOKill(false);
-                chipIcon.localScale = _iconScale;
-                chipIcon.DOPunchScale(Vector3.one * settings.arrivePunch, 0.14f, 4, 0.5f)
-                    .SetUpdate(true)
-                    .SetLink(chipIcon.gameObject);
+                Fx.Punch(chipIcon, settings.arrivePunch, 0.14f);
             }
 
             _visual += amount;

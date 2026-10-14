@@ -1,4 +1,5 @@
 using DG.Tweening;
+using ScrapFishing.FX;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,10 +17,9 @@ namespace ScrapFishing.UI
 
         Text _text;
         Tweener _countTween;
-        Tween _punchTween;
         Tween _colorTween;
-        Tween _shakeTween;
         Vector3 _baseScale = Vector3.one;
+        bool _scaleCaptured;
         float _displayed;
         int _written = int.MinValue;
         Color _flashColor;
@@ -35,7 +35,7 @@ namespace ScrapFishing.UI
             unscaled = useUnscaled;
             EnsureText();
             baseColor = _text.color;
-            _baseScale = transform.localScale;
+            CaptureScale();
         }
 
         public void Snap(int value)
@@ -72,6 +72,7 @@ namespace ScrapFishing.UI
         void Awake()
         {
             EnsureText();
+            CaptureScale();
         }
 
         void OnDisable()
@@ -84,11 +85,18 @@ namespace ScrapFishing.UI
             if (_text == null)
             {
                 _text = GetComponent<Text>();
-                if (_text != null)
-                {
-                    _baseScale = transform.localScale;
-                }
             }
+        }
+
+        void CaptureScale()
+        {
+            if (_scaleCaptured)
+            {
+                return;
+            }
+
+            _baseScale = transform.localScale;
+            _scaleCaptured = true;
         }
 
         void Apply(float value)
@@ -122,34 +130,17 @@ namespace ScrapFishing.UI
 
         void PlayFeedback(bool gained)
         {
-            if (settings != null && settings.Reduced)
-            {
-                return;
-            }
-
             var rect = (RectTransform)_text.transform;
-            if (_punchTween != null && _punchTween.IsActive())
-            {
-                _punchTween.Kill(false);
-            }
-
             if (_colorTween != null && _colorTween.IsActive())
             {
                 _colorTween.Kill(false);
-            }
-
-            if (_shakeTween != null && _shakeTween.IsActive())
-            {
-                _shakeTween.Kill(false);
             }
 
             rect.localScale = _baseScale;
             _text.color = baseColor;
             if (gained)
             {
-                _punchTween = rect.DOPunchScale(Vector3.one * settings.punchScale, settings.punchDuration, 4, 0.4f)
-                    .SetUpdate(unscaled)
-                    .SetLink(gameObject);
+                Fx.Punch(rect, settings.punchScale, settings.punchDuration);
                 _flashColor = settings.gainFlash;
                 _colorTween = _text.DOColor(_flashColor, settings.flashDuration)
                     .SetLoops(2, LoopType.Yoyo)
@@ -159,9 +150,7 @@ namespace ScrapFishing.UI
             }
             else
             {
-                _shakeTween = rect.DOShakePosition(settings.shakeDuration, settings.shakeStrength, 12, 90f, false, true)
-                    .SetUpdate(unscaled)
-                    .SetLink(gameObject);
+                Fx.Shake(rect, settings.shakeStrength, settings.shakeDuration);
                 _flashColor = settings.loseFlash;
                 _colorTween = _text.DOColor(_flashColor, settings.flashDuration)
                     .SetLoops(2, LoopType.Yoyo)
