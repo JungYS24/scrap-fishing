@@ -65,6 +65,12 @@ sysinfo.txt
 /webgl-build.log
 /webgl-build.status
 
+# Unity Performance Testing writes these into Resources when a test run starts.
+/Assets/Resources/PerformanceTestRunInfo.json
+/Assets/Resources/PerformanceTestRunInfo.json.meta
+/Assets/Resources/PerformanceTestRunSettings.json
+/Assets/Resources/PerformanceTestRunSettings.json.meta
+
 # macOS zip leftovers
 .DS_Store
 __MACOSX/

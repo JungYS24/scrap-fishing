@@ -18,33 +18,34 @@ namespace ScrapFishing.Build
             PlayerSettings.WebGL.decompressionFallback = true;
             PlayerSettings.WebGL.template = "PROJECT:ScrapFishing";
 
-            var output = Path.GetFullPath("docs");
-            Directory.CreateDirectory(output);
-            var buildDir = Path.Combine(output, "Build");
-            if (Directory.Exists(buildDir))
+            // Unity names Build files after the last folder, so this must stay "docs".
+            var staging = Path.GetFullPath(Path.Combine("Temp", "docs"));
+            if (Directory.Exists(staging))
             {
-                Directory.Delete(buildDir, true);
+                Directory.Delete(staging, true);
             }
+
+            Directory.CreateDirectory(staging);
 
             var options = new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/Scenes/Boat.unity" },
-                locationPathName = output,
+                locationPathName = staging,
                 target = BuildTarget.WebGL,
                 options = BuildOptions.None
             };
 
             var report = BuildPipeline.BuildPlayer(options);
-            File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty);
             File.WriteAllText(Path.GetFullPath("webgl-build.status"), report.summary.result.ToString());
-            var leftover = Path.Combine(output, "TemplateData");
+            var leftover = Path.Combine(staging, "TemplateData");
             if (Directory.Exists(leftover))
             {
                 Directory.Delete(leftover, true);
             }
+
             if (report.summary.result != BuildResult.Succeeded)
             {
-                Debug.LogError("WebGL build failed: " + report.summary.result);
+                Debug.LogError("WebGL build failed: " + report.summary.result + ". docs was left unchanged.");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
@@ -53,17 +54,95 @@ namespace ScrapFishing.Build
                 return;
             }
 
-            ValidateWebGlOutput(output);
+            if (!ValidateWebGlOutput(staging))
+            {
+                Debug.LogError("WebGL output check failed. docs was left unchanged.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+
+                return;
+            }
+
+            var output = Path.GetFullPath("docs");
+            PublishStaging(staging, output);
             Debug.Log("WebGL build succeeded: " + output);
         }
 
-        static void ValidateWebGlOutput(string output)
+        static void PublishStaging(string staging, string output)
         {
+            Directory.CreateDirectory(output);
+            var stagingBuild = Path.Combine(staging, "Build");
+            var publishedBuild = Path.Combine(output, "Build");
+            var incomingBuild = Path.Combine(output, "Build.next");
+            if (Directory.Exists(incomingBuild))
+            {
+                Directory.Delete(incomingBuild, true);
+            }
+
+            CopyDirectory(stagingBuild, incomingBuild);
+            if (Directory.Exists(publishedBuild))
+            {
+                Directory.Delete(publishedBuild, true);
+            }
+
+            Directory.Move(incomingBuild, publishedBuild);
+
+            foreach (var file in Directory.GetFiles(staging))
+            {
+                var destination = Path.Combine(output, Path.GetFileName(file));
+                File.Copy(file, destination, true);
+            }
+
+            foreach (var dir in Directory.GetDirectories(staging))
+            {
+                var name = Path.GetFileName(dir);
+                if (name.Equals("Build", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var destination = Path.Combine(output, name);
+                if (Directory.Exists(destination))
+                {
+                    Directory.Delete(destination, true);
+                }
+
+                CopyDirectory(dir, destination);
+            }
+
+            var publishedTemplateData = Path.Combine(output, "TemplateData");
+            if (Directory.Exists(publishedTemplateData))
+            {
+                Directory.Delete(publishedTemplateData, true);
+            }
+
+            File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty);
+        }
+
+        static void CopyDirectory(string source, string destination)
+        {
+            Directory.CreateDirectory(destination);
+            foreach (var file in Directory.GetFiles(source))
+            {
+                File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), true);
+            }
+
+            foreach (var dir in Directory.GetDirectories(source))
+            {
+                CopyDirectory(dir, Path.Combine(destination, Path.GetFileName(dir)));
+            }
+        }
+
+        static bool ValidateWebGlOutput(string output)
+        {
+            var ok = true;
             var indexPath = Path.Combine(output, "index.html");
             if (!File.Exists(indexPath))
             {
                 Debug.LogError("WebGL index.html not found: " + indexPath);
-                return;
+                return false;
             }
 
             var html = File.ReadAllText(indexPath);
@@ -84,13 +163,15 @@ namespace ScrapFishing.Build
                 if (!match.Success)
                 {
                     Debug.LogError("WebGL index.html is missing a " + label + " path (" + key + ")");
+                    ok = false;
                     continue;
                 }
 
                 var filePath = Path.Combine(buildDir, match.Groups[1].Value);
-                if (!File.Exists(filePath))
+                if (!File.Exists(filePath) || new FileInfo(filePath).Length == 0)
                 {
-                    Debug.LogError("WebGL " + label + " file missing: " + filePath);
+                    Debug.LogError("WebGL " + label + " file missing or empty: " + filePath);
+                    ok = false;
                 }
             }
 
@@ -98,7 +179,7 @@ namespace ScrapFishing.Build
             if (!config.Success)
             {
                 Debug.LogError("WebGL index.html config block was not found");
-                return;
+                return false;
             }
 
             var lines = config.Groups["body"].Value.Split('\n');
@@ -107,8 +188,11 @@ namespace ScrapFishing.Build
                 if (line.TrimEnd().EndsWith("\";"))
                 {
                     Debug.LogError("WebGL config line ends with a semicolon: " + line.Trim());
+                    ok = false;
                 }
             }
+
+            return ok;
         }
     }
 }
