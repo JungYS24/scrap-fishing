@@ -15,10 +15,10 @@ MonoBehaviour:
   id: bottle_wraith
   displayName: Bottle Wraith
   category: 0
-  rarity: 0
-  zone: 10_Beach
-  chip: 60
-  gold: 3
+  rarity: 2
+  zone: beach
+  chip: 900
+  gold: 45
   icon: {fileID: 4119510136400756509, guid: c4b0460193ff27142a4fb84f45c6ea00, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 8f5e10adb64643b4db8c7cea9493a099, type: 2}

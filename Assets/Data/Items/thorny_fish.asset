@@ -15,10 +15,10 @@ MonoBehaviour:
   id: thorny_fish
   displayName: Thorny Fish
   category: 0
-  rarity: 1
-  zone: 12_Abyss
-  chip: 700
-  gold: 35
+  rarity: 2
+  zone: abyss
+  chip: 1300
+  gold: 65
   icon: {fileID: -5137418087937218043, guid: dcbb35d7c773e6e41b7e3dfdd7b16081, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 0e92b49c9913e9440aaad1314e7f36a1, type: 2}

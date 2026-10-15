@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3687a77e320a6624595f63730ae1f6d6, type: 3}
+  m_Name: rusty_battery
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
+  id: rusty_battery
+  displayName: "\uB179\uC2A8 \uAC74\uC804\uC9C0"
+  category: 1
+  rarity: 0
+  zone: any
+  chip: 60
+  gold: 3
+  icon: {fileID: 5094811569450979495, guid: 435edfff4eeb1864890b41d38cf2e2c4, type: 3}
+  hasAnimation: 0
+  animationClip: {fileID: 0}
+  animatorController: {fileID: 0}
+  prefab: {fileID: 7334495626860801943, guid: 6e6b18a92a29b304d9df41f3cf85d4ab, type: 3}

@@ -15,10 +15,10 @@ MonoBehaviour:
   id: sucker_squid
   displayName: Sucker Squid
   category: 0
-  rarity: 0
-  zone: 11_Ocean
-  chip: 240
-  gold: 12
+  rarity: 2
+  zone: ocean
+  chip: 1000
+  gold: 50
   icon: {fileID: 8860566440624255847, guid: bd1a075b5dfbd20458cf41c8fb7b4417, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: bb36c0b8d95ecca4d992d1d379503919, type: 2}

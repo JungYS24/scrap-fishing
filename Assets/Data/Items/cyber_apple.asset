@@ -15,10 +15,10 @@ MonoBehaviour:
   id: cyber_apple
   displayName: "\uC0AC\uC774\uBC84 \uC0AC\uACFC"
   category: 1
-  rarity: 0
-  zone: scrap_items
-  chip: 40
-  gold: 2
+  rarity: 1
+  zone: any
+  chip: 220
+  gold: 11
   icon: {fileID: 2397195255108669392, guid: cd4b450fae89e82459361578eea4c91d, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

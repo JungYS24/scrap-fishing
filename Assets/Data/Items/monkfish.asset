@@ -15,10 +15,10 @@ MonoBehaviour:
   id: monkfish
   displayName: Monkfish
   category: 0
-  rarity: 2
-  zone: 12_Abyss
-  chip: 900
-  gold: 45
+  rarity: 3
+  zone: abyss
+  chip: 4000
+  gold: 200
   icon: {fileID: -8273791922294155748, guid: 190a1739a2f0e2440ae9f385f239b859, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 3e2476bcfe95b46499c93fa67944104d, type: 2}

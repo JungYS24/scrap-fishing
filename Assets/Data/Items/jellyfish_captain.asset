@@ -15,10 +15,10 @@ MonoBehaviour:
   id: jellyfish_captain
   displayName: Jellyfish Captain
   category: 0
-  rarity: 0
-  zone: 10_Beach
-  chip: 100
-  gold: 5
+  rarity: 3
+  zone: beach
+  chip: 3000
+  gold: 150
   icon: {fileID: -5535723247477392084, guid: cf973f6bac351eb4eaf90cd27e154ce4, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 32910e10dd98adc41a3988033d45fe61, type: 2}

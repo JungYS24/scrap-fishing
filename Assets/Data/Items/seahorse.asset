@@ -15,10 +15,10 @@ MonoBehaviour:
   id: seahorse
   displayName: Seahorse
   category: 0
-  rarity: 1
-  zone: 12_Abyss
-  chip: 600
-  gold: 30
+  rarity: 2
+  zone: abyss
+  chip: 1050
+  gold: 52
   icon: {fileID: -6786877694667150010, guid: de6da5f786568714793a71a654a05847, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: e79f4c4fad2107548a503ca0b42803da, type: 2}

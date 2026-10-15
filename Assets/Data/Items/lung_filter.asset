@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: "\uD3D0 \uD544\uD130"
   category: 1
   rarity: 1
-  zone: scrap_items
-  chip: 300
-  gold: 15
+  zone: any
+  chip: 420
+  gold: 21
   icon: {fileID: -3858056900211215435, guid: fda1e1a37f150804fb81fac5d5db222e, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

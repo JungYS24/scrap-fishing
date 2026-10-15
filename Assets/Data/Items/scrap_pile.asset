@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: scrap_pile
   m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Data.ItemData
   id: scrap_pile
-  displayName: "\uACE0\uCCA0 \uB354\uBBF8"
+  displayName: "\uD3D0\uD488 \uB354\uBBF8"
   category: 1
-  rarity: 0
-  zone: scrap_items
-  chip: 50
-  gold: 2
+  rarity: 1
+  zone: any
+  chip: 200
+  gold: 10
   icon: {fileID: 1605352379628694286, guid: 46e55f1630ad45745b77788325ab8035, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

@@ -15,10 +15,10 @@ MonoBehaviour:
   id: data_chip
   displayName: "\uB370\uC774\uD130 \uCE69"
   category: 1
-  rarity: 2
-  zone: scrap_items
-  chip: 400
-  gold: 20
+  rarity: 1
+  zone: any
+  chip: 480
+  gold: 24
   icon: {fileID: 1194981953614008509, guid: 721f0c11ca8750f47a02056b585afbc8, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

@@ -15,10 +15,10 @@ MonoBehaviour:
   id: leviathan
   displayName: Leviathan
   category: 0
-  rarity: 4
-  zone: 12_Abyss
-  chip: 2000
-  gold: 100
+  rarity: 3
+  zone: abyss
+  chip: 8000
+  gold: 400
   icon: {fileID: -8808785127103365754, guid: d1c2042fe997f5f4b9201179877e0711, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 357031577ddbee846964d21ce20b82a4, type: 2}

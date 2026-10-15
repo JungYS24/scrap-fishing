@@ -15,10 +15,10 @@ MonoBehaviour:
   id: frigate
   displayName: Frigate
   category: 0
-  rarity: 1
-  zone: 11_Ocean
-  chip: 360
-  gold: 18
+  rarity: 2
+  zone: ocean
+  chip: 1200
+  gold: 60
   icon: {fileID: -8496456226791334773, guid: 12d7551ba561b3a4ebfb4ce03a0f1f17, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 494194fc0cd588742a54a9cd1b1a9ca3, type: 2}

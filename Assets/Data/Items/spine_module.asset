@@ -15,10 +15,10 @@ MonoBehaviour:
   id: spine_module
   displayName: "\uCC99\uCD94 \uBAA8\uB4C8"
   category: 1
-  rarity: 2
-  zone: scrap_items
-  chip: 600
-  gold: 30
+  rarity: 1
+  zone: any
+  chip: 580
+  gold: 29
   icon: {fileID: 5388067253773893200, guid: 00a7df7d6a8295d448e5f08b74790fdb, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

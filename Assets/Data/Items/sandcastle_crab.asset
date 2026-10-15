@@ -15,10 +15,10 @@ MonoBehaviour:
   id: sandcastle_crab
   displayName: Sandcastle Crab
   category: 0
-  rarity: 1
-  zone: 10_Beach
-  chip: 140
-  gold: 7
+  rarity: 2
+  zone: beach
+  chip: 850
+  gold: 42
   icon: {fileID: -7363067482195545722, guid: 4beb1f9ea28e8da43a90bba4f15a6a27, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: dc6f7e6d81ef9004cb578ada49eee72c, type: 2}

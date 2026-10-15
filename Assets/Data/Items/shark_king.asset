@@ -15,10 +15,10 @@ MonoBehaviour:
   id: shark_king
   displayName: Shark King
   category: 0
-  rarity: 2
-  zone: 11_Ocean
-  chip: 500
-  gold: 25
+  rarity: 3
+  zone: ocean
+  chip: 5500
+  gold: 275
   icon: {fileID: -5573665938988007616, guid: 7dd03a2d973c1b340928b65021ff8ecd, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 4ad25ce47764e9c4eac25c01747ed652, type: 2}

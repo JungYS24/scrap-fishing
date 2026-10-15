@@ -15,10 +15,10 @@ MonoBehaviour:
   id: whirlpool_spirit
   displayName: Whirlpool Spirit
   category: 0
-  rarity: 1
-  zone: 11_Ocean
-  chip: 300
-  gold: 15
+  rarity: 2
+  zone: ocean
+  chip: 1400
+  gold: 70
   icon: {fileID: 1428630873093061989, guid: d6072bb8b8fb11c4694ecb470a5aa200, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 5c516efab0fadef4c906d2b8de8d9dd7, type: 2}

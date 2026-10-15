@@ -15,10 +15,10 @@ MonoBehaviour:
   id: neon_sign
   displayName: "\uB124\uC628 \uAC04\uD310"
   category: 1
-  rarity: 0
-  zone: scrap_items
-  chip: 100
-  gold: 5
+  rarity: 1
+  zone: any
+  chip: 300
+  gold: 15
   icon: {fileID: -4182257635208713765, guid: 7f9daa0af9e4fe644bd56f12a14ee71a, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

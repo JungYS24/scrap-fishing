@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: Pearl Mimic
   category: 0
   rarity: 2
-  zone: 10_Beach
-  chip: 200
-  gold: 10
+  zone: beach
+  chip: 1150
+  gold: 57
   icon: {fileID: -3092243978879235495, guid: 897b20d52a61b9b47ac7caac223161ec, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: 31e303209417b4f49bf432a5b5b8f0ec, type: 2}

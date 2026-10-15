@@ -15,10 +15,10 @@ MonoBehaviour:
   id: lobster
   displayName: Lobster
   category: 0
-  rarity: 1
-  zone: 10_Beach
-  chip: 120
-  gold: 6
+  rarity: 2
+  zone: beach
+  chip: 800
+  gold: 40
   icon: {fileID: 5071766062666551965, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: a7df9dbde1f6b0b428e27fe1bd5b8bfb, type: 2}

@@ -15,10 +15,10 @@ MonoBehaviour:
   id: ai_core
   displayName: "AI \uCF54\uC5B4"
   category: 1
-  rarity: 4
-  zone: scrap_items
-  chip: 1500
-  gold: 75
+  rarity: 1
+  zone: any
+  chip: 600
+  gold: 30
   icon: {fileID: 7472023410092543000, guid: 8820f8f3cfc5ddf41ac98ab215e7ade8, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

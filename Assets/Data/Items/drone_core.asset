@@ -15,10 +15,10 @@ MonoBehaviour:
   id: drone_core
   displayName: "\uB4DC\uB860 \uCF54\uC5B4"
   category: 1
-  rarity: 2
-  zone: scrap_items
-  chip: 500
-  gold: 25
+  rarity: 1
+  zone: any
+  chip: 540
+  gold: 27
   icon: {fileID: -6298936980773593275, guid: f7ff45e9684d26e479174536e4ece542, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}

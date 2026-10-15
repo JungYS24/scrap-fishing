@@ -15,10 +15,10 @@ MonoBehaviour:
   id: cyber_cat_plush
   displayName: "\uC0AC\uC774\uBC84 \uACE0\uC591\uC774 \uC778\uD615"
   category: 1
-  rarity: 0
-  zone: scrap_items
-  chip: 80
-  gold: 4
+  rarity: 1
+  zone: any
+  chip: 260
+  gold: 13
   icon: {fileID: -1351618530506611429, guid: 04e134e11d497954e9d1b9767b9d8515, type: 3}
   hasAnimation: 0
   animationClip: {fileID: 0}
