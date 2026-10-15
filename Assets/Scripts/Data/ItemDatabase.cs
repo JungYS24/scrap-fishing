@@ -40,6 +40,13 @@ namespace ScrapFishing.Data
             }
         }
 
+#if UNITY_EDITOR
+        public static void BindEditorInstance(ItemDatabase database)
+        {
+            _instance = database;
+        }
+#endif
+
         public ItemData GetById(string id)
         {
             if (string.IsNullOrEmpty(id) || items == null)

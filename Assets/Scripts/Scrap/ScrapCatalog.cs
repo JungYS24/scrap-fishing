@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
@@ -6,7 +7,20 @@ namespace ScrapFishing.Scrap
 {
     public static class ScrapCatalog
     {
-        static readonly string[] FishZones = { "10_Beach", "11_Ocean", "12_Abyss", "12_Abyss" };
+        public const float ZoneMatchBonus = 3f;
+
+        static readonly string[] ZoneNames = { "beach", "ocean", "abyss", "abyss" };
+        static readonly ItemRarity[] RarityOrder =
+        {
+            ItemRarity.Normal,
+            ItemRarity.Rare,
+            ItemRarity.Epic,
+            ItemRarity.Legend
+        };
+        static readonly int[] RarityCounts = new int[4];
+        static readonly int[] RarityWeights = new int[4];
+        static readonly List<ItemData> PickPool = new List<ItemData>(40);
+        static float[] _itemWeights = new float[40];
         static ScrapDefinition[][] _zones;
 
         public static ScrapDefinition Pick(float depth)
@@ -33,22 +47,167 @@ namespace ScrapFishing.Scrap
                 return null;
             }
 
-            var index = Mathf.Clamp(DepthZone.Index(depth), 0, FishZones.Length - 1);
-            var fish = db.GetByZone(FishZones[index]);
-            var scrap = db.GetByZone("scrap_items");
-            var count = fish.Count + scrap.Count;
-            if (count <= 0)
+            var zoneIdx = DepthZone.Index(depth);
+            var row = db.GetZoneRarity(zoneIdx);
+            var items = db.Items;
+            for (var i = 0; i < RarityCounts.Length; i++)
             {
-                return db.Items[Random.Range(0, db.Items.Count)];
+                RarityCounts[i] = 0;
+                RarityWeights[i] = 0;
+            }
+
+            for (var i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (item == null)
+                {
+                    continue;
+                }
+
+                RarityCounts[RaritySlot(item.Rarity)]++;
+            }
+
+            var total = 0;
+            total += SetRarityWeight(0, row.normal);
+            total += SetRarityWeight(1, row.rare);
+            total += SetRarityWeight(2, row.epic);
+            total += SetRarityWeight(3, row.legend);
+            if (total <= 0)
+            {
+                return PickUniform(items);
+            }
+
+            var roll = Random.Range(0, total);
+            var chosen = 0;
+            var accumulated = 0;
+            for (var i = 0; i < RarityWeights.Length; i++)
+            {
+                accumulated += RarityWeights[i];
+                if (roll < accumulated)
+                {
+                    chosen = i;
+                    break;
+                }
+            }
+
+            var zoneName = ZoneNames[Mathf.Clamp(zoneIdx, 0, ZoneNames.Length - 1)];
+            PickPool.Clear();
+            var rarity = RarityOrder[chosen];
+            for (var i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (item != null && item.Rarity == rarity)
+                {
+                    PickPool.Add(item);
+                }
+            }
+
+            if (PickPool.Count == 0)
+            {
+                return PickUniform(items);
+            }
+
+            return PickWeighted(zoneName);
+        }
+
+        static int SetRarityWeight(int slot, int weight)
+        {
+            if (weight <= 0 || RarityCounts[slot] <= 0)
+            {
+                RarityWeights[slot] = 0;
+                return 0;
+            }
+
+            RarityWeights[slot] = weight;
+            return weight;
+        }
+
+        static int RaritySlot(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Rare:
+                    return 1;
+                case ItemRarity.Epic:
+                    return 2;
+                case ItemRarity.Legend:
+                    return 3;
+                default:
+                    return 0;
+            }
+        }
+
+        static ItemData PickUniform(IReadOnlyList<ItemData> items)
+        {
+            var count = 0;
+            for (var i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null)
+                {
+                    count++;
+                }
+            }
+
+            if (count == 0)
+            {
+                return null;
             }
 
             var pick = Random.Range(0, count);
-            if (pick < fish.Count)
+            for (var i = 0; i < items.Count; i++)
             {
-                return fish[pick];
+                var item = items[i];
+                if (item == null)
+                {
+                    continue;
+                }
+
+                if (pick == 0)
+                {
+                    return item;
+                }
+
+                pick--;
             }
 
-            return scrap[pick - fish.Count];
+            return null;
+        }
+
+        static ItemData PickWeighted(string zoneName)
+        {
+            var count = PickPool.Count;
+            if (_itemWeights.Length < count)
+            {
+                var size = _itemWeights.Length;
+                while (size < count)
+                {
+                    size *= 2;
+                }
+
+                _itemWeights = new float[size];
+            }
+
+            var total = 0f;
+            for (var i = 0; i < count; i++)
+            {
+                var zone = PickPool[i].Zone;
+                var weight = zone == zoneName ? ZoneMatchBonus : 1f;
+                _itemWeights[i] = weight;
+                total += weight;
+            }
+
+            var roll = Random.value * total;
+            var accumulated = 0f;
+            for (var i = 0; i < count; i++)
+            {
+                accumulated += _itemWeights[i];
+                if (roll < accumulated)
+                {
+                    return PickPool[i];
+                }
+            }
+
+            return PickPool[count - 1];
         }
 
         static void Ensure()
