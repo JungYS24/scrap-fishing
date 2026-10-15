@@ -1,4 +1,5 @@
 using ScrapFishing.Data;
+using ScrapFishing.FX;
 using UnityEngine;
 
 namespace ScrapFishing.Scrap
@@ -60,6 +61,7 @@ namespace ScrapFishing.Scrap
                 : PlaceholderFactory.Square(definition != null ? definition.PlaceholderColor : Color.white);
             _renderer.color = Color.white;
             _renderer.sortingOrder = 2;
+            RarityGlow.Apply(this);
         }
 
         public void Bind(ItemData item)
