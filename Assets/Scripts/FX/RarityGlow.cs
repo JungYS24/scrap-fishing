@@ -96,6 +96,26 @@ namespace ScrapFishing.FX
         readonly List<SpriteRenderer> _rays = new List<SpriteRenderer>();
         readonly List<SpriteRenderer> _sparkles = new List<SpriteRenderer>();
 
+        public static void PlayAcquireFlash(ScrapView view)
+        {
+            if (view == null || view.data == null || view.ChipValue < 0)
+            {
+                return;
+            }
+
+            if (view.data.Rarity == ItemRarity.Epic)
+            {
+                Fx.ScreenFlash(EpicStyle.Color, 0.12f);
+                return;
+            }
+
+            if (view.data.Rarity == ItemRarity.Legend)
+            {
+                Fx.ScreenFlash(LegendStyle.Color, 0.16f);
+                Fx.ShakeCamera(0.05f, 0.12f);
+            }
+        }
+
         public static void Apply(ScrapView view)
         {
             if (view == null)

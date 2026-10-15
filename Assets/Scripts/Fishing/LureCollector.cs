@@ -130,6 +130,7 @@ namespace ScrapFishing.Fishing
 
             Fx.Punch(transform, 0.1f + slot * 0.015f, 0.16f);
             AudioManager.Ensure().PlayCatch(scrap);
+            RarityGlow.PlayAcquireFlash(scrap);
 
             _attached.Add(new AttachedScrap
             {

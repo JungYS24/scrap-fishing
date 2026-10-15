@@ -56,6 +56,7 @@ namespace ScrapFishing.Dive
                     else
                     {
                         AudioManager.Ensure().PlayCatch(scrap);
+                        RarityGlow.PlayAcquireFlash(scrap);
                     }
 
                     _spawner.Remove(scrap);
