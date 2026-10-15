@@ -9,8 +9,8 @@ namespace ScrapFishing.EditorTools
 {
     public static class ItemDataImporter
     {
-        const string JsonPath = "Assets/Art/Fish/fish_items.json";
-        const string ArtRoot = "Assets/Art/Fish/";
+        const string JsonPath = "Assets/Art/Scrap_items/fish_items.json";
+        const string ArtRoot = "Assets/Art/Scrap_items/";
         const string ItemsFolder = "Assets/Data/Items";
         const string PrefabsFolder = "Assets/Prefabs/Items";
         const string DatabasePath = "Assets/Resources/ItemDatabase.asset";
@@ -134,7 +134,9 @@ namespace ScrapFishing.EditorTools
             }
 
             database.ReplaceItems(created);
+            database.ReplaceZoneRarity(BuildZoneRarity(root.zoneRarity));
             EditorUtility.SetDirty(database);
+            DeleteOrphans(root.items);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -180,6 +182,36 @@ namespace ScrapFishing.EditorTools
                 {
                     errors++;
                     Debug.LogError("chip/gold 0 이하: " + item.Id + " chip=" + item.Chip + " gold=" + item.Gold);
+                }
+
+                if ((item.Rarity == ItemRarity.Epic || item.Rarity == ItemRarity.Legend) && !item.HasAnimation)
+                {
+                    errors++;
+                    Debug.LogError("epic/legend인데 hasAnimation=false: " + item.Id);
+                }
+                else if ((item.Rarity == ItemRarity.Normal || item.Rarity == ItemRarity.Rare) && item.HasAnimation)
+                {
+                    Debug.LogWarning("normal/rare인데 hasAnimation=true: " + item.Id);
+                }
+            }
+
+            var rows = database.ZoneRarity;
+            if (rows == null || rows.Count != 4)
+            {
+                errors++;
+                Debug.LogError("zoneRarity 행이 4개가 아닙니다: " + (rows == null ? 0 : rows.Count));
+            }
+            else
+            {
+                for (var i = 0; i < rows.Count; i++)
+                {
+                    var row = rows[i];
+                    var sum = row.normal + row.rare + row.epic + row.legend;
+                    if (sum <= 0)
+                    {
+                        errors++;
+                        Debug.LogError("zoneRarity 합이 0: index=" + row.index + " name=" + row.name);
+                    }
                 }
             }
 
@@ -384,6 +416,110 @@ namespace ScrapFishing.EditorTools
             }
 
             return (a.Length - ia).CompareTo(b.Length - ib);
+        }
+
+        static List<ZoneRarityWeights> BuildZoneRarity(List<ZoneRarityJson> rows)
+        {
+            var result = new List<ZoneRarityWeights>();
+            if (rows == null || rows.Count != 4)
+            {
+                Debug.LogError("zoneRarity 행이 4개(0~3)가 아닙니다: " + (rows == null ? 0 : rows.Count));
+                return result;
+            }
+
+            var seen = new bool[4];
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                if (row == null)
+                {
+                    Debug.LogError("zoneRarity[" + i + "] 가 null 입니다.");
+                    continue;
+                }
+
+                var sum = row.normal + row.rare + row.epic + row.legend;
+                if (sum <= 0 || row.index < 0 || row.index > 3)
+                {
+                    Debug.LogError("zoneRarity 행 오류: index=" + row.index + " sum=" + sum);
+                }
+                else
+                {
+                    seen[row.index] = true;
+                }
+
+                result.Add(new ZoneRarityWeights
+                {
+                    index = row.index,
+                    name = row.name,
+                    normal = row.normal,
+                    rare = row.rare,
+                    epic = row.epic,
+                    legend = row.legend
+                });
+            }
+
+            for (var i = 0; i < seen.Length; i++)
+            {
+                if (!seen[i])
+                {
+                    Debug.LogError("zoneRarity에 index " + i + " 행이 없습니다.");
+                }
+            }
+
+            return result;
+        }
+
+        static void DeleteOrphans(List<ItemJson> items)
+        {
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            if (items != null)
+            {
+                for (var i = 0; i < items.Count; i++)
+                {
+                    if (items[i] != null && !string.IsNullOrEmpty(items[i].id))
+                    {
+                        ids.Add(items[i].id);
+                    }
+                }
+            }
+
+            DeleteOrphanFolder(ItemsFolder, "*.asset", ids, true);
+            DeleteOrphanFolder(PrefabsFolder, "*.prefab", ids, false);
+        }
+
+        static void DeleteOrphanFolder(string folder, string pattern, HashSet<string> ids, bool itemDataOnly)
+        {
+            if (!Directory.Exists(folder))
+            {
+                return;
+            }
+
+            var files = Directory.GetFiles(folder, pattern);
+            for (var i = 0; i < files.Length; i++)
+            {
+                var fileName = Path.GetFileName(files[i]);
+                var id = Path.GetFileNameWithoutExtension(fileName);
+                if (ids.Contains(id))
+                {
+                    continue;
+                }
+
+                var assetPath = folder + "/" + fileName;
+                if (itemDataOnly)
+                {
+                    if (AssetDatabase.LoadAssetAtPath<ItemData>(assetPath) == null)
+                    {
+                        continue;
+                    }
+                }
+                else if (AssetDatabase.LoadAssetAtPath<GameObject>(assetPath) == null)
+                {
+                    continue;
+                }
+
+                Debug.Log("고아 에셋 삭제: " + id + " / " + assetPath);
+                AssetDatabase.DeleteAsset(assetPath);
+            }
         }
 
         static ItemCategory ParseCategory(string raw)

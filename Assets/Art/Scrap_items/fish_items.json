@@ -1,223 +1,338 @@
 {
-  "_note": "gold = chip / 20. fish: 8-frame 128x128 sprite sheet, 60 sample rate, looping. PPU 64.",
+  "_note": "경로는 Assets/Art/Scrap_items/ 기준 상대경로. gold = chip / 20. 에픽 이상은 8프레임 128x128 루프 애니메이션(PPU 64). 노멀/레어는 정지 스프라이트(PPU 100). zone은 이전 폴더 기준 수심대(beach/ocean/abyss), 스크랩은 any. zoneRarity: 깊이 구역(DepthZone.Index 0~3)별 등급 가중치(합 100). 숫자만 고치면 확률이 바뀝니다.",
+  "basePath": "Assets/Art/Scrap_items",
   "spriteSize": 128,
   "chipToGoldRatio": 20,
+  "rarities": {
+    "normal": {
+      "label": "노멀",
+      "animated": false,
+      "color": "#9AA0A6"
+    },
+    "rare": {
+      "label": "레어",
+      "animated": false,
+      "color": "#4DA3FF"
+    },
+    "epic": {
+      "label": "에픽",
+      "animated": true,
+      "color": "#B15CFF"
+    },
+    "legend": {
+      "label": "레전드",
+      "animated": true,
+      "color": "#FFB020"
+    }
+  },
+  "zoneRarity": [
+    {
+      "index": 0,
+      "name": "표층",
+      "normal": 80,
+      "rare": 18,
+      "epic": 2,
+      "legend": 0
+    },
+    {
+      "index": 1,
+      "name": "드론 묘지",
+      "normal": 55,
+      "rare": 35,
+      "epic": 9,
+      "legend": 1
+    },
+    {
+      "index": 2,
+      "name": "슬러지",
+      "normal": 30,
+      "rare": 40,
+      "epic": 24,
+      "legend": 6
+    },
+    {
+      "index": 3,
+      "name": "심연",
+      "normal": 15,
+      "rare": 35,
+      "epic": 38,
+      "legend": 12
+    }
+  ],
   "items": [
     {
-      "id": "bottle_wraith",
-      "name": "Bottle Wraith",
-      "category": "fish",
-      "zone": "10_Beach",
-      "rarity": "common",
-      "sprite": "10_Beach/Bottle_Wraith/Bottle_Wraith.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "10_Beach/Bottle_Wraith/Bottle_Wraith.anim",
-        "controller": "10_Beach/Bottle_Wraith/AC_Bottle_Wraith.controller",
-        "frames": 8,
-        "loop": true
-      },
+      "id": "rusty_boot",
+      "name": "녹슨 부츠",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_07_rusty_boot.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 40,
+      "gold": 2
+    },
+    {
+      "id": "rusty_scrap_heap",
+      "name": "녹슨 고철 뭉치",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_05_rusty_scrap_heap.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 50,
+      "gold": 2
+    },
+    {
+      "id": "rusty_battery",
+      "name": "녹슨 건전지",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_03_rusty_battery.png",
+      "hasAnimation": false,
+      "animation": null,
       "chip": 60,
       "gold": 3
     },
     {
-      "id": "coconut_ape",
-      "name": "Coconut Ape",
-      "category": "fish",
-      "zone": "10_Beach",
-      "rarity": "common",
-      "sprite": "10_Beach/CoConut_Ape/CoConut_Ape.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "10_Beach/CoConut_Ape/AC_CoConut_Ape.anim",
-        "controller": "10_Beach/CoConut_Ape/AC_CoConut_Ape.controller",
-        "frames": 8,
-        "loop": true
-      },
+      "id": "rusty_gear",
+      "name": "녹슨 톱니바퀴",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_04_rusty_gear.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 70,
+      "gold": 3
+    },
+    {
+      "id": "rusty_dentures",
+      "name": "녹슨 틀니",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_01_rusty_dentures.png",
+      "hasAnimation": false,
+      "animation": null,
       "chip": 80,
       "gold": 4
     },
     {
-      "id": "jellyfish_captain",
-      "name": "Jellyfish Captain",
-      "category": "fish",
-      "zone": "10_Beach",
-      "rarity": "common",
-      "sprite": "10_Beach/Jellyfish_Captain/Jellyfish_Captain.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "10_Beach/Jellyfish_Captain/Jellyfish_Captain.anim",
-        "controller": "10_Beach/Jellyfish_Captain/AC_Jellyfish_Captain.controller",
-        "frames": 8,
-        "loop": true
-      },
+      "id": "rusty_tire",
+      "name": "녹슨 타이어",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_08_rusty_tire.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 90,
+      "gold": 4
+    },
+    {
+      "id": "rusty_capacitor",
+      "name": "녹슨 커패시터",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_02_rusty_capacitor.png",
+      "hasAnimation": false,
+      "animation": null,
       "chip": 100,
       "gold": 5
+    },
+    {
+      "id": "rusty_robo_fish",
+      "name": "녹슨 로봇 물고기",
+      "category": "scrap",
+      "rarity": "normal",
+      "zone": "any",
+      "sprite": "Normal_items/normal_06_rusty_robo_fish.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 120,
+      "gold": 6
+    },
+    {
+      "id": "scrap_pile",
+      "name": "폐품 더미",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/11_scrap_pile.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 200,
+      "gold": 10
+    },
+    {
+      "id": "cyber_apple",
+      "name": "사이버 사과",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/07_cyber_apple.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 220,
+      "gold": 11
+    },
+    {
+      "id": "cyber_cat_plush",
+      "name": "사이버 고양이 인형",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/02_cyber_cat_plush.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 260,
+      "gold": 13
+    },
+    {
+      "id": "neon_sign",
+      "name": "네온 간판",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/09_neon_sign.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 300,
+      "gold": 15
+    },
+    {
+      "id": "cyber_arm",
+      "name": "사이버 의수",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/01_cyber_arm.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 340,
+      "gold": 17
+    },
+    {
+      "id": "exo_foot",
+      "name": "외골격 의족",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/08_exo_foot.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 380,
+      "gold": 19
+    },
+    {
+      "id": "lung_filter",
+      "name": "폐 필터",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/05_lung_filter.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 420,
+      "gold": 21
+    },
+    {
+      "id": "data_chip",
+      "name": "데이터 칩",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/04_data_chip.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 480,
+      "gold": 24
+    },
+    {
+      "id": "drone_core",
+      "name": "드론 코어",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/10_drone_core.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 540,
+      "gold": 27
+    },
+    {
+      "id": "spine_module",
+      "name": "척추 모듈",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/06_spine_module.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 580,
+      "gold": 29
+    },
+    {
+      "id": "ai_core",
+      "name": "AI 코어",
+      "category": "scrap",
+      "rarity": "rare",
+      "zone": "any",
+      "sprite": "Rare_items/scrap_items/03_ai_core.png",
+      "hasAnimation": false,
+      "animation": null,
+      "chip": 600,
+      "gold": 30
     },
     {
       "id": "lobster",
       "name": "Lobster",
       "category": "fish",
-      "zone": "10_Beach",
-      "rarity": "uncommon",
-      "sprite": "10_Beach/lobster/lobster.png",
+      "rarity": "epic",
+      "zone": "beach",
+      "sprite": "Epic_items/lobster/lobster.png",
       "hasAnimation": true,
       "animation": {
-        "clip": "10_Beach/lobster/lobster.anim",
-        "controller": "10_Beach/lobster/AC_lobster.controller",
+        "clip": "Epic_items/lobster/lobster.anim",
+        "controller": "Epic_items/lobster/AC_lobster.controller",
         "frames": 8,
         "loop": true
       },
-      "chip": 120,
-      "gold": 6
+      "chip": 800,
+      "gold": 40
     },
     {
       "id": "sandcastle_crab",
       "name": "Sandcastle Crab",
       "category": "fish",
-      "zone": "10_Beach",
-      "rarity": "uncommon",
-      "sprite": "10_Beach/Sandcastle_Crab/Sandcastle_Crab.png",
+      "rarity": "epic",
+      "zone": "beach",
+      "sprite": "Epic_items/Sandcastle_Crab/Sandcastle_Crab.png",
       "hasAnimation": true,
       "animation": {
-        "clip": "10_Beach/Sandcastle_Crab/Sandcastle_Crab.anim",
-        "controller": "10_Beach/Sandcastle_Crab/AC_Sandcastle_Crab.controller",
+        "clip": "Epic_items/Sandcastle_Crab/Sandcastle_Crab.anim",
+        "controller": "Epic_items/Sandcastle_Crab/AC_Sandcastle_Crab.controller",
         "frames": 8,
         "loop": true
       },
-      "chip": 140,
-      "gold": 7
+      "chip": 850,
+      "gold": 42
     },
     {
-      "id": "pearl_mimic",
-      "name": "Pearl Mimic",
+      "id": "bottle_wraith",
+      "name": "Bottle Wraith",
       "category": "fish",
-      "zone": "10_Beach",
-      "rarity": "rare",
-      "sprite": "10_Beach/Pearl_Mimic/Pearl_Mimic.png",
+      "rarity": "epic",
+      "zone": "beach",
+      "sprite": "Epic_items/Bottle_Wraith/Bottle_Wraith.png",
       "hasAnimation": true,
       "animation": {
-        "clip": "10_Beach/Pearl_Mimic/Pearl_Mimic.anim",
-        "controller": "10_Beach/Pearl_Mimic/AC_Pearl_Mimic.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 200,
-      "gold": 10
-    },
-    {
-      "id": "sucker_squid",
-      "name": "Sucker Squid",
-      "category": "fish",
-      "zone": "11_Ocean",
-      "rarity": "common",
-      "sprite": "11_Ocean/Sucker_Squid/Sucker_Squid.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "11_Ocean/Sucker_Squid/Sucker_Squid.anim",
-        "controller": "11_Ocean/Sucker_Squid/AC_Sucker_Squid.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 240,
-      "gold": 12
-    },
-    {
-      "id": "whirlpool_spirit",
-      "name": "Whirlpool Spirit",
-      "category": "fish",
-      "zone": "11_Ocean",
-      "rarity": "uncommon",
-      "sprite": "11_Ocean/Whirlpool_Spirit/Whirlpool_Spirit.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "11_Ocean/Whirlpool_Spirit/Whirlpool_Spirit.anim",
-        "controller": "11_Ocean/Whirlpool_Spirit/AC_Whirlpool_Spirit.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 300,
-      "gold": 15
-    },
-    {
-      "id": "frigate",
-      "name": "Frigate",
-      "category": "fish",
-      "zone": "11_Ocean",
-      "rarity": "uncommon",
-      "sprite": "11_Ocean/Frigate/Frigate.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "11_Ocean/Frigate/AC_Frigate.anim",
-        "controller": "11_Ocean/Frigate/AC_Frigate.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 360,
-      "gold": 18
-    },
-    {
-      "id": "shark_king",
-      "name": "Shark King",
-      "category": "fish",
-      "zone": "11_Ocean",
-      "rarity": "rare",
-      "sprite": "11_Ocean/Shark King/Shark King.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "11_Ocean/Shark King/Shark King.anim",
-        "controller": "11_Ocean/Shark King/AC_Shark King.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 500,
-      "gold": 25
-    },
-    {
-      "id": "seahorse",
-      "name": "Seahorse",
-      "category": "fish",
-      "zone": "12_Abyss",
-      "rarity": "uncommon",
-      "sprite": "12_Abyss/Seahorse_/Seahorse.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "12_Abyss/Seahorse_/AC_Seahorse.anim",
-        "controller": "12_Abyss/Seahorse_/AC_Seahorse.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 600,
-      "gold": 30
-    },
-    {
-      "id": "thorny_fish",
-      "name": "Thorny Fish",
-      "category": "fish",
-      "zone": "12_Abyss",
-      "rarity": "uncommon",
-      "sprite": "12_Abyss/Thorny_fish/Thorny_fish.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "12_Abyss/Thorny_fish/AC_Thorny_fish.anim",
-        "controller": "12_Abyss/Thorny_fish/AC_Thorny_fish.controller",
-        "frames": 8,
-        "loop": true
-      },
-      "chip": 700,
-      "gold": 35
-    },
-    {
-      "id": "monkfish",
-      "name": "Monkfish",
-      "category": "fish",
-      "zone": "12_Abyss",
-      "rarity": "rare",
-      "sprite": "12_Abyss/Monkfish/Monkfish.png",
-      "hasAnimation": true,
-      "animation": {
-        "clip": "12_Abyss/Monkfish/AC_Monkfish.anim",
-        "controller": "12_Abyss/Monkfish/AC_Monkfish.controller",
+        "clip": "Epic_items/Bottle_Wraith/Bottle_Wraith.anim",
+        "controller": "Epic_items/Bottle_Wraith/AC_Bottle_Wraith.controller",
         "frames": 8,
         "loop": true
       },
@@ -225,16 +340,67 @@
       "gold": 45
     },
     {
-      "id": "eye_of_abyss",
-      "name": "Eye of Abyss",
+      "id": "sucker_squid",
+      "name": "Sucker Squid",
       "category": "fish",
-      "zone": "12_Abyss",
       "rarity": "epic",
-      "sprite": "12_Abyss/Eye_of_Abyss/Eye_of_Abyss.png",
+      "zone": "ocean",
+      "sprite": "Epic_items/Sucker_Squid/Sucker_Squid.png",
       "hasAnimation": true,
       "animation": {
-        "clip": "12_Abyss/Eye_of_Abyss/AC_EyeofAbyss.anim",
-        "controller": "12_Abyss/Eye_of_Abyss/AC_Eye_of_Abyss.controller",
+        "clip": "Epic_items/Sucker_Squid/Sucker_Squid.anim",
+        "controller": "Epic_items/Sucker_Squid/AC_Sucker_Squid.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 1000,
+      "gold": 50
+    },
+    {
+      "id": "seahorse",
+      "name": "Seahorse",
+      "category": "fish",
+      "rarity": "epic",
+      "zone": "abyss",
+      "sprite": "Epic_items/Seahorse_/Seahorse.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Epic_items/Seahorse_/AC_Seahorse.anim",
+        "controller": "Epic_items/Seahorse_/AC_Seahorse.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 1050,
+      "gold": 52
+    },
+    {
+      "id": "pearl_mimic",
+      "name": "Pearl Mimic",
+      "category": "fish",
+      "rarity": "epic",
+      "zone": "beach",
+      "sprite": "Epic_items/Pearl_Mimic/Pearl_Mimic.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Epic_items/Pearl_Mimic/Pearl_Mimic.anim",
+        "controller": "Epic_items/Pearl_Mimic/AC_Pearl_Mimic.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 1150,
+      "gold": 57
+    },
+    {
+      "id": "frigate",
+      "name": "Frigate",
+      "category": "fish",
+      "rarity": "epic",
+      "zone": "ocean",
+      "sprite": "Epic_items/Frigate/Frigate.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Epic_items/Frigate/AC_Frigate.anim",
+        "controller": "Epic_items/Frigate/AC_Frigate.controller",
         "frames": 8,
         "loop": true
       },
@@ -242,153 +408,123 @@
       "gold": 60
     },
     {
-      "id": "leviathan",
-      "name": "Leviathan",
+      "id": "thorny_fish",
+      "name": "Thorny Fish",
       "category": "fish",
-      "zone": "12_Abyss",
-      "rarity": "legendary",
-      "sprite": "12_Abyss/Leviathan/Leviathan.png",
+      "rarity": "epic",
+      "zone": "abyss",
+      "sprite": "Epic_items/Thorny_fish/Thorny_fish.png",
       "hasAnimation": true,
       "animation": {
-        "clip": "12_Abyss/Leviathan/AC_Leviathan.anim",
-        "controller": "12_Abyss/Leviathan/AC_Leviathan.controller",
+        "clip": "Epic_items/Thorny_fish/AC_Thorny_fish.anim",
+        "controller": "Epic_items/Thorny_fish/AC_Thorny_fish.controller",
         "frames": 8,
         "loop": true
       },
-      "chip": 2000,
-      "gold": 100
+      "chip": 1300,
+      "gold": 65
     },
     {
-      "id": "cyber_arm",
-      "name": "사이버 의수",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "uncommon",
-      "sprite": "scrap_items/scrap_items/01_cyber_arm.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 150,
-      "gold": 7
+      "id": "whirlpool_spirit",
+      "name": "Whirlpool Spirit",
+      "category": "fish",
+      "rarity": "epic",
+      "zone": "ocean",
+      "sprite": "Epic_items/Whirlpool_Spirit/Whirlpool_Spirit.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Epic_items/Whirlpool_Spirit/Whirlpool_Spirit.anim",
+        "controller": "Epic_items/Whirlpool_Spirit/AC_Whirlpool_Spirit.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 1400,
+      "gold": 70
     },
     {
-      "id": "cyber_cat_plush",
-      "name": "사이버 고양이 인형",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "common",
-      "sprite": "scrap_items/scrap_items/02_cyber_cat_plush.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 80,
-      "gold": 4
-    },
-    {
-      "id": "ai_core",
-      "name": "AI 코어",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "legendary",
-      "sprite": "scrap_items/scrap_items/03_ai_core.png",
-      "hasAnimation": false,
-      "animation": null,
+      "id": "eye_of_abyss",
+      "name": "Eye of Abyss",
+      "category": "fish",
+      "rarity": "epic",
+      "zone": "abyss",
+      "sprite": "Epic_items/Eye_of_Abyss/Eye_of_Abyss.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Epic_items/Eye_of_Abyss/AC_EyeofAbyss.anim",
+        "controller": "Epic_items/Eye_of_Abyss/AC_Eye_of_Abyss.controller",
+        "frames": 8,
+        "loop": true
+      },
       "chip": 1500,
       "gold": 75
     },
     {
-      "id": "data_chip",
-      "name": "데이터 칩",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "rare",
-      "sprite": "scrap_items/scrap_items/04_data_chip.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 400,
-      "gold": 20
+      "id": "jellyfish_captain",
+      "name": "Jellyfish Captain",
+      "category": "fish",
+      "rarity": "legend",
+      "zone": "beach",
+      "sprite": "Legend_items/Jellyfish_Captain/Jellyfish_Captain.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Legend_items/Jellyfish_Captain/Jellyfish_Captain.anim",
+        "controller": "Legend_items/Jellyfish_Captain/AC_Jellyfish_Captain.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 3000,
+      "gold": 150
     },
     {
-      "id": "lung_filter",
-      "name": "폐 필터",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "uncommon",
-      "sprite": "scrap_items/scrap_items/05_lung_filter.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 300,
-      "gold": 15
+      "id": "monkfish",
+      "name": "Monkfish",
+      "category": "fish",
+      "rarity": "legend",
+      "zone": "abyss",
+      "sprite": "Legend_items/Monkfish/Monkfish.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Legend_items/Monkfish/AC_Monkfish.anim",
+        "controller": "Legend_items/Monkfish/AC_Monkfish.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 4000,
+      "gold": 200
     },
     {
-      "id": "spine_module",
-      "name": "척추 모듈",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "rare",
-      "sprite": "scrap_items/scrap_items/06_spine_module.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 600,
-      "gold": 30
+      "id": "shark_king",
+      "name": "Shark King",
+      "category": "fish",
+      "rarity": "legend",
+      "zone": "ocean",
+      "sprite": "Legend_items/Shark King/Shark King.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Legend_items/Shark King/Shark King.anim",
+        "controller": "Legend_items/Shark King/AC_Shark King.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 5500,
+      "gold": 275
     },
     {
-      "id": "cyber_apple",
-      "name": "사이버 사과",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "common",
-      "sprite": "scrap_items/scrap_items/07_cyber_apple.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 40,
-      "gold": 2
-    },
-    {
-      "id": "exo_foot",
-      "name": "외골격 의족",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "uncommon",
-      "sprite": "scrap_items/scrap_items/08_exo_foot.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 200,
-      "gold": 10
-    },
-    {
-      "id": "neon_sign",
-      "name": "네온 간판",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "common",
-      "sprite": "scrap_items/scrap_items/09_neon_sign.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 100,
-      "gold": 5
-    },
-    {
-      "id": "drone_core",
-      "name": "드론 코어",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "rare",
-      "sprite": "scrap_items/scrap_items/10_drone_core.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 500,
-      "gold": 25
-    },
-    {
-      "id": "scrap_pile",
-      "name": "고철 더미",
-      "category": "scrap",
-      "zone": "scrap_items",
-      "rarity": "common",
-      "sprite": "scrap_items/scrap_items/11_scrap_pile.png",
-      "hasAnimation": false,
-      "animation": null,
-      "chip": 50,
-      "gold": 2
+      "id": "leviathan",
+      "name": "Leviathan",
+      "category": "fish",
+      "rarity": "legend",
+      "zone": "abyss",
+      "sprite": "Legend_items/Leviathan/Leviathan.png",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Legend_items/Leviathan/AC_Leviathan.anim",
+        "controller": "Legend_items/Leviathan/AC_Leviathan.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 8000,
+      "gold": 400
     }
   ]
 }
