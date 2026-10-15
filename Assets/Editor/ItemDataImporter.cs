@@ -394,18 +394,19 @@ namespace ScrapFishing.EditorTools
 
         static ItemRarity ParseRarity(string raw)
         {
-            switch ((raw ?? string.Empty).ToLowerInvariant())
+            switch ((raw ?? string.Empty).Trim().ToLowerInvariant())
             {
-                case "uncommon":
-                    return ItemRarity.Uncommon;
+                case "normal":
+                    return ItemRarity.Normal;
                 case "rare":
                     return ItemRarity.Rare;
                 case "epic":
                     return ItemRarity.Epic;
-                case "legendary":
-                    return ItemRarity.Legendary;
+                case "legend":
+                    return ItemRarity.Legend;
                 default:
-                    return ItemRarity.Common;
+                    Debug.LogWarning("알 수 없는 rarity '" + raw + "' → Normal");
+                    return ItemRarity.Normal;
             }
         }
 

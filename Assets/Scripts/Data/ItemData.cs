@@ -10,11 +10,10 @@ namespace ScrapFishing.Data
 
     public enum ItemRarity
     {
-        Common,
-        Uncommon,
+        Normal,
         Rare,
         Epic,
-        Legendary
+        Legend
     }
 
     [CreateAssetMenu(menuName = "ScrapFishing/ItemData")]

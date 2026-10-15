@@ -603,7 +603,7 @@ namespace ScrapFishing.Audio
                 case ItemRarity.Rare:
                     return ScrapGrade.Rare;
                 case ItemRarity.Epic:
-                case ItemRarity.Legendary:
+                case ItemRarity.Legend:
                     return ScrapGrade.Mutant;
                 default:
                     return ScrapGrade.Common;
