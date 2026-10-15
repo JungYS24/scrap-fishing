@@ -3,14 +3,29 @@ using UnityEngine;
 
 namespace ScrapFishing.Data
 {
+    [System.Serializable]
+    public struct ZoneRarityWeights
+    {
+        public int index;
+        public string name;
+        public int normal;
+        public int rare;
+        public int epic;
+        public int legend;
+    }
+
     [CreateAssetMenu(menuName = "ScrapFishing/ItemDatabase")]
     public class ItemDatabase : ScriptableObject
     {
         [SerializeField] List<ItemData> items = new List<ItemData>();
+        [SerializeField] List<ZoneRarityWeights> zoneRarity = new List<ZoneRarityWeights>();
+
+        static readonly List<ZoneRarityWeights> EmptyZoneRarity = new List<ZoneRarityWeights>();
 
         static ItemDatabase _instance;
 
         public IReadOnlyList<ItemData> Items => items;
+        public IReadOnlyList<ZoneRarityWeights> ZoneRarity => zoneRarity ?? EmptyZoneRarity;
 
         public static ItemDatabase Instance
         {
@@ -64,6 +79,48 @@ namespace ScrapFishing.Data
             return result;
         }
 
+        public ZoneRarityWeights GetZoneRarity(int index)
+        {
+            if (zoneRarity == null || zoneRarity.Count == 0)
+            {
+                return default;
+            }
+
+            var best = 0;
+            var bestDistance = int.MaxValue;
+            for (var i = 0; i < zoneRarity.Count; i++)
+            {
+                var distance = Mathf.Abs(zoneRarity[i].index - index);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = i;
+                }
+            }
+
+            return zoneRarity[best];
+        }
+
+        public List<ItemData> GetByRarity(ItemRarity rarity)
+        {
+            var result = new List<ItemData>();
+            if (items == null)
+            {
+                return result;
+            }
+
+            for (var i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                if (item != null && item.Rarity == rarity)
+                {
+                    result.Add(item);
+                }
+            }
+
+            return result;
+        }
+
         public List<ItemData> GetByCategory(ItemCategory category)
         {
             var result = new List<ItemData>();
@@ -109,6 +166,22 @@ namespace ScrapFishing.Data
             }
 
             items.AddRange(next);
+        }
+
+        public void ReplaceZoneRarity(List<ZoneRarityWeights> next)
+        {
+            if (zoneRarity == null)
+            {
+                zoneRarity = new List<ZoneRarityWeights>();
+            }
+
+            zoneRarity.Clear();
+            if (next == null)
+            {
+                return;
+            }
+
+            zoneRarity.AddRange(next);
         }
     }
 }

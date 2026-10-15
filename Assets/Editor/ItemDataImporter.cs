@@ -304,6 +304,7 @@ namespace ScrapFishing.EditorTools
             {
                 spriteSize = alt.spriteSize,
                 chipToGoldRatio = alt.chipToGoldRatio,
+                zoneRarity = alt.zoneRarity,
                 items = new List<ItemJson>(alt.items)
             };
         }
@@ -504,6 +505,7 @@ namespace ScrapFishing.EditorTools
         {
             public int spriteSize;
             public int chipToGoldRatio;
+            public List<ZoneRarityJson> zoneRarity;
             public ItemJson[] items;
         }
     }

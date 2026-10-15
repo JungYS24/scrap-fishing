@@ -8,7 +8,19 @@ namespace ScrapFishing.Data
     {
         public int spriteSize;
         public int chipToGoldRatio;
+        public List<ZoneRarityJson> zoneRarity;
         public List<ItemJson> items;
+    }
+
+    [Serializable]
+    public class ZoneRarityJson
+    {
+        public int index;
+        public string name;
+        public int normal;
+        public int rare;
+        public int epic;
+        public int legend;
     }
 
     [Serializable]
