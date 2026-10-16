@@ -219,7 +219,32 @@ namespace ScrapFishing.Audio
 
         public void PlayCatch(ScrapView scrap)
         {
+            if (scrap != null && scrap.data != null)
+            {
+                PlayCatchRarity(scrap.data.Rarity);
+                return;
+            }
+
             PlayCatchGrade(GradeOf(scrap));
+        }
+
+        void PlayCatchRarity(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Rare:
+                    PlayNamed("sfx_catch_rare", 1f, true);
+                    return;
+                case ItemRarity.Epic:
+                    PlayNamed("sfx_catch_epic", HasOwnClip("sfx_catch_epic") ? 1f : 0.9f, true);
+                    return;
+                case ItemRarity.Legend:
+                    PlayNamed("sfx_catch_legend", HasOwnClip("sfx_catch_legend") ? 1f : 0.8f, true);
+                    return;
+                default:
+                    PlayNamed("sfx_catch_common", 1f, true);
+                    return;
+            }
         }
 
         public void PlayHazard()
