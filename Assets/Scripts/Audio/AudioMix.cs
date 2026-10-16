@@ -24,6 +24,8 @@ namespace ScrapFishing.Audio
         public float catchCommon = 0.5f;
         public float catchRare = 0.8f;
         public float catchMutant = 0.85f;
+        public float catchEpic = 0.85f;
+        public float catchLegend = 0.9f;
         public float chipTick = 0.35f;
         public float diveReady = 0.45f;
         public float timeUp = 0.5f;
@@ -37,6 +39,7 @@ namespace ScrapFishing.Audio
         public float oxygenWarn = 0.45f;
         public float surface = 0.4f;
         public float newBest = 0.5f;
+        public float lureFull = 0.5f;
 
         public float Named(string key)
         {
@@ -51,6 +54,8 @@ namespace ScrapFishing.Audio
                 case "sfx_catch_common": return catchCommon;
                 case "sfx_catch_rare": return catchRare;
                 case "sfx_catch_mutant": return catchMutant;
+                case "sfx_catch_epic": return catchEpic;
+                case "sfx_catch_legend": return catchLegend;
                 case "sfx_chip_tick": return chipTick;
                 case "sfx_dive_ready": return diveReady;
                 case "sfx_time_up": return timeUp;
@@ -63,6 +68,7 @@ namespace ScrapFishing.Audio
                 case "sfx_oxygen_warn": return oxygenWarn;
                 case "sfx_surface": return surface;
                 case "sfx_new_best": return newBest;
+                case "sfx_lure_full": return lureFull;
                 default: return 0.5f;
             }
         }

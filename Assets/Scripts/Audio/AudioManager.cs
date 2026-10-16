@@ -24,12 +24,15 @@ namespace ScrapFishing.Audio
         static readonly Dictionary<string, string> Aliases = new Dictionary<string, string>
         {
             { "sfx_catch_mutant", "sfx_catch_rare" },
+            { "sfx_catch_epic", "sfx_catch_rare" },
+            { "sfx_catch_legend", "sfx_catch_rare" },
             { "sfx_dive_enter", "sfx_dive_ready" },
             { "sfx_hazard", "sfx_upgrade_denied" },
             { "sfx_mine_hit", "sfx_upgrade_denied" },
             { "sfx_oxygen_warn", "sfx_timer_tick" },
             { "sfx_surface", "sfx_splash" },
-            { "sfx_new_best", "sfx_dive_ready" }
+            { "sfx_new_best", "sfx_dive_ready" },
+            { "sfx_lure_full", "sfx_upgrade_denied" }
         };
 
         public static AudioManager Instance { get; private set; }
@@ -298,6 +301,12 @@ namespace ScrapFishing.Audio
             }
 
             _fullAt = Time.unscaledTime + FullCooldown;
+            if (HasOwnClip("sfx_lure_full"))
+            {
+                PlayNamed("sfx_lure_full", 1f, false);
+                return;
+            }
+
             PlayNamed("sfx_upgrade_denied", 1f, false, mix.fullDenied);
         }
 
@@ -366,12 +375,17 @@ namespace ScrapFishing.Audio
 
         bool HasClip(string key)
         {
-            if (_clips.TryGetValue(key, out var list) && list.Count > 0)
+            if (HasOwnClip(key))
             {
                 return true;
             }
 
             return Aliases.TryGetValue(key, out var alias) && _clips.TryGetValue(alias, out var mapped) && mapped.Count > 0;
+        }
+
+        bool HasOwnClip(string key)
+        {
+            return _clips.TryGetValue(key, out var list) && list.Count > 0;
         }
 
         AudioSource NextVoice()
@@ -485,6 +499,9 @@ namespace ScrapFishing.Audio
             _fallback["sfx_catch_common"] = MakeTone(880, 0.09f);
             _fallback["sfx_catch_rare"] = MakeChime(660, 990, 0.08f);
             _fallback["sfx_catch_mutant"] = MakeChime(520, 1040, 0.1f);
+            _fallback["sfx_catch_epic"] = MakeChime(520, 1040, 0.1f);
+            _fallback["sfx_catch_legend"] = MakeChime(440, 880, 0.12f);
+            _fallback["sfx_lure_full"] = MakeTone(140, 0.12f);
             _fallback["sfx_chip_tick"] = MakeTone(980, 0.05f);
             _fallback["sfx_dive_ready"] = MakeChime(660, 990, 0.08f);
             _fallback["sfx_dive_enter"] = MakeTone(260, 0.14f);

@@ -6,47 +6,39 @@ public static class AudioPreviewMenu
 {
     const string Root = "Scrap Fishing/Audio/";
 
-    [MenuItem(Root + "Play sfx_ui_tap", false, 10)]
-    static void UiTap() => Play("sfx_ui_tap");
+    public static readonly string[] Keys =
+    {
+        "sfx_ui_tap",
+        "sfx_start",
+        "sfx_cast_whoosh",
+        "sfx_splash",
+        "sfx_reel",
+        "sfx_zone_enter",
+        "sfx_catch_common",
+        "sfx_catch_rare",
+        "sfx_catch_epic",
+        "sfx_catch_legend",
+        "sfx_catch_mutant",
+        "sfx_chip_tick",
+        "sfx_dive_ready",
+        "sfx_dive_enter",
+        "sfx_hazard",
+        "sfx_mine_hit",
+        "sfx_oxygen_warn",
+        "sfx_surface",
+        "sfx_timer_tick",
+        "sfx_time_up",
+        "sfx_new_best",
+        "sfx_upgrade_buy",
+        "sfx_upgrade_denied",
+        "sfx_lure_full"
+    };
 
-    [MenuItem(Root + "Play sfx_start", false, 11)]
-    static void StartClip() => Play("sfx_start");
-
-    [MenuItem(Root + "Play sfx_cast_whoosh", false, 12)]
-    static void Cast() => Play("sfx_cast_whoosh");
-
-    [MenuItem(Root + "Play sfx_splash", false, 13)]
-    static void Splash() => Play("sfx_splash");
-
-    [MenuItem(Root + "Play sfx_reel", false, 14)]
-    static void Reel() => Play("sfx_reel");
-
-    [MenuItem(Root + "Play sfx_zone_enter", false, 15)]
-    static void Zone() => Play("sfx_zone_enter");
-
-    [MenuItem(Root + "Play sfx_catch_common", false, 16)]
-    static void CatchCommon() => Play("sfx_catch_common");
-
-    [MenuItem(Root + "Play sfx_catch_rare", false, 17)]
-    static void CatchRare() => Play("sfx_catch_rare");
-
-    [MenuItem(Root + "Play sfx_chip_tick", false, 18)]
-    static void Chip() => Play("sfx_chip_tick");
-
-    [MenuItem(Root + "Play sfx_dive_ready", false, 19)]
-    static void DiveReady() => Play("sfx_dive_ready");
-
-    [MenuItem(Root + "Play sfx_timer_tick", false, 20)]
-    static void Timer() => Play("sfx_timer_tick");
-
-    [MenuItem(Root + "Play sfx_time_up", false, 21)]
-    static void TimeUp() => Play("sfx_time_up");
-
-    [MenuItem(Root + "Play sfx_upgrade_buy", false, 22)]
-    static void Buy() => Play("sfx_upgrade_buy");
-
-    [MenuItem(Root + "Play sfx_upgrade_denied", false, 23)]
-    static void Denied() => Play("sfx_upgrade_denied");
+    [MenuItem(Root + "Preview Keys", false, 1)]
+    static void OpenPreview()
+    {
+        EditorWindow.GetWindow<AudioPreviewWindow>("SFX Preview");
+    }
 
     [MenuItem(Root + "Play Title BGM", false, 40)]
     static void TitleBgm()
@@ -73,13 +65,13 @@ public static class AudioPreviewMenu
         Debug.Log("Audio reimport 요청 완료");
     }
 
-    static void Play(string key)
+    public static void Play(string key)
     {
         EnsurePlaymode();
         AudioManager.Ensure().Preview(key);
     }
 
-    static void EnsurePlaymode()
+    public static void EnsurePlaymode()
     {
         if (EditorApplication.isPlaying)
         {
@@ -91,27 +83,43 @@ public static class AudioPreviewMenu
     }
 }
 
+public class AudioPreviewWindow : EditorWindow
+{
+    Vector2 _scroll;
+
+    void OnGUI()
+    {
+        EditorGUILayout.LabelField("AudioManager.Preview", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("키를 눌러 하나씩 들어보세요. Play Mode가 아니면 AudioManager가 잠시 생성됩니다.", MessageType.Info);
+        _scroll = EditorGUILayout.BeginScrollView(_scroll);
+        var keys = AudioPreviewMenu.Keys;
+        for (var i = 0; i < keys.Length; i++)
+        {
+            if (GUILayout.Button(keys[i], GUILayout.Height(24)))
+            {
+                AudioPreviewMenu.Play(keys[i]);
+            }
+        }
+
+        EditorGUILayout.EndScrollView();
+    }
+}
+
 [CustomEditor(typeof(AudioManager))]
 public class AudioManagerEditor : Editor
 {
-    static readonly string[] Keys =
-    {
-        "sfx_ui_tap", "sfx_start", "sfx_cast_whoosh", "sfx_splash", "sfx_reel",
-        "sfx_zone_enter", "sfx_catch_common", "sfx_catch_rare", "sfx_chip_tick",
-        "sfx_dive_ready", "sfx_timer_tick", "sfx_time_up", "sfx_upgrade_buy", "sfx_upgrade_denied"
-    };
-
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
         var manager = (AudioManager)target;
         GUILayout.Space(8);
         GUILayout.Label("Preview", EditorStyles.boldLabel);
-        for (var i = 0; i < Keys.Length; i++)
+        var keys = AudioPreviewMenu.Keys;
+        for (var i = 0; i < keys.Length; i++)
         {
-            if (GUILayout.Button("Play " + Keys[i]))
+            if (GUILayout.Button("Play " + keys[i]))
             {
-                manager.Preview(Keys[i]);
+                manager.Preview(keys[i]);
             }
         }
     }
