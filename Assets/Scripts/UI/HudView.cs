@@ -43,6 +43,7 @@ namespace ScrapFishing.UI
         bool _playing;
         bool _oxygenShown;
         int _oxygenBand;
+        GameObject _soundToggle;
 
         public void Build(Transform canvas, Text chipText, GameObject chipPanel)
         {
@@ -94,6 +95,8 @@ namespace ScrapFishing.UI
 
             BindChip(rect, banner);
             BuildOxygenBar(rect);
+            _soundToggle = SoundToggle.Create(rect, new Vector2(0.90f, 0.955f), new Vector2(0.99f, 0.995f));
+            _soundToggle.SetActive(false);
             _hudGroup = root.AddComponent<CanvasGroup>();
             _hudGroup.alpha = 0f;
         }
@@ -276,6 +279,11 @@ namespace ScrapFishing.UI
             var fade = settings != null ? settings.hudFadeDuration : 0.22f;
             var slide = settings != null ? settings.hudSlide : 24f;
             _hudIntro = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
+            if (_soundToggle != null)
+            {
+                _soundToggle.SetActive(true);
+            }
+
             if (_hudGroup != null)
             {
                 _hudGroup.alpha = 0f;
@@ -297,6 +305,11 @@ namespace ScrapFishing.UI
         {
             StopOxygenWarn();
             KillHudIntro();
+            if (_soundToggle != null)
+            {
+                _soundToggle.SetActive(false);
+            }
+
             if (_hudGroup != null)
             {
                 _hudGroup.alpha = 0f;

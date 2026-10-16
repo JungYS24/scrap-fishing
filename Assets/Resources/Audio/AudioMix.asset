@@ -44,3 +44,8 @@ MonoBehaviour:
   surface: 0.4
   newBest: 0.5
   lureFull: 0.5
+  countTick: 0.35
+  countDone: 0.55
+  zoneUnlock: 0.55
+  upgradeMax: 0.6
+  legendAppear: 0.6

@@ -126,6 +126,17 @@ namespace ScrapFishing.UI
             }
 
             EnsureVersion();
+            EnsureSoundToggle();
+        }
+
+        void EnsureSoundToggle()
+        {
+            if (transform.Find("SoundToggle") != null)
+            {
+                return;
+            }
+
+            SoundToggle.Create((RectTransform)transform, new Vector2(0.86f, 0.91f), new Vector2(0.98f, 0.98f));
         }
 
         void EnsureVersion()

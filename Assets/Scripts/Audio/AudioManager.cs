@@ -19,6 +19,8 @@ namespace ScrapFishing.Audio
         const float QuietPeak = 0.05f;
         const float PitchJitter = 0.04f;
         const float FullCooldown = 0.5f;
+        const float CountTickGap = 1f / 12f;
+        const string SoundPref = "SoundOn";
 
         static readonly float[] ZonePitch = { 1f, 0.94f, 0.88f, 0.82f };
         static readonly Dictionary<string, string> Aliases = new Dictionary<string, string>
@@ -32,7 +34,12 @@ namespace ScrapFishing.Audio
             { "sfx_oxygen_warn", "sfx_timer_tick" },
             { "sfx_surface", "sfx_splash" },
             { "sfx_new_best", "sfx_dive_ready" },
-            { "sfx_lure_full", "sfx_upgrade_denied" }
+            { "sfx_lure_full", "sfx_upgrade_denied" },
+            { "sfx_count_tick", "sfx_chip_tick" },
+            { "sfx_count_done", "sfx_upgrade_buy" },
+            { "sfx_zone_unlock", "sfx_zone_enter" },
+            { "sfx_upgrade_max", "sfx_new_best" },
+            { "sfx_legend_appear", "sfx_catch_rare" }
         };
 
         public static AudioManager Instance { get; private set; }
@@ -53,6 +60,7 @@ namespace ScrapFishing.Audio
         int _hitFrame = -1;
         float _bgmTarget = 0.55f;
         float _fullAt;
+        float _countTickAt;
         bool _unlocked;
         bool _wantTitle;
         bool _diving;
@@ -96,6 +104,8 @@ namespace ScrapFishing.Audio
             {
                 _pool[i] = MakeSfx("Sfx" + i);
             }
+
+            ApplySoundPref();
         }
 
         void Update()
@@ -115,9 +125,78 @@ namespace ScrapFishing.Audio
         {
             AudioListener.pause = false;
             _unlocked = true;
+            ResumeBgm();
             if (_wantTitle)
             {
                 PlayTitleBgm();
+            }
+        }
+
+        public bool SoundOn => PlayerPrefs.GetInt(SoundPref, 1) != 0;
+
+        public void SetSoundOn(bool on)
+        {
+            PlayerPrefs.SetInt(SoundPref, on ? 1 : 0);
+            PlayerPrefs.Save();
+            ApplySoundPref();
+        }
+
+        public void ToggleSound()
+        {
+            SetSoundOn(!SoundOn);
+        }
+
+        void ApplySoundPref()
+        {
+            AudioListener.volume = SoundOn ? 1f : 0f;
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused)
+            {
+                SuspendPlayback();
+            }
+        }
+
+        void OnApplicationFocus(bool focused)
+        {
+            if (!focused)
+            {
+                SuspendPlayback();
+            }
+        }
+
+        void SuspendPlayback()
+        {
+            _unlocked = false;
+            PauseSource(_bgmA);
+            PauseSource(_bgmB);
+        }
+
+        void ResumeBgm()
+        {
+            UnpauseSource(_bgmA);
+            UnpauseSource(_bgmB);
+            if (_bgmLive != null && _bgmLive.clip != null && !_bgmLive.isPlaying)
+            {
+                _bgmLive.Play();
+            }
+        }
+
+        static void PauseSource(AudioSource src)
+        {
+            if (src != null && src.isPlaying)
+            {
+                src.Pause();
+            }
+        }
+
+        static void UnpauseSource(AudioSource src)
+        {
+            if (src != null && src.clip != null)
+            {
+                src.UnPause();
             }
         }
 
@@ -267,11 +346,6 @@ namespace ScrapFishing.Audio
             PlayNamed("sfx_dive_enter", 1f, false);
         }
 
-        public void PlayHurt()
-        {
-            PlayNamed("sfx_mine_hit", 1f, false);
-        }
-
         public void PlayMineHit()
         {
             PlayNamed("sfx_mine_hit", 1f, false);
@@ -316,6 +390,55 @@ namespace ScrapFishing.Audio
         public void PlayUpgradeDenied()
         {
             PlayNamed("sfx_upgrade_denied", 1f, false);
+        }
+
+        public void PlayMaxedTap()
+        {
+            PlayNamed("sfx_ui_tap", 0.8f, false);
+        }
+
+        public void PlayZoneUnlock()
+        {
+            PlayNamed("sfx_zone_unlock", HasOwnClip("sfx_zone_unlock") ? 1f : 1.2f, false);
+        }
+
+        public void PlayUpgradeMax()
+        {
+            PlayNamed("sfx_upgrade_max", HasOwnClip("sfx_upgrade_max") ? 1f : 1.15f, false);
+        }
+
+        public void PlayLegendAppear()
+        {
+            PlayNamed("sfx_legend_appear", HasOwnClip("sfx_legend_appear") ? 1f : 1.35f, false, mix.legendAppear);
+        }
+
+        public void PlayCountTick(float progress)
+        {
+            if (Time.unscaledTime < _countTickAt)
+            {
+                return;
+            }
+
+            _countTickAt = Time.unscaledTime + CountTickGap;
+            var rise = Mathf.Lerp(1f, 1.4f, Mathf.Clamp01(progress));
+            if (HasOwnClip("sfx_count_tick"))
+            {
+                PlayNamed("sfx_count_tick", rise, false);
+                return;
+            }
+
+            if (HasOwnClip("sfx_chip_tick"))
+            {
+                PlayNamed("sfx_chip_tick", rise, false);
+                return;
+            }
+
+            PlayNamed("sfx_ui_tap", Mathf.Lerp(1.3f, 1.4f, Mathf.Clamp01(progress)), false);
+        }
+
+        public void PlayCountDone()
+        {
+            PlayNamed("sfx_count_done", 1f, false);
         }
 
         public void PlayFull()
@@ -539,6 +662,11 @@ namespace ScrapFishing.Audio
             _fallback["sfx_new_best"] = MakeChime(660, 990, 0.08f);
             _fallback["sfx_upgrade_buy"] = MakeChime(520, 780, 0.07f);
             _fallback["sfx_upgrade_denied"] = MakeTone(140, 0.12f);
+            _fallback["sfx_count_tick"] = MakeTone(980, 0.04f);
+            _fallback["sfx_count_done"] = MakeChime(520, 780, 0.07f);
+            _fallback["sfx_zone_unlock"] = MakeTone(400, 0.08f);
+            _fallback["sfx_upgrade_max"] = MakeChime(660, 990, 0.08f);
+            _fallback["sfx_legend_appear"] = MakeChime(660, 990, 0.08f);
         }
 
         AudioSource MakeBgm(string name)

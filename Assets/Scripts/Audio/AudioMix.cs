@@ -40,6 +40,11 @@ namespace ScrapFishing.Audio
         public float surface = 0.4f;
         public float newBest = 0.5f;
         public float lureFull = 0.5f;
+        public float countTick = 0.35f;
+        public float countDone = 0.55f;
+        public float zoneUnlock = 0.55f;
+        public float upgradeMax = 0.6f;
+        public float legendAppear = 0.6f;
 
         public float Named(string key)
         {
@@ -69,6 +74,11 @@ namespace ScrapFishing.Audio
                 case "sfx_surface": return surface;
                 case "sfx_new_best": return newBest;
                 case "sfx_lure_full": return lureFull;
+                case "sfx_count_tick": return countTick;
+                case "sfx_count_done": return countDone;
+                case "sfx_zone_unlock": return zoneUnlock;
+                case "sfx_upgrade_max": return upgradeMax;
+                case "sfx_legend_appear": return legendAppear;
                 default: return 0.5f;
             }
         }

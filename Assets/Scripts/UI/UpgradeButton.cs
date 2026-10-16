@@ -42,9 +42,29 @@ namespace ScrapFishing.UI
 
         void Buy()
         {
+            if (Progression.IsMaxed(kind))
+            {
+                AudioManager.Ensure().PlayMaxedTap();
+                return;
+            }
+
+            var unlocking = !string.IsNullOrEmpty(Progression.ZoneUnlockLabel(kind));
             if (Progression.TryBuy(kind))
             {
-                AudioManager.Ensure().PlayUpgradeBuy();
+                if (unlocking)
+                {
+                    AudioManager.Ensure().PlayZoneUnlock();
+                }
+                else
+                {
+                    AudioManager.Ensure().PlayUpgradeBuy();
+                }
+
+                if (Progression.IsMaxed(kind))
+                {
+                    AudioManager.Ensure().PlayUpgradeMax();
+                }
+
                 Punch();
             }
             else
@@ -93,7 +113,7 @@ namespace ScrapFishing.UI
 
             if (button != null)
             {
-                button.interactable = !maxed;
+                button.interactable = true;
             }
         }
 

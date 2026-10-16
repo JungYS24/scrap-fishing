@@ -58,6 +58,7 @@ namespace ScrapFishing.Boat
         {
             Clear();
             var count = DepthZone.SpawnCount(depth);
+            var legendCue = false;
             for (var i = 0; i < count; i++)
             {
                 var along = Random.value < 0.42f ? Random.Range(0.72f, 1f) : Random.Range(0.12f, 0.72f);
@@ -73,6 +74,12 @@ namespace ScrapFishing.Boat
                         0.05f,
                         item.Icon,
                         item);
+                    if (!legendCue && item.Rarity == ItemRarity.Legend)
+                    {
+                        legendCue = true;
+                        AudioManager.Ensure().PlayLegendAppear();
+                    }
+
                     continue;
                 }
 

@@ -31,7 +31,12 @@ public static class AudioPreviewMenu
         "sfx_new_best",
         "sfx_upgrade_buy",
         "sfx_upgrade_denied",
-        "sfx_lure_full"
+        "sfx_lure_full",
+        "sfx_count_tick",
+        "sfx_count_done",
+        "sfx_zone_unlock",
+        "sfx_upgrade_max",
+        "sfx_legend_appear"
     };
 
     [MenuItem(Root + "Preview Keys", false, 1)]

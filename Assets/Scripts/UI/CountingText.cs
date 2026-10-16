@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using ScrapFishing.FX;
 using UnityEngine;
@@ -25,6 +26,8 @@ namespace ScrapFishing.UI
         Color _flashColor;
 
         public int Displayed => Mathf.RoundToInt(_displayed);
+        public event Action<int> Stepped;
+        public event Action Completed;
 
         public void Bind(UiFxSettings fxSettings, string numberPrefix, bool comma, string numberSuffix = "", bool useUnscaled = true)
         {
@@ -65,7 +68,8 @@ namespace ScrapFishing.UI
             _countTween = DOTween.To(() => _displayed, Apply, target, duration)
                 .SetEase(settings.countEase)
                 .SetUpdate(unscaled)
-                .SetLink(gameObject);
+                .SetLink(gameObject)
+                .OnComplete(() => Completed?.Invoke());
             PlayFeedback(target >= from);
         }
 
@@ -113,6 +117,11 @@ namespace ScrapFishing.UI
             }
 
             _written = value;
+            if (_countTween != null && _countTween.IsActive())
+            {
+                Stepped?.Invoke(value);
+            }
+
             if (_text == null)
             {
                 return;

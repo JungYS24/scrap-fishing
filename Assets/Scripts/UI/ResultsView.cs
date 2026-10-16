@@ -35,6 +35,8 @@ namespace ScrapFishing.UI
         float _readyAt;
         int _targetCy;
         bool _counting;
+        bool _countAudioDone;
+        bool _pendingNewBest;
 
         public void Build(Transform canvas, Action onRestart)
         {
@@ -72,6 +74,8 @@ namespace ScrapFishing.UI
             _cyText.color = Palette.NeonGreen;
             _cyCount = _cyText.gameObject.AddComponent<CountingText>();
             _cyCount.Bind(_settings, "획득 ", false, " CY", true);
+            _cyCount.Stepped += HandleCountStep;
+            _cyCount.Completed += HandleCountComplete;
 
             _bestText = UiFonts.CreateText(rect, "BestText", 22, TextAnchor.MiddleCenter);
             Stretch(_bestText.rectTransform, new Vector2(0.08f, 0.46f), new Vector2(0.92f, 0.53f));
@@ -124,6 +128,7 @@ namespace ScrapFishing.UI
                 }
 
                 _counting = false;
+                FinishCountAudio();
                 if (_cyText != null)
                 {
                     Fx.Punch(_cyText.transform, 0.16f, 0.16f);
@@ -145,15 +150,12 @@ namespace ScrapFishing.UI
             _detail.text = $"건수 {session.Caught.Count}\n최고 등급 {bestName}\n달러 +{session.EarnedDollars} (보유 $ {Progression.Dollars})";
             _newBest.SetActive(session.IsNewBest);
             _targetCy = session.CY;
-            _counting = true;
+            _counting = session.CY > 0;
+            _countAudioDone = false;
+            _pendingNewBest = session.IsNewBest;
             _readyAt = Time.unscaledTime + InputLock;
             _restart.interactable = false;
             _root.SetActive(true);
-            if (session.IsNewBest)
-            {
-                AudioManager.Ensure().PlayNewBest();
-            }
-
             PlayIntro(session);
         }
 
@@ -186,16 +188,18 @@ namespace ScrapFishing.UI
             if (_cyCount != null)
             {
                 _cyCount.Snap(0);
-                _cyCount.PlayTo(session.CY);
-                DOVirtual.DelayedCall(0.45f, () =>
+                if (session.CY <= 0)
                 {
-                    if (_counting && _cyText != null)
+                    _counting = false;
+                    if (_pendingNewBest)
                     {
-                        _counting = false;
-                        Fx.Punch(_cyText.transform, 0.16f, 0.16f);
-                        Fx.FlashColor(_cyText, Color.white, 0.12f);
+                        AudioManager.Ensure().PlayNewBest();
                     }
-                }).SetUpdate(true).SetLink(_root);
+                }
+                else
+                {
+                    _cyCount.PlayTo(session.CY);
+                }
             }
             else
             {
@@ -264,6 +268,47 @@ namespace ScrapFishing.UI
                     }
                 });
             }
+        }
+
+        void HandleCountStep(int value)
+        {
+            if (_countAudioDone || _targetCy <= 0)
+            {
+                return;
+            }
+
+            AudioManager.Ensure().PlayCountTick(Mathf.Clamp01(value / (float)_targetCy));
+        }
+
+        void HandleCountComplete()
+        {
+            _counting = false;
+            FinishCountAudio();
+            if (_cyText != null)
+            {
+                Fx.Punch(_cyText.transform, 0.16f, 0.16f);
+                Fx.FlashColor(_cyText, Color.white, 0.12f);
+            }
+        }
+
+        void FinishCountAudio()
+        {
+            if (_countAudioDone)
+            {
+                return;
+            }
+
+            _countAudioDone = true;
+            AudioManager.Ensure().PlayCountDone();
+            if (!_pendingNewBest)
+            {
+                return;
+            }
+
+            DOVirtual.DelayedCall(0.15f, () =>
+            {
+                AudioManager.Ensure().PlayNewBest();
+            }).SetUpdate(true).SetLink(_root);
         }
 
         void KillIntro()
