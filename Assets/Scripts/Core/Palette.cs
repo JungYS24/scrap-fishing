@@ -11,6 +11,7 @@ namespace ScrapFishing.Core
         public static readonly Color Magenta = new Color(1f, 0.17f, 0.84f);
         public static readonly Color Cyan = new Color(0.35f, 0.85f, 1f);
         public static readonly Color Gold = new Color(1f, 0.84f, 0.2f);
+        public static readonly Color Hazard = new Color(1f, 0.23137255f, 0.23137255f);
         public static readonly Color Panel = new Color(0.04f, 0.05f, 0.09f, 0.82f);
         public static readonly Color Text = Color.white;
     }

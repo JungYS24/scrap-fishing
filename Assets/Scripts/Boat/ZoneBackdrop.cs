@@ -20,21 +20,15 @@ namespace ScrapFishing.Boat
         bool _followInit;
         bool _diveMode;
         Tween _fade;
+        Material _unlit;
+        const float Overscan = 1.08f;
+        const float CrossfadeSeconds = 0.4f;
 
         public void SetDiveMode(bool dive)
         {
             _diveMode = dive;
             _followInit = false;
-            var order = dive ? -21 : -15;
-            if (_current != null)
-            {
-                _current.sortingOrder = order;
-            }
-
-            if (_next != null)
-            {
-                _next.sortingOrder = order + 1;
-            }
+            PinOrder();
         }
 
         void Awake()
@@ -76,6 +70,8 @@ namespace ScrapFishing.Boat
             }
 
             _followY = Mathf.SmoothDamp(_followY, desired, ref _followVel, 0.32f, Mathf.Infinity, Time.unscaledDeltaTime);
+            var maxLag = cam.orthographicSize * (Overscan - 1f) * 0.85f;
+            _followY = desired + Mathf.Clamp(_followY - desired, -maxLag, maxLag);
 
             var depth = DepthZone.FromWorldY(camY);
             var zone = DepthZone.Index(depth);
@@ -127,26 +123,45 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _next.sprite = sprite;
-            _next.color = new Color(1f, 1f, 1f, 0f);
             if (_fade != null && _fade.IsActive())
             {
                 _fade.Kill(false);
             }
 
-            var from = _current;
-            var to = _next;
+            PinOrder();
+            var back = _current.color;
+            back.a = 1f;
+            _current.color = back;
+            _next.sprite = sprite;
+            _next.color = new Color(1f, 1f, 1f, 0f);
+            var incoming = _next;
+            var outgoing = _current;
             _fade = DOTween.Sequence().SetUpdate(true).SetLink(gameObject)
-                .Join(FadeSprite(to, 1f, 0.4f))
-                .Join(FadeSprite(from, 0f, 0.4f))
+                .Append(FadeSprite(incoming, 1f, CrossfadeSeconds))
                 .OnComplete(() =>
                 {
-                    _current = to;
-                    _next = from;
-                    _next.color = new Color(1f, 1f, 1f, 0f);
+                    outgoing.sprite = incoming.sprite;
+                    outgoing.color = Color.white;
+                    incoming.sprite = null;
+                    incoming.color = new Color(1f, 1f, 1f, 0f);
+                    PinOrder();
                 });
             _zone = zone;
             HideColorBands();
+        }
+
+        void PinOrder()
+        {
+            var order = _diveMode ? -21 : -15;
+            if (_current != null)
+            {
+                _current.sortingOrder = order;
+            }
+
+            if (_next != null)
+            {
+                _next.sortingOrder = order + 1;
+            }
         }
 
         Sprite Resolve(int index)
@@ -243,9 +258,22 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            var worldH = cam.orthographicSize * 2f;
-            var worldW = worldH * cam.aspect;
-            var s = Mathf.Max(worldW / size.x, worldH / size.y);
+            var viewH = Mathf.Max(cam.orthographicSize * 2f, GameView.OrthoSize * 2f);
+            var viewW = viewH * GameView.Aspect;
+            if (cam.pixelWidth > 8 && cam.pixelHeight > 8)
+            {
+                var pixelAspect = cam.pixelWidth / (float)cam.pixelHeight;
+                if (pixelAspect < GameView.Aspect)
+                {
+                    viewH = Mathf.Max(viewH, viewW / Mathf.Max(0.01f, pixelAspect));
+                }
+                else if (pixelAspect <= GameView.Aspect * Overscan)
+                {
+                    viewW = Mathf.Max(viewW, viewH * pixelAspect);
+                }
+            }
+
+            var s = Mathf.Max(viewW / size.x, viewH / size.y) * Overscan;
             layer.transform.localScale = new Vector3(s, s, 1f);
             var offset = sprite.bounds.center * s;
             layer.transform.position = new Vector3(cam.transform.position.x, y, 0f) - offset;
@@ -260,12 +288,39 @@ namespace ScrapFishing.Boat
             var renderer = go.AddComponent<SpriteRenderer>();
             renderer.sortingOrder = order;
             renderer.color = Color.white;
-            if (_shared != null)
+            var material = UnlitMaterial();
+            if (material != null)
+            {
+                renderer.sharedMaterial = material;
+            }
+            else if (_shared != null)
             {
                 renderer.sharedMaterial = _shared;
             }
 
             return renderer;
+        }
+
+        Material UnlitMaterial()
+        {
+            if (_unlit != null)
+            {
+                return _unlit;
+            }
+
+            var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+            if (shader == null)
+            {
+                shader = Shader.Find("Sprites/Default");
+            }
+
+            if (shader == null)
+            {
+                return null;
+            }
+
+            _unlit = new Material(shader);
+            return _unlit;
         }
     }
 }

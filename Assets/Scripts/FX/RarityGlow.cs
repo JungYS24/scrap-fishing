@@ -27,7 +27,19 @@ namespace ScrapFishing.FX
             public int SparklePool;
             public bool Rays;
             public bool IntroFlash;
+            public bool Mark;
         }
+
+        static readonly Style HazardStyle = new Style
+        {
+            Color = new Color(1f, 0.23137255f, 0.23137255f, 1f),
+            ScaleMin = 1.28f,
+            ScaleMax = 1.48f,
+            AlphaMin = 0.4f,
+            AlphaMax = 0.85f,
+            Period = 0.55f,
+            Mark = true
+        };
 
         static readonly Style RareStyle = new Style
         {
@@ -76,6 +88,7 @@ namespace ScrapFishing.FX
         static Sprite _circle;
         static Sprite _star;
         static Sprite _ray;
+        static Sprite _bang;
         static Material _spriteMaterial;
         static UiFxSettings _uiFx;
 
@@ -91,6 +104,7 @@ namespace ScrapFishing.FX
         Tween _pulseTween;
         Tween _introTween;
         SpriteRenderer _glow;
+        SpriteRenderer _mark;
         SpriteRenderer _flash;
         Transform _rayRoot;
         readonly List<SpriteRenderer> _rays = new List<SpriteRenderer>();
@@ -173,7 +187,18 @@ namespace ScrapFishing.FX
         static bool TryStyle(ScrapView view, out Style style)
         {
             style = default;
-            if (view == null || view.data == null || view.ChipValue < 0)
+            if (view == null)
+            {
+                return false;
+            }
+
+            if (view.ChipValue < 0)
+            {
+                style = HazardStyle;
+                return true;
+            }
+
+            if (view.data == null)
             {
                 return false;
             }
@@ -205,6 +230,7 @@ namespace ScrapFishing.FX
             _sparkleTimer = Random.Range(0f, Mathf.Max(0.05f, style.SparkleInterval));
             _introPlayed = false;
             EnsureGlow();
+            EnsureMark();
             EnsureRays();
             EnsureSparkles();
             EnsureFlash();
@@ -333,6 +359,13 @@ namespace ScrapFishing.FX
             var order = scrap.sortingOrder;
             var layer = scrap.sortingLayerID;
             Paint(_glow, layer, order - 1, _style.Color, alpha, scale);
+            if (_mark != null && _mark.gameObject.activeSelf)
+            {
+                var mark = _style.Color;
+                mark.a = Mathf.Clamp01(0.85f * strength + 0.15f);
+                Paint(_mark, layer, order + 2, mark, mark.a, _fit * 0.42f);
+                _mark.transform.localPosition = new Vector3(_fit * 0.28f, _fit * 0.32f, 0f);
+            }
             if (_style.Rays)
             {
                 var length = Mathf.Max(0.2f, _fit * _style.ScaleMax * 1.15f);
@@ -425,6 +458,27 @@ namespace ScrapFishing.FX
             }
 
             _glow = CreateRenderer("Glow", CircleSprite());
+        }
+
+        void EnsureMark()
+        {
+            if (!_style.Mark)
+            {
+                if (_mark != null)
+                {
+                    _mark.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            if (_mark == null)
+            {
+                _mark = CreateRenderer("HazardMark", BangSprite());
+            }
+
+            _mark.gameObject.SetActive(true);
+            _mark.color = _style.Color;
         }
 
         void EnsureFlash()
@@ -660,6 +714,16 @@ namespace ScrapFishing.FX
             return _star;
         }
 
+        static Sprite BangSprite()
+        {
+            if (_bang == null)
+            {
+                _bang = MakeSprite("RarityGlowBang", 32, 32, 0.5f, 0.5f, 32f, PaintBang);
+            }
+
+            return _bang;
+        }
+
         static Sprite RaySprite()
         {
             if (_ray == null)
@@ -722,6 +786,23 @@ namespace ScrapFishing.FX
                     alpha = Mathf.Max(alpha, Mathf.Clamp01(1f - cross * 4.5f) * 0.35f);
                     alpha *= alpha;
                     pixels[y * width + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(Mathf.Clamp01(alpha) * 255f));
+                }
+            }
+        }
+
+        static void PaintBang(Color32[] pixels, int width, int height)
+        {
+            var cx = (width - 1) * 0.5f;
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    var nx = (x - cx) / cx;
+                    var ny = y / (float)(height - 1);
+                    var bar = ny > 0.28f && ny < 0.78f && Mathf.Abs(nx) < 0.16f;
+                    var dot = ny < 0.2f && nx * nx + ((ny - 0.1f) / 0.12f) * ((ny - 0.1f) / 0.12f) < 1f;
+                    var alpha = bar || dot ? 1f : 0f;
+                    pixels[y * width + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
                 }
             }
         }

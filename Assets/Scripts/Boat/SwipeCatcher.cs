@@ -57,6 +57,7 @@ namespace ScrapFishing.Boat
                 {
                     _session.AddCatch(scrap.Definition, scrap.transform.position);
                     AudioManager.Ensure().PlayHazard();
+                    LureCollector.PresentHazard(scrap.transform.position, scrap.ChipValue, _collector);
                     _spawner.Remove(scrap);
                     continue;
                 }

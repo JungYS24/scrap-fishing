@@ -41,7 +41,13 @@ namespace ScrapFishing.Core
 
         public static int SpawnCount(float normalized)
         {
-            return 5 + Index(normalized);
+            return SpawnCount(normalized, 0);
+        }
+
+        public static int SpawnCount(float normalized, int capacity)
+        {
+            var count = Mathf.Max(5 + Index(normalized), capacity + 2);
+            return Mathf.Min(12, count);
         }
 
         public static int ExtraMines(float normalized)

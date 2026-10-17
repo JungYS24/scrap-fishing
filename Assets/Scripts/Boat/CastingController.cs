@@ -3,6 +3,7 @@ using System.Collections;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Fishing;
+using ScrapFishing.UI;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
@@ -35,6 +36,8 @@ namespace ScrapFishing.Boat
         [SerializeField] float collectRadius = 0.5f;
         [SerializeField] float attractRadius = 0.8f;
         [SerializeField] float attractSpeed = 1.5f;
+        [SerializeField] float autoReelRadius = 2.4f;
+        const float AutoReelScale = 2f;
 
         GameFlow _flow;
         RunSession _session;
@@ -42,6 +45,8 @@ namespace ScrapFishing.Boat
         HookMover _hook;
         ScrapSpawner _spawner;
         LureCollector _collector;
+        HudView _hud;
+        bool _autoToast;
 
         float _targetY;
         bool _descending;
@@ -57,6 +62,8 @@ namespace ScrapFishing.Boat
         float _surfaceHold;
 
         public bool IsLaunching => _launch != null;
+        public bool IsDescending => _descending && !IsLaunching;
+        public bool IsReeling => _flow != null && _flow.Phase == GamePhase.Reeling && !_settling;
 
         public bool AcceptsSteer =>
             _flow != null
@@ -83,6 +90,11 @@ namespace ScrapFishing.Boat
             ResetSteer();
         }
 
+        public void SetHud(HudView hud)
+        {
+            _hud = hud;
+        }
+
         public void PrepareForRun()
         {
             _castSerial = 0;
@@ -107,6 +119,7 @@ namespace ScrapFishing.Boat
             }
 
             _castSerial++;
+            _autoToast = false;
             ResetSteer();
             _session.RegisterCast(_gauge.Normalized);
             _targetY = Mathf.Lerp(SurfaceLayout.WaterlineY - 0.5f, SurfaceLayout.MaxDepthY, _session.CastDepth);
@@ -124,6 +137,7 @@ namespace ScrapFishing.Boat
             StopLaunch();
             _descending = false;
             _dwell = 0f;
+            _autoToast = false;
             _settling = false;
             _surfaceHold = 0f;
             _gauge.SetLocked(false);
@@ -218,27 +232,48 @@ namespace ScrapFishing.Boat
             if (_flow.Phase == GamePhase.Casting && _descending)
             {
                 TickHook();
-                StepToward(_targetY, Mathf.Lerp(7.2f, 5.2f, _session.CastDepth), () =>
+                if (LureFull())
                 {
-                    _descending = false;
-                    _dwell = 0.28f;
-                });
+                    StartFastReel();
+                }
+                else
+                {
+                    StepToward(_targetY, Mathf.Lerp(7.2f, 5.2f, _session.CastDepth), () =>
+                    {
+                        _descending = false;
+                        _dwell = 0.28f;
+                    });
+                }
             }
             else if (_flow.Phase == GamePhase.Casting && _dwell > 0f)
             {
                 TickHook();
-                PlaceSteered(_hook.Position.y);
-                _dwell -= Time.deltaTime;
-                if (_dwell <= 0f)
+                if (ShouldFastReel())
                 {
-                    AudioManager.Ensure().PlayReel();
-                    _flow.BeginReeling();
+                    StartFastReel();
+                }
+                else
+                {
+                    PlaceSteered(_hook.Position.y);
+                    _dwell -= Time.deltaTime;
+                    if (_dwell <= 0f)
+                    {
+                        AudioManager.Ensure().PlayReel();
+                        _flow.BeginReeling();
+                    }
                 }
             }
             else if (_flow.Phase == GamePhase.Reeling && !_settling)
             {
                 TickHook();
-                StepToward(SurfaceLayout.WaterlineY, Mathf.Lerp(4.1f, 2.35f, _session.CastDepth), BeginSurfaceSettle);
+                var speed = Mathf.Lerp(4.1f, 2.35f, _session.CastDepth);
+                if (ShouldFastReel())
+                {
+                    speed *= AutoReelScale;
+                    NotifyAutoReel();
+                }
+
+                StepToward(SurfaceLayout.WaterlineY, speed, BeginSurfaceSettle);
                 if (_hook.Position.y >= SurfaceLayout.WaterlineY - surfaceReturnDistance)
                 {
                     _surfaceHold += Time.deltaTime;
@@ -251,6 +286,48 @@ namespace ScrapFishing.Boat
                 {
                     _surfaceHold = 0f;
                 }
+            }
+        }
+
+        bool LureFull()
+        {
+            return _collector != null && _collector.MaxAttach > 0 && _collector.IsFull;
+        }
+
+        bool ShouldFastReel()
+        {
+            if (LureFull())
+            {
+                return true;
+            }
+
+            return _spawner != null && _hook != null && !_spawner.HasScrapNear(_hook.Position, autoReelRadius);
+        }
+
+        void StartFastReel()
+        {
+            _descending = false;
+            _dwell = 0f;
+            if (_flow.Phase == GamePhase.Casting)
+            {
+                AudioManager.Ensure().PlayReel();
+                _flow.BeginReeling();
+            }
+
+            NotifyAutoReel();
+        }
+
+        void NotifyAutoReel()
+        {
+            if (_autoToast)
+            {
+                return;
+            }
+
+            _autoToast = true;
+            if (_hud != null)
+            {
+                _hud.Notify("자동 회수");
             }
         }
 

@@ -15,12 +15,14 @@ namespace ScrapFishing.Core
         public const int MaxUpgradeLevel = 12;
 
         const string DollarKey = "Dollar";
+        const string SaveVersionKey = "SaveVersion";
+        const int SaveVersion = 2;
         const float ReelRadiusPerLevel = 0.05f;
         const float BoatChipPerLevel = 0.05f;
-        const float CostGrowth = 0.18f;
-        const int ReelBaseCost = 150;
-        const int BoatBaseCost = 190;
-        const int DepthBaseCost = 230;
+        const float CostGrowth = 1.38f;
+        const int ReelBaseCost = 250;
+        const int BoatBaseCost = 320;
+        const int DepthBaseCost = 380;
         const float DepthFloor = 0.49f;
         const float DepthCeiling = 1f;
 
@@ -50,7 +52,32 @@ namespace ScrapFishing.Core
 
         public static int Cost(UpgradeKind kind)
         {
-            return Mathf.Max(1, Mathf.RoundToInt(BaseCost(kind) * (1f + Level(kind) * CostGrowth)));
+            return CostAt(kind, Level(kind));
+        }
+
+        public static int CostAt(UpgradeKind kind, int level)
+        {
+            level = Mathf.Max(0, level);
+            return Mathf.Max(1, Mathf.RoundToInt(BaseCost(kind) * Mathf.Pow(CostGrowth, level)));
+        }
+
+        public static void MigrateSave()
+        {
+            if (PlayerPrefs.GetInt(SaveVersionKey, 0) == SaveVersion)
+            {
+                return;
+            }
+
+            PlayerPrefs.DeleteKey(DollarKey);
+            PlayerPrefs.DeleteKey("RodLevel");
+            foreach (UpgradeKind kind in Enum.GetValues(typeof(UpgradeKind)))
+            {
+                PlayerPrefs.DeleteKey(LevelKey(kind));
+            }
+
+            PlayerPrefs.SetInt(SaveVersionKey, SaveVersion);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
         }
 
         public static string ZoneUnlockLabel(UpgradeKind kind)

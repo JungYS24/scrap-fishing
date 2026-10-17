@@ -57,7 +57,7 @@ namespace ScrapFishing.Boat
         public void SpawnForCast(float surfaceY, float targetY, float depth)
         {
             Clear();
-            var count = DepthZone.SpawnCount(depth);
+            var count = DepthZone.SpawnCount(depth, RodStats.MaxAttach);
             var legendCue = false;
             for (var i = 0; i < count; i++)
             {
@@ -131,6 +131,7 @@ namespace ScrapFishing.Boat
                 {
                     session.AddCatch(scrap.Definition, scrap.transform.position);
                     AudioManager.Ensure().PlayHazard();
+                    LureCollector.PresentHazard(scrap.transform.position, scrap.ChipValue, collector);
                     Remove(scrap);
                     continue;
                 }
@@ -164,6 +165,26 @@ namespace ScrapFishing.Boat
                     drift.PullOrigin(hook, speed * Time.deltaTime);
                 }
             }
+        }
+
+        public bool HasScrapNear(Vector3 point, float radius)
+        {
+            var limit = radius * radius;
+            for (var i = 0; i < _live.Count; i++)
+            {
+                var scrap = _live[i];
+                if (scrap == null || scrap.Attached)
+                {
+                    continue;
+                }
+
+                if ((scrap.transform.position - point).sqrMagnitude <= limit)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void Unregister(ScrapView view)

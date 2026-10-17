@@ -46,7 +46,8 @@ namespace ScrapFishing.Boat
             if (!follow)
             {
                 MoveTo(_rest.y, 10f);
-                _camera.backgroundColor = Palette.Background;
+                var settled = Mathf.Abs(_camera.transform.position.y - _rest.y) < 0.08f;
+                _camera.backgroundColor = settled ? Palette.Background : Palette.Water;
                 return;
             }
 

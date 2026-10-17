@@ -9,6 +9,8 @@ namespace ScrapFishing.Core
 
         Camera _gameCamera;
         Camera _letterboxCamera;
+        Rect _appliedRect;
+        bool _hasRect;
 
         public Camera GameCamera => _gameCamera;
 
@@ -53,6 +55,10 @@ namespace ScrapFishing.Core
             _gameCamera.orthographic = true;
             _gameCamera.orthographicSize = GameView.OrthoSize;
             _gameCamera.targetTexture = null;
+            _gameCamera.allowHDR = false;
+            _gameCamera.allowMSAA = false;
+            _gameCamera.clearFlags = CameraClearFlags.SolidColor;
+            _gameCamera.depth = 0f;
 
             var letterboxGo = new GameObject("LetterboxCamera");
             letterboxGo.transform.SetParent(transform, false);
@@ -61,7 +67,8 @@ namespace ScrapFishing.Core
             _letterboxCamera.clearFlags = CameraClearFlags.SolidColor;
             _letterboxCamera.backgroundColor = Palette.Background;
             _letterboxCamera.cullingMask = 0;
-            _letterboxCamera.depth = _gameCamera.depth - 1;
+            _letterboxCamera.depth = -10f;
+            _letterboxCamera.rect = new Rect(0f, 0f, 1f, 1f);
             _letterboxCamera.allowHDR = false;
             _letterboxCamera.allowMSAA = false;
             var urp = letterboxGo.AddComponent<UniversalAdditionalCameraData>();
@@ -92,17 +99,51 @@ namespace ScrapFishing.Core
                 return;
             }
 
-            var window = Screen.width / (float)Mathf.Max(1, Screen.height);
-            if (window > GameView.Aspect)
+            var sw = Mathf.Max(1f, Screen.width);
+            var sh = Mathf.Max(1f, Screen.height);
+            var safe = Screen.safeArea;
+            if (safe.width < 2f || safe.height < 2f)
             {
-                var width = GameView.Aspect / window;
-                _gameCamera.rect = new Rect((1f - width) * 0.5f, 0f, width, 1f);
+                safe = new Rect(0f, 0f, sw, sh);
+            }
+
+            var safeAspect = safe.width / Mathf.Max(1f, safe.height);
+            float x;
+            float y;
+            float w;
+            float h;
+            if (safeAspect > GameView.Aspect)
+            {
+                h = safe.height;
+                w = h * GameView.Aspect;
+                x = safe.x + (safe.width - w) * 0.5f;
+                y = safe.y;
             }
             else
             {
-                var height = window / GameView.Aspect;
-                _gameCamera.rect = new Rect(0f, (1f - height) * 0.5f, 1f, height);
+                w = safe.width;
+                h = w / GameView.Aspect;
+                x = safe.x;
+                y = safe.y + (safe.height - h) * 0.5f;
             }
+
+            var rect = new Rect(x / sw, y / sh, w / sw, h / sh);
+            if (_hasRect && Near(_appliedRect, rect))
+            {
+                return;
+            }
+
+            _hasRect = true;
+            _appliedRect = rect;
+            _gameCamera.rect = rect;
+        }
+
+        static bool Near(Rect a, Rect b)
+        {
+            return Mathf.Abs(a.x - b.x) < 0.0005f
+                && Mathf.Abs(a.y - b.y) < 0.0005f
+                && Mathf.Abs(a.width - b.width) < 0.0005f
+                && Mathf.Abs(a.height - b.height) < 0.0005f;
         }
     }
 }

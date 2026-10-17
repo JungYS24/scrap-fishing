@@ -52,7 +52,17 @@ namespace ScrapFishing.Fishing
         public int Count => _load.Count;
         public int MaxAttach => RodStats.MaxAttach;
         public bool HasAttached => _load.Count > 0;
+        public bool IsFull => _load.IsFull;
         public bool IsSettling => _settling;
+
+        public static void PresentHazard(Vector3 worldPos, int chip, LureCollector collector)
+        {
+            Fx.FloatText(worldPos + Vector3.up * 0.16f, chip + " CY", Palette.Hazard);
+            if (collector != null)
+            {
+                collector.DropAttached();
+            }
+        }
 
         void OnEnable()
         {
@@ -180,6 +190,54 @@ namespace ScrapFishing.Fishing
             }
 
             FinishSettle();
+        }
+
+        public int DropAttached()
+        {
+            if (_settling || _attached.Count == 0)
+            {
+                return 0;
+            }
+
+            var dropped = 0;
+            for (var i = 0; i < _attached.Count; i++)
+            {
+                var item = _attached[i];
+                var view = item.View;
+                if (view == null)
+                {
+                    continue;
+                }
+
+                dropped++;
+                view.Attached = false;
+                view.RestoreLook(item.RestColor, item.RestScale, item.RestOrder);
+                var body = view.transform;
+                body.DOKill(false);
+                var dest = body.position + new Vector3(UnityEngine.Random.Range(-0.55f, 0.55f), UnityEngine.Random.Range(-1.75f, -1.05f), 0f);
+                var spin = UnityEngine.Random.Range(-160f, 160f);
+                var seq = DOTween.Sequence().SetLink(view.gameObject);
+                seq.Join(body.DOMove(dest, 0.48f).SetEase(Ease.InQuad));
+                seq.Join(body.DORotate(new Vector3(0f, 0f, spin), 0.48f, RotateMode.FastBeyond360));
+                var renderer = view.Renderer;
+                if (renderer != null)
+                {
+                    seq.Join(renderer.DOFade(0f, 0.48f));
+                }
+
+                seq.OnComplete(() =>
+                {
+                    if (view != null)
+                    {
+                        Destroy(view.gameObject);
+                    }
+                });
+            }
+
+            _attached.Clear();
+            _load.Clear();
+            Notify();
+            return dropped;
         }
 
         public void DiscardAttached()

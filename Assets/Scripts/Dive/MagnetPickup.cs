@@ -52,13 +52,14 @@ namespace ScrapFishing.Dive
                     if (LureLoad.IsHazard(n))
                     {
                         AudioManager.Ensure().PlayHazard();
-                    }
-                    else
-                    {
-                        AudioManager.Ensure().PlayCatch(scrap);
-                        RarityGlow.PlayAcquireFlash(scrap);
+                        LureCollector.PresentHazard(from, n, null);
+                        _spawner.Remove(scrap);
+                        Fx.Burst(from, null, 6, Palette.Hazard);
+                        continue;
                     }
 
+                    AudioManager.Ensure().PlayCatch(scrap);
+                    RarityGlow.PlayAcquireFlash(scrap);
                     _spawner.Remove(scrap);
                     Fx.SuckIn(from, _diver.position, sprite, scale, n);
                 }

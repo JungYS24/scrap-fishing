@@ -33,6 +33,7 @@ namespace ScrapFishing.Boat
 
         void Awake()
         {
+            Progression.MigrateSave();
             Fx.Ensure();
             AudioManager.Ensure();
             _flow = gameObject.AddComponent<GameFlow>();
@@ -119,6 +120,7 @@ namespace ScrapFishing.Boat
 
             _castCamera = gameObject.AddComponent<CastCamera>();
             _castCamera.Bind(Camera.main, _hook, _flow, _casting);
+            gameObject.AddComponent<DepthBubbles>().Bind(Camera.main, _casting);
 
             var catcher = GetComponent<SwipeCatcher>();
             if (catcher == null)
@@ -272,6 +274,12 @@ namespace ScrapFishing.Boat
             _hud = canvas.gameObject.AddComponent<HudView>();
             _hud.Build(area.Area, _canvasUi.ChipText, _canvasUi.ChipPanel);
             _hud.Bind(_session);
+            if (_casting != null)
+            {
+                _casting.SetHud(_hud);
+            }
+
+            canvas.gameObject.AddComponent<FirstPlayGuide>().Bind(area.Area, _flow, _casting);
             if (_collector != null)
             {
                 _collector.Bind(_session, EnsureSettlePoint(), _hud);
