@@ -19,33 +19,3 @@ MonoBehaviour:
   resultsDuck: 0.5
   diveDuck: 0.72
   crossfade: 0.6
-  uiTap: 0.6
-  start: 0.5
-  castWhoosh: 0.55
-  splash: 0.65
-  reel: 1
-  zoneEnter: 0.5
-  catchCommon: 0.5
-  catchRare: 0.8
-  catchMutant: 0.85
-  catchEpic: 0.85
-  catchLegend: 0.9
-  chipTick: 0.35
-  diveReady: 0.45
-  timeUp: 0.5
-  timerTick: 0.35
-  upgradeBuy: 0.65
-  upgradeDenied: 0.8
-  fullDenied: 0.3
-  hazard: 0.5
-  diveEnter: 0.4
-  mineHit: 0.5
-  oxygenWarn: 0.45
-  surface: 0.4
-  newBest: 0.5
-  lureFull: 0.5
-  countTick: 0.35
-  countDone: 0.55
-  zoneUnlock: 0.55
-  upgradeMax: 0.6
-  legendAppear: 0.6

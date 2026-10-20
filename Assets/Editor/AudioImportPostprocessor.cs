@@ -43,6 +43,16 @@ public class AudioImportPostprocessor : AssetPostprocessor
         webgl.loadType = AudioClipLoadType.DecompressOnLoad;
         webgl.preloadAudioData = true;
         importer.SetOverrideSampleSettings("WebGL", webgl);
+        if (importer.assetPath.EndsWith("/sfx_chip_tick.mp3", System.StringComparison.OrdinalIgnoreCase))
+        {
+            var so = new SerializedObject(importer);
+            var normalize = so.FindProperty("m_Normalize") ?? so.FindProperty("normalize");
+            if (normalize != null)
+            {
+                normalize.boolValue = false;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
     }
 
     static void ApplyBgm(AudioImporter importer)

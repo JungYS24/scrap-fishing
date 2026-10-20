@@ -11,45 +11,28 @@ namespace ScrapFishing.Audio
     public class AudioManager : MonoBehaviour
     {
         const string MixResource = "Audio/AudioMix";
-        const string SfxFolder = "Audio/SFX";
+        const string LibraryResource = "Audio/SoundCueLibrary";
         const string TitleBgmResource = "Audio/Start_Title_BGM";
         const string PlayBgmResource = "Audio/Neo-Tokyo Sludge";
         const int PoolSize = 6;
-        const int MaxSameFrame = 2;
-        const float QuietPeak = 0.05f;
-        const float PitchJitter = 0.04f;
-        const float FullCooldown = 0.5f;
         const float CountTickGap = 1f / 12f;
+        const float LureFullDeniedVolume = 0.3f;
         const string SoundPref = "SoundOn";
 
         static readonly float[] ZonePitch = { 1f, 0.94f, 0.88f, 0.82f };
-        static readonly Dictionary<string, string> Aliases = new Dictionary<string, string>
-        {
-            { "sfx_catch_mutant", "sfx_catch_rare" },
-            { "sfx_catch_epic", "sfx_catch_rare" },
-            { "sfx_catch_legend", "sfx_catch_rare" },
-            { "sfx_dive_enter", "sfx_dive_ready" },
-            { "sfx_hazard", "sfx_upgrade_denied" },
-            { "sfx_mine_hit", "sfx_upgrade_denied" },
-            { "sfx_oxygen_warn", "sfx_timer_tick" },
-            { "sfx_surface", "sfx_splash" },
-            { "sfx_new_best", "sfx_dive_ready" },
-            { "sfx_lure_full", "sfx_upgrade_denied" },
-            { "sfx_count_tick", "sfx_chip_tick" },
-            { "sfx_count_done", "sfx_upgrade_buy" },
-            { "sfx_zone_unlock", "sfx_zone_enter" },
-            { "sfx_upgrade_max", "sfx_new_best" },
-            { "sfx_legend_appear", "sfx_catch_rare" }
-        };
 
         public static AudioManager Instance { get; private set; }
 
         [SerializeField] AudioMix mix;
+        [SerializeField] SoundCueLibrary library;
 
-        readonly Dictionary<string, List<AudioClip>> _clips = new Dictionary<string, List<AudioClip>>();
-        readonly Dictionary<string, AudioClip> _fallback = new Dictionary<string, AudioClip>();
-        readonly Dictionary<string, int> _frameHits = new Dictionary<string, int>();
-        readonly HashSet<string> _quiet = new HashSet<string>();
+        readonly Dictionary<SfxId, AudioClip> _procedural = new Dictionary<SfxId, AudioClip>();
+        readonly Dictionary<SfxId, int> _frameHits = new Dictionary<SfxId, int>();
+        readonly Dictionary<SfxId, float> _readyAt = new Dictionary<SfxId, float>();
+        readonly Dictionary<SfxId, AudioClip> _lastClip = new Dictionary<SfxId, AudioClip>();
+        readonly Dictionary<int, bool> _quiet = new Dictionary<int, bool>();
+        readonly HashSet<SfxId> _missingCue = new HashSet<SfxId>();
+        readonly List<AudioClip> _pick = new List<AudioClip>(4);
         AudioSource[] _pool;
         AudioSource _bgmA;
         AudioSource _bgmB;
@@ -59,7 +42,6 @@ namespace ScrapFishing.Audio
         int _poolAt;
         int _hitFrame = -1;
         float _bgmTarget = 0.55f;
-        float _fullAt;
         float _countTickAt;
         bool _unlocked;
         bool _wantTitle;
@@ -92,8 +74,12 @@ namespace ScrapFishing.Audio
                 mix = ScriptableObject.CreateInstance<AudioMix>();
             }
 
-            BuildFallbacks();
-            LoadClips();
+            if (library == null)
+            {
+                library = Resources.Load<SoundCueLibrary>(LibraryResource);
+            }
+
+            BuildProcedural();
             _titleClip = Resources.Load<AudioClip>(TitleBgmResource);
             _playClip = Resources.Load<AudioClip>(PlayBgmResource);
             _bgmA = MakeBgm("BgmA");
@@ -239,33 +225,33 @@ namespace ScrapFishing.Audio
 
         public void PlayUiTap()
         {
-            PlayNamed("sfx_ui_tap", 1f, false);
+            PlayCue(SfxId.UiTap);
         }
 
         public void PlayStart()
         {
-            PlayNamed("sfx_start", 1f, false);
+            PlayCue(SfxId.Start);
         }
 
         public void PlayCast()
         {
-            PlayNamed("sfx_cast_whoosh", 1f, true);
+            PlayCue(SfxId.CastWhoosh);
         }
 
         public void PlaySplash()
         {
-            PlayNamed("sfx_splash", 1f, false);
+            PlayCue(SfxId.Splash);
         }
 
         public void PlayReel()
         {
-            PlayNamed("sfx_reel", 1f, false);
+            PlayCue(SfxId.Reel);
         }
 
         public void PlayZone(int index)
         {
             var i = Mathf.Clamp(index, 0, ZonePitch.Length - 1);
-            PlayNamed("sfx_zone_enter", ZonePitch[i], false);
+            PlayCue(SfxId.ZoneEnter, ZonePitch[i]);
         }
 
         public void PlayCatch()
@@ -277,23 +263,23 @@ namespace ScrapFishing.Audio
         {
             if (grade >= ScrapGrade.Mutant)
             {
-                if (HasClip("sfx_catch_mutant"))
+                if (CanResolve(SfxId.CatchMutant))
                 {
-                    PlayNamed("sfx_catch_mutant", 1f, true);
+                    PlayCue(SfxId.CatchMutant);
                     return;
                 }
 
-                PlayNamed("sfx_catch_rare", 0.9f, true);
+                PlayCue(SfxId.CatchRare, 0.9f);
                 return;
             }
 
             if (grade >= ScrapGrade.Rare)
             {
-                PlayNamed("sfx_catch_rare", 1f, true);
+                PlayCue(SfxId.CatchRare);
                 return;
             }
 
-            PlayNamed("sfx_catch_common", 1f, true);
+            PlayCue(SfxId.CatchCommon);
         }
 
         public void PlayCatch(ScrapView scrap)
@@ -312,104 +298,104 @@ namespace ScrapFishing.Audio
             switch (rarity)
             {
                 case ItemRarity.Rare:
-                    PlayNamed("sfx_catch_rare", 1f, true);
+                    PlayCue(SfxId.CatchRare);
                     return;
                 case ItemRarity.Epic:
-                    PlayNamed("sfx_catch_epic", HasOwnClip("sfx_catch_epic") ? 1f : 0.9f, true);
+                    PlayCue(SfxId.CatchEpic);
                     return;
                 case ItemRarity.Legend:
-                    PlayNamed("sfx_catch_legend", HasOwnClip("sfx_catch_legend") ? 1f : 0.8f, true);
+                    PlayCue(SfxId.CatchLegend);
                     return;
                 default:
-                    PlayNamed("sfx_catch_common", 1f, true);
+                    PlayCue(SfxId.CatchCommon);
                     return;
             }
         }
 
         public void PlayHazard()
         {
-            PlayNamed("sfx_hazard", 1f, false);
+            PlayCue(SfxId.Hazard);
         }
 
         public void PlayChipArrive(float pitch)
         {
-            PlayNamed("sfx_chip_tick", pitch, true);
+            PlayCue(SfxId.ChipTick, pitch);
         }
 
         public void PlayDiveReady()
         {
-            PlayNamed("sfx_dive_ready", 1f, false);
+            PlayCue(SfxId.DiveReady);
         }
 
         public void PlayDive()
         {
-            PlayNamed("sfx_dive_enter", 1f, false);
+            PlayCue(SfxId.DiveEnter);
         }
 
         public void PlayMineHit()
         {
-            PlayNamed("sfx_mine_hit", 1f, false);
+            PlayCue(SfxId.MineHit);
         }
 
         public void PlayOxygenWarn()
         {
-            PlayNamed("sfx_oxygen_warn", 1f, false);
+            PlayCue(SfxId.OxygenWarn);
         }
 
         public void PlaySurface()
         {
-            PlayNamed("sfx_surface", 1f, false);
+            PlayCue(SfxId.Surface);
         }
 
         public void PlayTimerTick(float pitch)
         {
-            PlayNamed("sfx_timer_tick", pitch, false);
+            PlayCue(SfxId.TimerTick, pitch);
         }
 
         public void PlayTimeUp()
         {
-            PlayNamed("sfx_time_up", 1f, false);
+            PlayCue(SfxId.TimeUp);
         }
 
         public void PlayNewBest()
         {
-            if (HasClip("sfx_new_best"))
+            if (CanResolve(SfxId.NewBest))
             {
-                PlayNamed("sfx_new_best", 1f, false);
+                PlayCue(SfxId.NewBest);
                 return;
             }
 
-            PlayNamed("sfx_dive_ready", 1.1f, false);
+            PlayCue(SfxId.DiveReady, 1.1f);
         }
 
         public void PlayUpgradeBuy()
         {
-            PlayNamed("sfx_upgrade_buy", 1f, false);
+            PlayCue(SfxId.UpgradeBuy);
         }
 
         public void PlayUpgradeDenied()
         {
-            PlayNamed("sfx_upgrade_denied", 1f, false);
+            PlayCue(SfxId.UpgradeDenied);
         }
 
         public void PlayMaxedTap()
         {
-            PlayNamed("sfx_ui_tap", 0.8f, false);
+            PlayCue(SfxId.UiTap, 0.8f);
         }
 
         public void PlayZoneUnlock()
         {
-            PlayNamed("sfx_zone_unlock", HasOwnClip("sfx_zone_unlock") ? 1f : 1.2f, false);
+            PlayCue(SfxId.ZoneUnlock);
         }
 
         public void PlayUpgradeMax()
         {
-            PlayNamed("sfx_upgrade_max", HasOwnClip("sfx_upgrade_max") ? 1f : 1.15f, false);
+            PlayCue(SfxId.UpgradeMax);
         }
 
         public void PlayLegendAppear()
         {
-            PlayNamed("sfx_legend_appear", HasOwnClip("sfx_legend_appear") ? 1f : 1.35f, false, mix.legendAppear);
+            PlayCue(SfxId.LegendAppear);
         }
 
         public void PlayCountTick(float progress)
@@ -420,66 +406,92 @@ namespace ScrapFishing.Audio
             }
 
             _countTickAt = Time.unscaledTime + CountTickGap;
-            var rise = Mathf.Lerp(1f, 1.4f, Mathf.Clamp01(progress));
-            if (HasOwnClip("sfx_count_tick"))
+            var t = Mathf.Clamp01(progress);
+            if (HasOwnClip(SfxId.CountTick))
             {
-                PlayNamed("sfx_count_tick", rise, false);
+                PlayCue(SfxId.CountTick, Mathf.Lerp(1f, 1.4f, t));
                 return;
             }
 
-            if (HasOwnClip("sfx_chip_tick"))
+            if (HasOwnClip(SfxId.ChipTick))
             {
-                PlayNamed("sfx_chip_tick", rise, false);
+                PlayCue(SfxId.ChipTick, Mathf.Lerp(1f, 1.4f, t));
                 return;
             }
 
-            PlayNamed("sfx_ui_tap", Mathf.Lerp(1.3f, 1.4f, Mathf.Clamp01(progress)), false);
+            PlayCue(SfxId.UiTap, Mathf.Lerp(1.3f, 1.4f, t));
         }
 
         public void PlayCountDone()
         {
-            PlayNamed("sfx_count_done", 1f, false);
+            PlayCue(SfxId.CountDone);
         }
 
         public void PlayFull()
         {
-            if (Time.unscaledTime < _fullAt)
+            var lure = Cue(SfxId.LureFull);
+            if (!ConsumeCooldown(lure))
             {
                 return;
             }
 
-            _fullAt = Time.unscaledTime + FullCooldown;
-            if (HasOwnClip("sfx_lure_full"))
+            if (HasOwnClip(SfxId.LureFull))
             {
-                PlayNamed("sfx_lure_full", 1f, false);
+                PlayCue(SfxId.LureFull, 1f, 1f, false, true);
                 return;
             }
 
-            PlayNamed("sfx_upgrade_denied", 1f, false, mix.fullDenied);
+            var denied = Cue(SfxId.UpgradeDenied);
+            var mul = denied != null && denied.volume > 0.0001f ? LureFullDeniedVolume / denied.volume : 1f;
+            PlayCue(SfxId.UpgradeDenied, 1f, mul, false, true);
         }
 
-        public void Preview(string key)
+        public void Preview(SfxId id)
         {
             Unlock();
-            PlayNamed(key, 1f, false);
+            PlayCue(id, 1f, 1f, false, false);
         }
 
-        void PlayNamed(string key, float pitch, bool jitter, float volumeOverride = -1f)
+        public void PlayCue(SfxId id, float pitchMul = 1f, float volumeMul = 1f)
         {
-            if (Time.frameCount != _hitFrame)
-            {
-                _hitFrame = Time.frameCount;
-                _frameHits.Clear();
-            }
+            PlayCue(id, pitchMul, volumeMul, true, true);
+        }
 
-            _frameHits.TryGetValue(key, out var hits);
-            if (hits >= MaxSameFrame)
+        void PlayCue(SfxId id, float pitchMul, float volumeMul, bool checkCooldown, bool checkFrame)
+        {
+            var cue = Cue(id);
+            if (checkCooldown && !ConsumeCooldown(cue))
             {
                 return;
             }
 
-            _frameHits[key] = hits + 1;
-            var clip = Resolve(key);
+            if (checkFrame && !AllowFrame(id, cue != null ? cue.maxPerFrame : 2))
+            {
+                return;
+            }
+
+            var own = false;
+            var clip = cue != null ? PickClip(cue) : null;
+            var pitchScale = 1f;
+            if (clip != null)
+            {
+                own = true;
+            }
+            else if (cue != null && cue.fallback != null)
+            {
+                clip = PickClip(cue.fallback);
+                pitchScale = cue.fallbackPitch > 0f ? cue.fallbackPitch : 1f;
+            }
+
+            if (clip == null)
+            {
+                clip = Procedural(id);
+                if (cue != null && !own)
+                {
+                    pitchScale = cue.fallbackPitch > 0f ? cue.fallbackPitch : 1f;
+                }
+            }
+
             if (clip == null)
             {
                 return;
@@ -491,49 +503,150 @@ namespace ScrapFishing.Audio
                 return;
             }
 
-            var vol = (volumeOverride >= 0f ? volumeOverride : mix.Named(key)) * mix.masterSfx;
-            var usedPitch = Mathf.Clamp(pitch, 0.5f, 2f);
-            if (jitter)
+            var volume = (cue != null ? cue.volume : 0.5f) * volumeMul * mix.masterSfx;
+            var pitch = Mathf.Clamp(pitchMul, 0.5f, 2f) * (own ? 1f : pitchScale);
+            if (cue != null)
             {
-                usedPitch *= Random.Range(1f - PitchJitter, 1f + PitchJitter);
+                var min = cue.pitchMin;
+                var max = cue.pitchMax;
+                if (max < min)
+                {
+                    var swap = min;
+                    min = max;
+                    max = swap;
+                }
+
+                pitch *= Mathf.Approximately(min, max) ? (min > 0f ? min : 1f) : Random.Range(min, max);
             }
 
             src.Stop();
             src.clip = clip;
-            src.pitch = usedPitch;
-            src.volume = vol;
+            src.pitch = pitch;
+            src.volume = volume;
             src.Play();
         }
 
-        AudioClip Resolve(string key)
+        SoundCue Cue(SfxId id)
         {
-            if (_clips.TryGetValue(key, out var list) && list.Count > 0)
+            var cue = library != null ? library.Get(id) : null;
+            if (cue == null && _missingCue.Add(id))
             {
-                return list[Random.Range(0, list.Count)];
+                Debug.LogWarning("SoundCue 없음: " + id + ". ScrapFishing/Audio/Build Sound Cues 를 실행하세요.");
             }
 
-            if (Aliases.TryGetValue(key, out var alias) && _clips.TryGetValue(alias, out var mapped) && mapped.Count > 0)
-            {
-                return mapped[Random.Range(0, mapped.Count)];
-            }
-
-            _fallback.TryGetValue(key, out var tone);
-            return tone;
+            return cue;
         }
 
-        bool HasClip(string key)
+        bool HasOwnClip(SfxId id)
         {
-            if (HasOwnClip(key))
+            var cue = library != null ? library.Get(id) : null;
+            return cue != null && PickClip(cue, false) != null;
+        }
+
+        bool CanResolve(SfxId id)
+        {
+            if (HasOwnClip(id))
             {
                 return true;
             }
 
-            return Aliases.TryGetValue(key, out var alias) && _clips.TryGetValue(alias, out var mapped) && mapped.Count > 0;
+            var cue = library != null ? library.Get(id) : null;
+            return cue != null && cue.fallback != null && HasOwnClip(cue.fallback.id);
         }
 
-        bool HasOwnClip(string key)
+        bool ConsumeCooldown(SoundCue cue)
         {
-            return _clips.TryGetValue(key, out var list) && list.Count > 0;
+            if (cue == null || cue.cooldown <= 0f)
+            {
+                return true;
+            }
+
+            if (_readyAt.TryGetValue(cue.id, out var at) && Time.unscaledTime < at)
+            {
+                return false;
+            }
+
+            _readyAt[cue.id] = Time.unscaledTime + cue.cooldown;
+            return true;
+        }
+
+        bool AllowFrame(SfxId id, int maxPerFrame)
+        {
+            if (Time.frameCount != _hitFrame)
+            {
+                _hitFrame = Time.frameCount;
+                _frameHits.Clear();
+            }
+
+            _frameHits.TryGetValue(id, out var hits);
+            var limit = maxPerFrame < 1 ? 2 : maxPerFrame;
+            if (hits >= limit)
+            {
+                return false;
+            }
+
+            _frameHits[id] = hits + 1;
+            return true;
+        }
+
+        AudioClip PickClip(SoundCue cue, bool remember = true)
+        {
+            if (cue == null || cue.clips == null || cue.clips.Length == 0)
+            {
+                return null;
+            }
+
+            _pick.Clear();
+            for (var i = 0; i < cue.clips.Length; i++)
+            {
+                var clip = cue.clips[i];
+                if (clip != null && !Quiet(clip))
+                {
+                    _pick.Add(clip);
+                }
+            }
+
+            if (_pick.Count == 0)
+            {
+                return null;
+            }
+
+            var index = 0;
+            if (_pick.Count > 1)
+            {
+                index = Random.Range(0, _pick.Count);
+                if (_lastClip.TryGetValue(cue.id, out var last) && _pick[index] == last)
+                {
+                    index = (index + 1) % _pick.Count;
+                }
+            }
+
+            var choice = _pick[index];
+            if (remember)
+            {
+                _lastClip[cue.id] = choice;
+            }
+
+            return choice;
+        }
+
+        bool Quiet(AudioClip clip)
+        {
+            var key = clip.GetInstanceID();
+            if (_quiet.TryGetValue(key, out var quiet))
+            {
+                return quiet;
+            }
+
+            quiet = SfxLoudness.IsTooQuiet(clip);
+            _quiet[key] = quiet;
+            return quiet;
+        }
+
+        AudioClip Procedural(SfxId id)
+        {
+            _procedural.TryGetValue(id, out var clip);
+            return clip;
         }
 
         AudioSource NextVoice()
@@ -553,120 +666,37 @@ namespace ScrapFishing.Audio
             return steal;
         }
 
-        void LoadClips()
+        void BuildProcedural()
         {
-            var loaded = Resources.LoadAll<AudioClip>(SfxFolder);
-            for (var i = 0; i < loaded.Length; i++)
-            {
-                var clip = loaded[i];
-                if (clip == null)
-                {
-                    continue;
-                }
-
-                var key = VariantKey(clip.name);
-                if (IsTooQuiet(clip))
-                {
-                    _quiet.Add(key);
-                    continue;
-                }
-
-                if (!_clips.TryGetValue(key, out var list))
-                {
-                    list = new List<AudioClip>(3);
-                    _clips[key] = list;
-                }
-
-                list.Add(clip);
-            }
-        }
-
-        static string VariantKey(string name)
-        {
-            var split = name.LastIndexOf('_');
-            if (split <= 0 || split >= name.Length - 1)
-            {
-                return name;
-            }
-
-            var suffix = name.Substring(split + 1);
-            for (var i = 0; i < suffix.Length; i++)
-            {
-                if (!char.IsDigit(suffix[i]))
-                {
-                    return name;
-                }
-            }
-
-            return name.Substring(0, split);
-        }
-
-        static bool IsTooQuiet(AudioClip clip)
-        {
-            if (clip == null || clip.samples <= 0)
-            {
-                return true;
-            }
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-            return false;
-#else
-            if (!clip.LoadAudioData())
-            {
-                return false;
-            }
-
-            var data = new float[Mathf.Min(clip.samples * clip.channels, 48000)];
-            if (!clip.GetData(data, 0))
-            {
-                return false;
-            }
-
-            var peak = 0f;
-            for (var i = 0; i < data.Length; i++)
-            {
-                var mag = Mathf.Abs(data[i]);
-                if (mag > peak)
-                {
-                    peak = mag;
-                }
-            }
-
-            return peak < QuietPeak;
-#endif
-        }
-
-        void BuildFallbacks()
-        {
-            _fallback["sfx_ui_tap"] = MakeTone(720, 0.05f);
-            _fallback["sfx_start"] = MakeChime(440, 660, 0.08f);
-            _fallback["sfx_cast_whoosh"] = MakeTone(520, 0.07f);
-            _fallback["sfx_splash"] = MakeSplash(0.16f);
-            _fallback["sfx_reel"] = MakeTone(340, 0.1f);
-            _fallback["sfx_zone_enter"] = MakeTone(400, 0.07f);
-            _fallback["sfx_catch_common"] = MakeTone(880, 0.09f);
-            _fallback["sfx_catch_rare"] = MakeChime(660, 990, 0.08f);
-            _fallback["sfx_catch_mutant"] = MakeChime(520, 1040, 0.1f);
-            _fallback["sfx_catch_epic"] = MakeChime(520, 1040, 0.1f);
-            _fallback["sfx_catch_legend"] = MakeChime(440, 880, 0.12f);
-            _fallback["sfx_lure_full"] = MakeTone(140, 0.12f);
-            _fallback["sfx_chip_tick"] = MakeTone(980, 0.05f);
-            _fallback["sfx_dive_ready"] = MakeChime(660, 990, 0.08f);
-            _fallback["sfx_dive_enter"] = MakeTone(260, 0.14f);
-            _fallback["sfx_hazard"] = MakeTone(180, 0.16f);
-            _fallback["sfx_mine_hit"] = MakeTone(180, 0.16f);
-            _fallback["sfx_oxygen_warn"] = MakeTone(240, 0.18f);
-            _fallback["sfx_surface"] = MakeSplash(0.12f);
-            _fallback["sfx_timer_tick"] = MakeTone(640, 0.04f);
-            _fallback["sfx_time_up"] = MakeTone(160, 0.22f);
-            _fallback["sfx_new_best"] = MakeChime(660, 990, 0.08f);
-            _fallback["sfx_upgrade_buy"] = MakeChime(520, 780, 0.07f);
-            _fallback["sfx_upgrade_denied"] = MakeTone(140, 0.12f);
-            _fallback["sfx_count_tick"] = MakeTone(980, 0.04f);
-            _fallback["sfx_count_done"] = MakeChime(520, 780, 0.07f);
-            _fallback["sfx_zone_unlock"] = MakeTone(400, 0.08f);
-            _fallback["sfx_upgrade_max"] = MakeChime(660, 990, 0.08f);
-            _fallback["sfx_legend_appear"] = MakeChime(660, 990, 0.08f);
+            _procedural[SfxId.UiTap] = MakeTone(720, 0.05f);
+            _procedural[SfxId.Start] = MakeChime(440, 660, 0.08f);
+            _procedural[SfxId.CastWhoosh] = MakeTone(520, 0.07f);
+            _procedural[SfxId.Splash] = MakeSplash(0.16f);
+            _procedural[SfxId.Reel] = MakeTone(340, 0.1f);
+            _procedural[SfxId.ZoneEnter] = MakeTone(400, 0.07f);
+            _procedural[SfxId.CatchCommon] = MakeTone(880, 0.09f);
+            _procedural[SfxId.CatchRare] = MakeChime(660, 990, 0.08f);
+            _procedural[SfxId.CatchMutant] = MakeChime(520, 1040, 0.1f);
+            _procedural[SfxId.CatchEpic] = MakeChime(520, 1040, 0.1f);
+            _procedural[SfxId.CatchLegend] = MakeChime(440, 880, 0.12f);
+            _procedural[SfxId.LureFull] = MakeTone(140, 0.12f);
+            _procedural[SfxId.ChipTick] = MakeTone(980, 0.05f);
+            _procedural[SfxId.DiveReady] = MakeChime(660, 990, 0.08f);
+            _procedural[SfxId.DiveEnter] = MakeTone(260, 0.14f);
+            _procedural[SfxId.Hazard] = MakeTone(180, 0.16f);
+            _procedural[SfxId.MineHit] = MakeTone(180, 0.16f);
+            _procedural[SfxId.OxygenWarn] = MakeTone(240, 0.18f);
+            _procedural[SfxId.Surface] = MakeSplash(0.12f);
+            _procedural[SfxId.TimerTick] = MakeTone(640, 0.04f);
+            _procedural[SfxId.TimeUp] = MakeTone(160, 0.22f);
+            _procedural[SfxId.NewBest] = MakeChime(660, 990, 0.08f);
+            _procedural[SfxId.UpgradeBuy] = MakeChime(520, 780, 0.07f);
+            _procedural[SfxId.UpgradeDenied] = MakeTone(140, 0.12f);
+            _procedural[SfxId.CountTick] = MakeTone(980, 0.04f);
+            _procedural[SfxId.CountDone] = MakeChime(520, 780, 0.07f);
+            _procedural[SfxId.ZoneUnlock] = MakeTone(400, 0.08f);
+            _procedural[SfxId.UpgradeMax] = MakeChime(660, 990, 0.08f);
+            _procedural[SfxId.LegendAppear] = MakeChime(660, 990, 0.08f);
         }
 
         AudioSource MakeBgm(string name)

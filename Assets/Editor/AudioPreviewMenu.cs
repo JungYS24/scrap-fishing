@@ -1,3 +1,4 @@
+using System;
 using ScrapFishing.Audio;
 using UnityEditor;
 using UnityEngine;
@@ -6,38 +7,7 @@ public static class AudioPreviewMenu
 {
     const string Root = "Scrap Fishing/Audio/";
 
-    public static readonly string[] Keys =
-    {
-        "sfx_ui_tap",
-        "sfx_start",
-        "sfx_cast_whoosh",
-        "sfx_splash",
-        "sfx_reel",
-        "sfx_zone_enter",
-        "sfx_catch_common",
-        "sfx_catch_rare",
-        "sfx_catch_epic",
-        "sfx_catch_legend",
-        "sfx_catch_mutant",
-        "sfx_chip_tick",
-        "sfx_dive_ready",
-        "sfx_dive_enter",
-        "sfx_hazard",
-        "sfx_mine_hit",
-        "sfx_oxygen_warn",
-        "sfx_surface",
-        "sfx_timer_tick",
-        "sfx_time_up",
-        "sfx_new_best",
-        "sfx_upgrade_buy",
-        "sfx_upgrade_denied",
-        "sfx_lure_full",
-        "sfx_count_tick",
-        "sfx_count_done",
-        "sfx_zone_unlock",
-        "sfx_upgrade_max",
-        "sfx_legend_appear"
-    };
+    public static readonly SfxId[] Ids = (SfxId[])Enum.GetValues(typeof(SfxId));
 
     [MenuItem(Root + "Preview Keys", false, 1)]
     static void OpenPreview()
@@ -70,10 +40,10 @@ public static class AudioPreviewMenu
         Debug.Log("Audio reimport 요청 완료");
     }
 
-    public static void Play(string key)
+    public static void Play(SfxId id)
     {
         EnsurePlaymode();
-        AudioManager.Ensure().Preview(key);
+        AudioManager.Ensure().Preview(id);
     }
 
     public static void EnsurePlaymode()
@@ -94,15 +64,15 @@ public class AudioPreviewWindow : EditorWindow
 
     void OnGUI()
     {
-        EditorGUILayout.LabelField("AudioManager.Preview", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("키를 눌러 하나씩 들어보세요. Play Mode가 아니면 AudioManager가 잠시 생성됩니다.", MessageType.Info);
+        EditorGUILayout.LabelField("SoundCue Preview", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("큐를 눌러 하나씩 들어보세요. Play Mode가 아니면 AudioManager가 잠시 생성됩니다.", MessageType.Info);
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
-        var keys = AudioPreviewMenu.Keys;
-        for (var i = 0; i < keys.Length; i++)
+        var ids = AudioPreviewMenu.Ids;
+        for (var i = 0; i < ids.Length; i++)
         {
-            if (GUILayout.Button(keys[i], GUILayout.Height(24)))
+            if (GUILayout.Button(ids[i].ToString(), GUILayout.Height(24)))
             {
-                AudioPreviewMenu.Play(keys[i]);
+                AudioPreviewMenu.Play(ids[i]);
             }
         }
 
@@ -119,12 +89,12 @@ public class AudioManagerEditor : Editor
         var manager = (AudioManager)target;
         GUILayout.Space(8);
         GUILayout.Label("Preview", EditorStyles.boldLabel);
-        var keys = AudioPreviewMenu.Keys;
-        for (var i = 0; i < keys.Length; i++)
+        var ids = AudioPreviewMenu.Ids;
+        for (var i = 0; i < ids.Length; i++)
         {
-            if (GUILayout.Button("Play " + keys[i]))
+            if (GUILayout.Button("Play " + ids[i]))
             {
-                manager.Preview(keys[i]);
+                manager.Preview(ids[i]);
             }
         }
     }

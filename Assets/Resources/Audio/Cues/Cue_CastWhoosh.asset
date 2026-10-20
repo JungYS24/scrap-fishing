@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a2d3b0c9f814e1b8c4d6e8f203b5c71, type: 3}
+  m_Name: Cue_CastWhoosh
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Audio.SoundCue
+  id: 2
+  clips:
+  - {fileID: 8300000, guid: 31d4043f358a8bf4f8fe7212141fdcb8, type: 3}
+  - {fileID: 8300000, guid: 9c559ea264e57d949a2f5ce43ed3043d, type: 3}
+  - {fileID: 8300000, guid: beddd3cc1e98f2e4b8005bf0b9d02274, type: 3}
+  bus: 1
+  volume: 0.55
+  pitchMin: 0.96
+  pitchMax: 1.04
+  cooldown: 0
+  maxPerFrame: 2
+  fallback: {fileID: 0}
+  fallbackPitch: 1
