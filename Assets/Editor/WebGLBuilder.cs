@@ -65,9 +65,34 @@ namespace ScrapFishing.Build
                 return;
             }
 
+            CopyShareFiles(staging);
             var output = Path.GetFullPath("docs");
             PublishStaging(staging, output);
             Debug.Log("WebGL build succeeded: " + output);
+        }
+
+        static readonly string[] ShareFiles =
+        {
+            "og-image.png",
+            "apple-touch-icon.png",
+            "icon-192.png",
+            "icon-512.png"
+        };
+
+        static void CopyShareFiles(string staging)
+        {
+            var template = Path.GetFullPath(Path.Combine("Assets", "WebGLTemplates", "ScrapFishing"));
+            foreach (var name in ShareFiles)
+            {
+                var source = Path.Combine(template, name);
+                if (!File.Exists(source))
+                {
+                    Debug.LogWarning("공유 이미지가 템플릿에 없습니다: " + source);
+                    continue;
+                }
+
+                File.Copy(source, Path.Combine(staging, name), true);
+            }
         }
 
         static void PublishStaging(string staging, string output)

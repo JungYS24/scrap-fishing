@@ -129,7 +129,7 @@ namespace ScrapFishing.Boat
 
                 if (LureLoad.IsHazard(scrap.ChipValue))
                 {
-                    session.AddCatch(scrap.Definition, scrap.transform.position);
+                    session.AddCatch(scrap.Definition, scrap.data, scrap.transform.position);
                     AudioManager.Ensure().PlayHazard();
                     LureCollector.PresentHazard(scrap.transform.position, scrap.ChipValue, collector);
                     Remove(scrap);

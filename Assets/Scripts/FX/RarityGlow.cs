@@ -110,6 +110,19 @@ namespace ScrapFishing.FX
         readonly List<SpriteRenderer> _rays = new List<SpriteRenderer>();
         readonly List<SpriteRenderer> _sparkles = new List<SpriteRenderer>();
 
+        public static Color BorderColor(ItemRarity rarity)
+        {
+            switch (rarity)
+            {
+                case ItemRarity.Rare: return RareStyle.Color;
+                case ItemRarity.Epic: return EpicStyle.Color;
+                case ItemRarity.Legend: return LegendStyle.Color;
+                default: return new Color(0.604f, 0.627f, 0.651f, 1f);
+            }
+        }
+
+        public static Color HazardBorder => HazardStyle.Color;
+
         public static void PlayAcquireFlash(ScrapView view)
         {
             if (view == null || view.data == null || view.ChipValue < 0)

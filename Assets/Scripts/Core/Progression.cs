@@ -97,6 +97,71 @@ namespace ScrapFishing.Core
             return DepthZone.Name(nextDepth) + " 해금";
         }
 
+        public readonly struct GoalHint
+        {
+            public readonly string Primary;
+            public readonly string Zone;
+            public readonly bool CanBuy;
+            public readonly bool AllMaxed;
+
+            public GoalHint(string primary, string zone, bool canBuy, bool allMaxed)
+            {
+                Primary = primary;
+                Zone = zone;
+                CanBuy = canBuy;
+                AllMaxed = allMaxed;
+            }
+        }
+
+        public static GoalHint NextGoal()
+        {
+            var allMaxed = true;
+            var canBuy = false;
+            var buyKind = UpgradeKind.Reel;
+            var buyCost = int.MaxValue;
+            var nextKind = UpgradeKind.Reel;
+            var nextGap = int.MaxValue;
+            foreach (UpgradeKind kind in Enum.GetValues(typeof(UpgradeKind)))
+            {
+                if (IsMaxed(kind))
+                {
+                    continue;
+                }
+
+                allMaxed = false;
+                var cost = Cost(kind);
+                if (Dollars >= cost && cost < buyCost)
+                {
+                    canBuy = true;
+                    buyCost = cost;
+                    buyKind = kind;
+                }
+
+                var gap = cost - Dollars;
+                if (gap < nextGap)
+                {
+                    nextGap = gap;
+                    nextKind = kind;
+                }
+            }
+
+            if (allMaxed)
+            {
+                return new GoalHint("모든 강화 완료! 최고 기록에 도전하세요", null, false, true);
+            }
+
+            var primary = canBuy
+                ? "지금 [" + ShortName(buyKind) + "] 강화 가능!"
+                : "[" + ShortName(nextKind) + "] 강화까지 $" + Mathf.Max(0, nextGap).ToString("N0") + " 남음";
+            string zone = null;
+            if (TryLevelsUntilNextZone(out var levels, out var zoneName))
+            {
+                zone = "수심 강화 " + levels + "번 더 → [" + zoneName + "] 해금";
+            }
+
+            return new GoalHint(primary, zone, canBuy, false);
+        }
+
         public static string DisplayName(UpgradeKind kind)
         {
             switch (kind)
@@ -182,6 +247,42 @@ namespace ScrapFishing.Core
         static string LevelKey(UpgradeKind kind)
         {
             return "Upgrade" + kind;
+        }
+
+        static string ShortName(UpgradeKind kind)
+        {
+            switch (kind)
+            {
+                case UpgradeKind.Reel: return "릴";
+                case UpgradeKind.Boat: return "보트";
+                default: return "수심";
+            }
+        }
+
+        static bool TryLevelsUntilNextZone(out int levels, out string zoneName)
+        {
+            levels = 0;
+            zoneName = null;
+            if (IsMaxed(UpgradeKind.Depth))
+            {
+                return false;
+            }
+
+            var current = DepthZone.Index(DepthAt(Level(UpgradeKind.Depth)));
+            var level = Level(UpgradeKind.Depth);
+            for (var next = level + 1; next <= MaxLevel(UpgradeKind.Depth); next++)
+            {
+                if (DepthZone.Index(DepthAt(next)) <= current)
+                {
+                    continue;
+                }
+
+                levels = next - level;
+                zoneName = DepthZone.Name(DepthAt(next));
+                return true;
+            }
+
+            return false;
         }
     }
 }

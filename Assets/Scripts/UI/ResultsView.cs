@@ -2,7 +2,9 @@ using System;
 using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 using ScrapFishing.FX;
+using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -21,6 +23,13 @@ namespace ScrapFishing.UI
         CountingText _cyCount;
         Text _bestText;
         Text _detail;
+        Text _goalText;
+        Text _zoneText;
+        RectTransform _goalRect;
+        Vector3 _goalScale = Vector3.one;
+        RectTransform _lootRoot;
+        GridLayoutGroup _lootGrid;
+        bool _lootPlayed;
         GameObject _newBest;
         RectTransform _bestRect;
         Vector3 _bestScale = Vector3.one;
@@ -33,10 +42,11 @@ namespace ScrapFishing.UI
         UiFxSettings _settings;
         Sequence _intro;
         float _readyAt;
-        int _targetCy;
+        int _targetTotal;
         bool _counting;
         bool _countAudioDone;
         bool _pendingNewBest;
+        RunSession _session;
 
         public void Build(Transform canvas, Action onRestart)
         {
@@ -56,12 +66,12 @@ namespace ScrapFishing.UI
             _group = _root.AddComponent<CanvasGroup>();
 
             var title = UiFonts.CreateText(rect, "Title", 28, TextAnchor.MiddleCenter);
-            Stretch(title.rectTransform, new Vector2(0.08f, 0.70f), new Vector2(0.92f, 0.80f));
+            Stretch(title.rectTransform, new Vector2(0.08f, 0.86f), new Vector2(0.92f, 0.93f));
             title.text = "정산";
             _titleRect = title.rectTransform;
 
             var newBest = UiFonts.CreateText(rect, "NewBestText", 28, TextAnchor.MiddleCenter);
-            Stretch(newBest.rectTransform, new Vector2(0.08f, 0.62f), new Vector2(0.92f, 0.70f));
+            Stretch(newBest.rectTransform, new Vector2(0.08f, 0.79f), new Vector2(0.92f, 0.86f));
             newBest.text = "NEW BEST!";
             newBest.color = Palette.Magenta;
             _newBest = newBest.gameObject;
@@ -70,21 +80,48 @@ namespace ScrapFishing.UI
             _newBest.SetActive(false);
 
             _cyText = UiFonts.CreateText(rect, "CyText", 28, TextAnchor.MiddleCenter);
-            Stretch(_cyText.rectTransform, new Vector2(0.08f, 0.53f), new Vector2(0.92f, 0.62f));
-            _cyText.color = Palette.NeonGreen;
+            Stretch(_cyText.rectTransform, new Vector2(0.08f, 0.61f), new Vector2(0.92f, 0.68f));
+            _cyText.color = Palette.Gold;
             _cyCount = _cyText.gameObject.AddComponent<CountingText>();
-            _cyCount.Bind(_settings, "획득 ", false, " CY", true);
+            _cyCount.Bind(_settings, "획득 $", true, "", true);
             _cyCount.Stepped += HandleCountStep;
             _cyCount.Completed += HandleCountComplete;
 
-            _bestText = UiFonts.CreateText(rect, "BestText", 22, TextAnchor.MiddleCenter);
-            Stretch(_bestText.rectTransform, new Vector2(0.08f, 0.46f), new Vector2(0.92f, 0.53f));
+            _detail = UiFonts.CreateText(rect, "Detail", 16, TextAnchor.MiddleCenter);
+            Stretch(_detail.rectTransform, new Vector2(0.08f, 0.68f), new Vector2(0.92f, 0.79f));
+            _detail.fontSize = 16;
+            _detail.supportRichText = true;
+            _detail.color = Palette.Text;
+            _detail.lineSpacing = 0.85f;
 
-            _detail = UiFonts.CreateText(rect, "Detail", 18, TextAnchor.MiddleCenter);
-            Stretch(_detail.rectTransform, new Vector2(0.08f, 0.32f), new Vector2(0.92f, 0.46f));
-            _detail.color = Palette.Cyan;
+            _bestText = UiFonts.CreateText(rect, "BestText", 16, TextAnchor.MiddleCenter);
+            Stretch(_bestText.rectTransform, new Vector2(0.08f, 0.555f), new Vector2(0.92f, 0.61f));
+            _bestText.fontSize = 16;
 
-            _restart = UiButton.Create(rect, "RestartButton", "재도전", new Vector2(0.25f, 0.18f), new Vector2(0.75f, 0.28f), () =>
+            _goalText = UiFonts.CreateText(rect, "NextGoal", 16, TextAnchor.MiddleCenter);
+            Stretch(_goalText.rectTransform, new Vector2(0.06f, 0.50f), new Vector2(0.94f, 0.555f));
+            _goalText.fontSize = 16;
+            _goalRect = _goalText.rectTransform;
+            _goalScale = _goalRect.localScale;
+
+            _zoneText = UiFonts.CreateText(rect, "NextZone", 16, TextAnchor.MiddleCenter);
+            Stretch(_zoneText.rectTransform, new Vector2(0.06f, 0.455f), new Vector2(0.94f, 0.50f));
+            _zoneText.fontSize = 16;
+            _zoneText.color = Palette.Cyan;
+
+            var loot = new GameObject("Loot", typeof(RectTransform));
+            loot.transform.SetParent(rect, false);
+            _lootRoot = (RectTransform)loot.transform;
+            Stretch(_lootRoot, new Vector2(0.04f, 0.26f), new Vector2(0.96f, 0.45f));
+            _lootGrid = loot.AddComponent<GridLayoutGroup>();
+            _lootGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            _lootGrid.constraintCount = 6;
+            _lootGrid.cellSize = new Vector2(64f, 58f);
+            _lootGrid.spacing = new Vector2(6f, 4f);
+            _lootGrid.childAlignment = TextAnchor.UpperCenter;
+            _lootGrid.startAxis = GridLayoutGroup.Axis.Horizontal;
+
+            _restart = UiButton.Create(rect, "RestartButton", "재도전", new Vector2(0.25f, 0.15f), new Vector2(0.75f, 0.245f), () =>
             {
                 if (_restartArmed)
                 {
@@ -124,8 +161,10 @@ namespace ScrapFishing.UI
             {
                 if (_cyCount != null)
                 {
-                    _cyCount.Snap(_targetCy);
+                    _cyCount.Snap(_targetTotal);
                 }
+
+                PlayLoot();
 
                 _counting = false;
                 FinishCountAudio();
@@ -144,19 +183,29 @@ namespace ScrapFishing.UI
 
         public void Show(RunSession session)
         {
-            var best = session.HighestGrade();
-            var bestName = best != null ? best.DisplayName : "없음";
+            _session = session;
             _bestText.text = $"최고 기록 {session.BestCY} CY";
-            _detail.text = $"건수 {session.Caught.Count}\n최고 등급 {bestName}\n달러 +{session.EarnedDollars} (보유 $ {Progression.Dollars})";
+            var goldHex = ColorUtility.ToHtmlStringRGB(Palette.Gold);
+            _detail.text = $"CY {session.CY:N0}\n<color=#{goldHex}>골드 {session.Gold:N0}G → +${session.GoldDollars:N0}</color>\n─────────";
+            var goal = Progression.NextGoal();
+            _goalText.text = goal.Primary;
+            _goalText.color = goal.CanBuy ? Palette.NeonGreen : goal.AllMaxed ? Palette.Gold : Palette.Text;
+            _zoneText.text = goal.Zone ?? string.Empty;
             _newBest.SetActive(session.IsNewBest);
-            _targetCy = session.CY;
-            _counting = session.CY > 0;
+            _targetTotal = session.EarnedDollars;
+            _counting = session.EarnedDollars > 0;
             _countAudioDone = false;
+            _lootPlayed = false;
             _pendingNewBest = session.IsNewBest;
             _readyAt = Time.unscaledTime + InputLock;
             _restart.interactable = false;
+            ClearLoot();
             _root.SetActive(true);
             PlayIntro(session);
+            if (!_counting)
+            {
+                PlayLoot();
+            }
         }
 
         public void Hide()
@@ -188,7 +237,7 @@ namespace ScrapFishing.UI
             if (_cyCount != null)
             {
                 _cyCount.Snap(0);
-                if (session.CY <= 0)
+                if (session.EarnedDollars <= 0)
                 {
                     _counting = false;
                     if (_pendingNewBest)
@@ -198,12 +247,12 @@ namespace ScrapFishing.UI
                 }
                 else
                 {
-                    _cyCount.PlayTo(session.CY);
+                    _cyCount.PlayTo(session.EarnedDollars);
                 }
             }
             else
             {
-                _cyText.text = $"획득 {session.CY} CY";
+                _cyText.text = $"획득 ${session.EarnedDollars:N0}";
             }
 
             if (_restartRect != null)
@@ -236,6 +285,20 @@ namespace ScrapFishing.UI
             {
                 _bestText.transform.localScale = Vector3.zero;
                 _intro.Join(_bestText.transform.DOScale(1f, fade).SetDelay(stagger * 3f).SetEase(Ease.OutBack).SetUpdate(true));
+            }
+
+            if (_goalRect != null)
+            {
+                _goalRect.localScale = _goalScale;
+                var hint = Progression.NextGoal();
+                if (hint.CanBuy)
+                {
+                    _goalRect.DOScale(_goalScale * 1.06f, 0.6f)
+                        .SetLoops(-1, LoopType.Yoyo)
+                        .SetEase(Ease.InOutSine)
+                        .SetUpdate(true)
+                        .SetLink(_goalText.gameObject);
+                }
             }
 
             if (session.IsNewBest && _bestRect != null)
@@ -272,18 +335,19 @@ namespace ScrapFishing.UI
 
         void HandleCountStep(int value)
         {
-            if (_countAudioDone || _targetCy <= 0)
+            if (_countAudioDone || _targetTotal <= 0)
             {
                 return;
             }
 
-            AudioManager.Ensure().PlayCountTick(Mathf.Clamp01(value / (float)_targetCy));
+            AudioManager.Ensure().PlayCountTick(Mathf.Clamp01(value / (float)_targetTotal));
         }
 
         void HandleCountComplete()
         {
             _counting = false;
             FinishCountAudio();
+            PlayLoot();
             if (_cyText != null)
             {
                 Fx.Punch(_cyText.transform, 0.16f, 0.16f);
@@ -333,6 +397,121 @@ namespace ScrapFishing.UI
             if (_restartRect != null)
             {
                 _restartRect.DOKill(false);
+            }
+
+            if (_goalRect != null)
+            {
+                _goalRect.DOKill(false);
+                _goalRect.localScale = _goalScale;
+            }
+
+            ClearLoot();
+        }
+
+        void PlayLoot()
+        {
+            if (_lootPlayed || _session == null || _lootRoot == null)
+            {
+                return;
+            }
+
+            _lootPlayed = true;
+            ClearLoot();
+            var stacks = _session.Loot;
+            var hazards = _session.HazardCount > 0;
+            var capacity = hazards ? 11 : 12;
+            var overflow = stacks.Count > capacity;
+            var shown = overflow ? capacity - 1 : stacks.Count;
+            var index = 0;
+            for (var i = 0; i < shown; i++)
+            {
+                var stack = stacks[i];
+                SpawnCell(stack.Name, stack.Icon, stack.Placeholder, RarityGlow.BorderColor(stack.Rarity), stack.Count, stack.Rarity, index++);
+            }
+
+            if (overflow)
+            {
+                var extra = stacks.Count - shown;
+                SpawnCell("+" + extra, null, Palette.Text, Palette.Text, 0, ItemRarity.Normal, index++, true);
+            }
+
+            if (hazards)
+            {
+                SpawnCell("위험물 x" + _session.HazardCount, null, RarityGlow.HazardBorder, RarityGlow.HazardBorder, 0, ItemRarity.Normal, index++, true);
+            }
+        }
+
+        void SpawnCell(string label, Sprite icon, Color placeholder, Color border, int count, ItemRarity rarity, int index, bool caption = false)
+        {
+            var cell = new GameObject(caption ? "LootNote" : "LootCell");
+            cell.transform.SetParent(_lootRoot, false);
+            var background = cell.AddComponent<Image>();
+            background.color = new Color(0.04f, 0.05f, 0.08f, 0.94f);
+            background.raycastTarget = false;
+            var outline = cell.AddComponent<Outline>();
+            outline.effectColor = border;
+            outline.effectDistance = new Vector2(2f, -2f);
+            outline.useGraphicAlpha = false;
+
+            if (!caption)
+            {
+                var artGo = new GameObject("Icon");
+                artGo.transform.SetParent(cell.transform, false);
+                var art = artGo.AddComponent<Image>();
+                art.sprite = icon != null ? icon : PlaceholderFactory.Square(placeholder, 16);
+                art.preserveAspect = true;
+                art.raycastTarget = false;
+                var artRect = art.rectTransform;
+                artRect.anchorMin = new Vector2(0.12f, 0.22f);
+                artRect.anchorMax = new Vector2(0.88f, 0.92f);
+                artRect.offsetMin = Vector2.zero;
+                artRect.offsetMax = Vector2.zero;
+                if (count > 1)
+                {
+                    var badge = UiFonts.CreateText(cell.transform, "Count", 11, TextAnchor.LowerRight);
+                    badge.fontSize = 11;
+                    badge.color = Color.white;
+                    badge.text = "x" + count;
+                    Stretch(badge.rectTransform, new Vector2(0.08f, 0.02f), new Vector2(0.96f, 0.38f));
+                }
+            }
+            else
+            {
+                var captionText = UiFonts.CreateText(cell.transform, "Caption", 11, TextAnchor.MiddleCenter);
+                captionText.fontSize = 11;
+                captionText.color = border;
+                captionText.text = label;
+                Stretch(captionText.rectTransform, Vector2.zero, Vector2.one);
+            }
+
+            cell.transform.localScale = Vector3.zero;
+            cell.transform.DOScale(1f, 0.22f)
+                .SetDelay(index * 0.04f)
+                .SetEase(Ease.OutBack)
+                .SetUpdate(true)
+                .SetLink(cell);
+            if (rarity == ItemRarity.Epic || rarity == ItemRarity.Legend)
+            {
+                background.DOColor(Color.Lerp(background.color, border, 0.45f), 0.7f)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetEase(Ease.InOutSine)
+                    .SetUpdate(true)
+                    .SetLink(cell);
+            }
+        }
+
+        void ClearLoot()
+        {
+            if (_lootRoot == null)
+            {
+                return;
+            }
+
+            for (var i = _lootRoot.childCount - 1; i >= 0; i--)
+            {
+                var child = _lootRoot.GetChild(i);
+                child.DOKill(false);
+                Destroy(child.gameObject);
             }
         }
 

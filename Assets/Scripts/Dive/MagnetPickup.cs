@@ -48,7 +48,7 @@ namespace ScrapFishing.Dive
                     var n = scrap.ChipValue;
                     var sprite = scrap.Renderer != null ? scrap.Renderer.sprite : null;
                     var scale = scrap.transform.localScale;
-                    _session.AddCatch(scrap.Definition, from);
+                    _session.AddCatch(scrap.Definition, scrap.data, from);
                     if (LureLoad.IsHazard(n))
                     {
                         AudioManager.Ensure().PlayHazard();
