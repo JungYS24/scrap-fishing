@@ -21,7 +21,7 @@ public class DeepSeeImportPostprocessor : AssetPostprocessor
         importer.filterMode = FilterMode.Point;
         importer.alphaIsTransparency = true;
         importer.textureCompression = TextureImporterCompression.Compressed;
-        importer.maxTextureSize = 1024;
+        importer.maxTextureSize = 2048;
 
         var settings = new TextureImporterSettings();
         importer.ReadTextureSettings(settings);
@@ -34,7 +34,7 @@ public class DeepSeeImportPostprocessor : AssetPostprocessor
 
         var webgl = importer.GetPlatformTextureSettings("WebGL");
         webgl.overridden = true;
-        webgl.maxTextureSize = 1024;
+        webgl.maxTextureSize = 2048;
         webgl.textureCompression = TextureImporterCompression.Compressed;
         importer.SetPlatformTextureSettings(webgl);
     }

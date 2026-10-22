@@ -15,19 +15,47 @@ namespace ScrapFishing.Boat
         Sprite[] _baked;
         Material _shared;
         int _zone = -1;
+        int _currentZone;
+        int _nextZone = -1;
         float _followY;
         float _followVel;
         bool _followInit;
         bool _diveMode;
+        Scroll _currentScroll;
+        Scroll _nextScroll;
+        Transform _diver;
         Tween _fade;
         Material _unlit;
         const float Overscan = 1.08f;
         const float CrossfadeSeconds = 0.4f;
+        const float WidthFit = 1.02f;
+        const float EdgeMargin = 0.64f;
+        const float FollowSmooth = 0.15f;
+        const float ZoneSpan = 0.25f;
+        const float LegacyMaxAspect = 2.05f;
+        const float DiveFollow = 0.15f;
+        const float DiveTopY = 3.2f;
+        const float DiveBottomY = -4f;
+
+        struct Scroll
+        {
+            public float y;
+            public float vel;
+            public bool ready;
+            public int zone;
+        }
 
         public void SetDiveMode(bool dive)
         {
             _diveMode = dive;
             _followInit = false;
+            _currentScroll.ready = false;
+            _nextScroll.ready = false;
+            if (dive)
+            {
+                ResolveDiver();
+            }
+
             PinOrder();
         }
 
@@ -62,16 +90,7 @@ namespace ScrapFishing.Boat
             var camY = cam.transform.position.y;
             var half = cam.orthographicSize;
             var ceiling = SurfaceLayout.WaterlineY - half;
-            var desired = _diveMode ? camY : Mathf.Min(camY, ceiling);
-            if (!_followInit)
-            {
-                _followY = desired;
-                _followInit = true;
-            }
-
-            _followY = Mathf.SmoothDamp(_followY, desired, ref _followVel, 0.32f, Mathf.Infinity, Time.unscaledDeltaTime);
-            var maxLag = cam.orthographicSize * (Overscan - 1f) * 0.85f;
-            _followY = desired + Mathf.Clamp(_followY - desired, -maxLag, maxLag);
+            var viewCenter = _diveMode ? camY : Mathf.Min(camY, ceiling);
 
             var depth = DepthZone.FromWorldY(camY);
             var zone = DepthZone.Index(depth);
@@ -81,15 +100,23 @@ namespace ScrapFishing.Boat
             }
             else if (zone != _zone)
             {
-                var edge = zone > _zone ? _zone * 0.25f + 0.25f : _zone * 0.25f;
+                var edge = zone > _zone ? _zone * ZoneSpan + ZoneSpan : _zone * ZoneSpan;
                 if (Mathf.Abs(depth - edge) >= 0.04f)
                 {
                     Show(zone, false);
                 }
             }
 
-            FitAndPlace(_current, cam, _followY);
-            FitAndPlace(_next, cam, _followY);
+            if (IsShort(_current.sprite) || IsShort(_next.sprite))
+            {
+                FollowLegacy(viewCenter, cam);
+                FitAndPlace(_current, cam, _followY);
+                FitAndPlace(_next, cam, _followY);
+                return;
+            }
+
+            Place(_current, cam, viewCenter, _currentZone, ref _currentScroll);
+            Place(_next, cam, viewCenter, _nextZone, ref _nextScroll);
         }
 
         void OnDisable()
@@ -117,8 +144,12 @@ namespace ScrapFishing.Boat
             {
                 _current.sprite = sprite;
                 _current.color = Color.white;
+                _next.sprite = null;
                 _next.color = new Color(1f, 1f, 1f, 0f);
                 _zone = zone;
+                _currentZone = zone;
+                _currentScroll.ready = false;
+                _nextZone = -1;
                 HideColorBands();
                 return;
             }
@@ -136,6 +167,8 @@ namespace ScrapFishing.Boat
             _next.color = new Color(1f, 1f, 1f, 0f);
             var incoming = _next;
             var outgoing = _current;
+            _nextZone = zone;
+            _nextScroll.ready = false;
             _fade = DOTween.Sequence().SetUpdate(true).SetLink(gameObject)
                 .Append(FadeSprite(incoming, 1f, CrossfadeSeconds))
                 .OnComplete(() =>
@@ -144,6 +177,10 @@ namespace ScrapFishing.Boat
                     outgoing.color = Color.white;
                     incoming.sprite = null;
                     incoming.color = new Color(1f, 1f, 1f, 0f);
+                    _currentZone = zone;
+                    _currentScroll = _nextScroll;
+                    _nextZone = -1;
+                    _nextScroll.ready = false;
                     PinOrder();
                 });
             _zone = zone;
@@ -198,7 +235,7 @@ namespace ScrapFishing.Boat
                 }
             }
 
-            _baked[index] = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
+            _baked[index] = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), GameView.PixelsPerUnit);
             return _baked[index];
         }
 
@@ -244,6 +281,131 @@ namespace ScrapFishing.Boat
             }, alpha, dur).SetTarget(renderer).SetUpdate(true).SetLink(renderer.gameObject);
         }
 
+        void ResolveDiver()
+        {
+            if (_diver != null)
+            {
+                return;
+            }
+
+            var player = GameObject.Find("Player");
+            if (player != null)
+            {
+                _diver = player.transform;
+            }
+        }
+
+        static bool IsShort(Sprite sprite)
+        {
+            if (sprite == null || sprite.rect.width < 1f)
+            {
+                return false;
+            }
+
+            return sprite.rect.height / sprite.rect.width < LegacyMaxAspect;
+        }
+
+        void FollowLegacy(float desired, Camera cam)
+        {
+            if (!_followInit)
+            {
+                _followY = desired;
+                _followInit = true;
+            }
+
+            _followY = Mathf.SmoothDamp(_followY, desired, ref _followVel, 0.32f, Mathf.Infinity, Time.unscaledDeltaTime);
+            var maxLag = cam.orthographicSize * (Overscan - 1f) * 0.85f;
+            _followY = desired + Mathf.Clamp(_followY - desired, -maxLag, maxLag);
+        }
+
+        void Place(SpriteRenderer layer, Camera cam, float viewCenter, int zone, ref Scroll scroll)
+        {
+            var sprite = layer.sprite;
+            if (sprite == null)
+            {
+                return;
+            }
+
+            var ppu = Mathf.Max(1f, sprite.pixelsPerUnit);
+            var size = sprite.rect.size / ppu;
+            if (size.x < 0.001f || size.y < 0.001f)
+            {
+                return;
+            }
+
+            ViewSize(cam, out var viewW, out var viewH);
+            var scale = viewW / size.x * WidthFit;
+            var minHeight = viewH + EdgeMargin * 2f;
+            if (size.y * scale < minHeight)
+            {
+                scale = minHeight / size.y;
+            }
+
+            var height = size.y * scale;
+            var top = viewCenter + viewH * 0.5f;
+            var bottom = viewCenter - viewH * 0.5f;
+            var y0 = top + EdgeMargin - height * 0.5f;
+            var y1 = bottom - EdgeMargin + height * 0.5f;
+            var low = Mathf.Min(y0, y1);
+            var high = Mathf.Max(y0, y1);
+            float target;
+            if (_diveMode)
+            {
+                ResolveDiver();
+                var travel = Mathf.Max(0.01f, DiveTopY - DiveBottomY);
+                var diverY = _diver != null ? _diver.position.y : DiveTopY;
+                var down = Mathf.Clamp01((DiveTopY - diverY) / travel);
+                target = Mathf.Clamp(y0 + down * travel * DiveFollow, low, high);
+            }
+            else
+            {
+                var depth = DepthZone.FromWorldY(cam.transform.position.y);
+                var t = Mathf.Clamp01((depth - zone * ZoneSpan) / ZoneSpan);
+                target = Mathf.Lerp(y0, y1, t);
+            }
+
+            if (!scroll.ready || scroll.zone != zone)
+            {
+                scroll.y = target;
+                scroll.vel = 0f;
+                scroll.ready = true;
+                scroll.zone = zone;
+            }
+            else
+            {
+                scroll.y = Mathf.SmoothDamp(scroll.y, target, ref scroll.vel, FollowSmooth, Mathf.Infinity, Time.unscaledDeltaTime);
+            }
+
+            if (scroll.y < low || scroll.y > high)
+            {
+                scroll.y = Mathf.Clamp(scroll.y, low, high);
+                scroll.vel = 0f;
+            }
+
+            var pivot = sprite.pivot;
+            var center = new Vector3((sprite.rect.width * 0.5f - pivot.x) / ppu, (sprite.rect.height * 0.5f - pivot.y) / ppu, 0f);
+            layer.transform.localScale = new Vector3(scale, scale, 1f);
+            layer.transform.position = new Vector3(cam.transform.position.x, scroll.y, 0f) - center * scale;
+        }
+
+        static void ViewSize(Camera cam, out float viewW, out float viewH)
+        {
+            viewH = Mathf.Max(cam.orthographicSize * 2f, GameView.OrthoSize * 2f);
+            viewW = viewH * GameView.Aspect;
+            if (cam.pixelWidth > 8 && cam.pixelHeight > 8)
+            {
+                var pixelAspect = cam.pixelWidth / (float)cam.pixelHeight;
+                if (pixelAspect < GameView.Aspect)
+                {
+                    viewH = Mathf.Max(viewH, viewW / Mathf.Max(0.01f, pixelAspect));
+                }
+                else if (pixelAspect <= GameView.Aspect * Overscan)
+                {
+                    viewW = Mathf.Max(viewW, viewH * pixelAspect);
+                }
+            }
+        }
+
         static void FitAndPlace(SpriteRenderer layer, Camera cam, float y)
         {
             var sprite = layer.sprite;
@@ -258,21 +420,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            var viewH = Mathf.Max(cam.orthographicSize * 2f, GameView.OrthoSize * 2f);
-            var viewW = viewH * GameView.Aspect;
-            if (cam.pixelWidth > 8 && cam.pixelHeight > 8)
-            {
-                var pixelAspect = cam.pixelWidth / (float)cam.pixelHeight;
-                if (pixelAspect < GameView.Aspect)
-                {
-                    viewH = Mathf.Max(viewH, viewW / Mathf.Max(0.01f, pixelAspect));
-                }
-                else if (pixelAspect <= GameView.Aspect * Overscan)
-                {
-                    viewW = Mathf.Max(viewW, viewH * pixelAspect);
-                }
-            }
-
+            ViewSize(cam, out var viewW, out var viewH);
             var s = Mathf.Max(viewW / size.x, viewH / size.y) * Overscan;
             layer.transform.localScale = new Vector3(s, s, 1f);
             var offset = sprite.bounds.center * s;
