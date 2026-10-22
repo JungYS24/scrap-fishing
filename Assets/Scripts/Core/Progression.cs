@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Core
@@ -14,9 +15,7 @@ namespace ScrapFishing.Core
     {
         public const int MaxUpgradeLevel = 12;
 
-        const string DollarKey = "Dollar";
-        const string SaveVersionKey = "SaveVersion";
-        const int SaveVersion = 2;
+        public const string DollarKey = "Dollar";
         const float ReelRadiusPerLevel = 0.05f;
         const float BoatChipPerLevel = 0.05f;
         const float CostGrowth = 1.38f;
@@ -63,21 +62,10 @@ namespace ScrapFishing.Core
 
         public static void MigrateSave()
         {
-            if (PlayerPrefs.GetInt(SaveVersionKey, 0) == SaveVersion)
+            if (SaveMigration.Run(PlayerPrefsStore.Instance))
             {
-                return;
+                Changed?.Invoke();
             }
-
-            PlayerPrefs.DeleteKey(DollarKey);
-            PlayerPrefs.DeleteKey("RodLevel");
-            foreach (UpgradeKind kind in Enum.GetValues(typeof(UpgradeKind)))
-            {
-                PlayerPrefs.DeleteKey(LevelKey(kind));
-            }
-
-            PlayerPrefs.SetInt(SaveVersionKey, SaveVersion);
-            PlayerPrefs.Save();
-            Changed?.Invoke();
         }
 
         public static string ZoneUnlockLabel(UpgradeKind kind)
@@ -184,6 +172,19 @@ namespace ScrapFishing.Core
             Changed?.Invoke();
         }
 
+        public static bool TrySpend(int amount)
+        {
+            if (amount <= 0 || Dollars < amount)
+            {
+                return false;
+            }
+
+            PlayerPrefs.SetInt(DollarKey, Dollars - amount);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+            return true;
+        }
+
         public static void ResetProgress()
         {
             PlayerPrefs.DeleteKey(DollarKey);
@@ -244,7 +245,7 @@ namespace ScrapFishing.Core
             }
         }
 
-        static string LevelKey(UpgradeKind kind)
+        public static string LevelKey(UpgradeKind kind)
         {
             return "Upgrade" + kind;
         }

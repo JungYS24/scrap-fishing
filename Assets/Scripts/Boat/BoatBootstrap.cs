@@ -4,6 +4,7 @@ using ScrapFishing.Core;
 using ScrapFishing.Dive;
 using ScrapFishing.Fishing;
 using ScrapFishing.FX;
+using ScrapFishing.Gacha;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -30,6 +31,7 @@ namespace ScrapFishing.Boat
         SwipeTrail _trail;
         CastCamera _castCamera;
         BoatCanvas _canvasUi;
+        GachaShopView _market;
 
         void Awake()
         {
@@ -288,10 +290,23 @@ namespace ScrapFishing.Boat
             _stick.Build(area.Area);
             _title = _canvasUi.Title;
             _title.Bind(BeginRun);
+            _title.BindMarket(OpenMarket);
             _canvasUi.BringReadyToFront();
             _results = canvas.gameObject.AddComponent<ResultsView>();
-            _results.Build(area.Area, _session.Restart);
+            _results.Build(area.Area, _session.Restart, OpenMarket);
+            _market = canvas.gameObject.AddComponent<GachaShopView>();
+            _market.Build(area.Area);
             area.Adopt();
+        }
+
+        void OpenMarket()
+        {
+            if (_market == null || (_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results))
+            {
+                return;
+            }
+
+            _market.Open();
         }
 
         void BindDive()

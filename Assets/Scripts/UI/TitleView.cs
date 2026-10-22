@@ -18,6 +18,8 @@ namespace ScrapFishing.UI
         [SerializeField] Button startButton;
 
         Action _onStart;
+        Action _onMarket;
+        Button _marketButton;
         UiFxSettings _settings;
         CanvasGroup _group;
         RectTransform _logo;
@@ -49,6 +51,12 @@ namespace ScrapFishing.UI
                 startButton.onClick.RemoveListener(HandleStart);
                 startButton.onClick.AddListener(HandleStart);
             }
+        }
+
+        public void BindMarket(Action onMarket)
+        {
+            _onMarket = onMarket;
+            EnsureMarketButton();
         }
 
         public void SetVisible(bool visible)
@@ -127,6 +135,34 @@ namespace ScrapFishing.UI
 
             EnsureVersion();
             EnsureSoundToggle();
+            EnsureMarketButton();
+        }
+
+        // 달러 잔액 패널 오른쪽 빈자리(소리 토글 왼쪽)에 암시장 입구를 둔다.
+        void EnsureMarketButton()
+        {
+            if (_marketButton != null || _onMarket == null)
+            {
+                return;
+            }
+
+            _marketButton = UiButton.Create((RectTransform)transform, "MarketButton", "암시장", new Vector2(0.53f, 0.905f), new Vector2(0.84f, 0.95f), () =>
+            {
+                AudioManager.Ensure().Unlock();
+                _onMarket?.Invoke();
+            });
+            var outline = _marketButton.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.effectColor = Palette.Magenta;
+            }
+
+            var label = _marketButton.GetComponentInChildren<Text>(true);
+            if (label != null)
+            {
+                label.fontSize = 22;
+                label.color = Palette.Magenta;
+            }
         }
 
         void EnsureSoundToggle()

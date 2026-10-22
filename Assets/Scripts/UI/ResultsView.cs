@@ -48,7 +48,7 @@ namespace ScrapFishing.UI
         bool _pendingNewBest;
         RunSession _session;
 
-        public void Build(Transform canvas, Action onRestart)
+        public void Build(Transform canvas, Action onRestart, Action onMarket = null)
         {
             _onRestart = onRestart;
             _settings = Resources.Load<UiFxSettings>("UiFxSettings");
@@ -140,6 +140,29 @@ namespace ScrapFishing.UI
             });
             _restartRect = _restart.transform as RectTransform;
             _restartScale = _restartRect.localScale;
+
+            if (onMarket != null)
+            {
+                var market = UiButton.Create(rect, "MarketButton", "암시장", new Vector2(0.25f, 0.055f), new Vector2(0.75f, 0.13f), () =>
+                {
+                    if (!_restartArmed)
+                    {
+                        onMarket();
+                    }
+                });
+                var outline = market.GetComponent<Outline>();
+                if (outline != null)
+                {
+                    outline.effectColor = Palette.Magenta;
+                }
+
+                var label = market.GetComponentInChildren<Text>(true);
+                if (label != null)
+                {
+                    label.fontSize = 22;
+                    label.color = Palette.Magenta;
+                }
+            }
 
             Hide();
         }
