@@ -143,7 +143,7 @@ namespace ScrapFishing.UI
 
             if (onMarket != null)
             {
-                var market = UiButton.Create(rect, "MarketButton", "암시장", new Vector2(0.25f, 0.055f), new Vector2(0.75f, 0.13f), () =>
+                var market = UiButton.Create(rect, "MarketButton", TitleView.MarketLabel, new Vector2(0.25f, 0.055f), new Vector2(0.75f, 0.13f), () =>
                 {
                     if (!_restartArmed)
                     {

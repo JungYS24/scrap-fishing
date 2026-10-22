@@ -34,7 +34,7 @@ namespace ScrapFishing.Gacha
             _onRetry = onRetry;
             _onClose = onClose;
             _root = GachaUi.Panel(parent, "GachaRefund", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Dim, null, true).rectTransform;
-            _group = _root.gameObject.AddComponent<CanvasGroup>();
+            _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _confirmPanel = GachaUi.Panel(_root, "ConfirmPanel", new Vector2(0.07f, 0.3f), new Vector2(0.93f, 0.7f), GachaUi.Card, Palette.Gold, true).rectTransform;
             GachaUi.Label(_confirmPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.8f), new Vector2(0.96f, 0.96f), Palette.Gold, "달러 환원");

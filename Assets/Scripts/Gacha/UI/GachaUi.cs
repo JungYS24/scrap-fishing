@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.UI;
@@ -25,6 +26,48 @@ namespace ScrapFishing.Gacha
 
         static Sprite _dollarSprite;
         static bool _dollarSearched;
+        static int _reuseDepth;
+
+        // 이 범위 안에서는 Rect·Panel·Label·MakeButton·Scroll·CheckMark가 같은 이름의 자식을 먼저 찾아 그대로 쓴다.
+        // 하이러키에 배치해 둔 화면은 위치·색·문구를 씬 값 그대로 두고, 없는 오브젝트만 코드 기본값으로 만든다.
+        public static IDisposable Reuse()
+        {
+            _reuseDepth++;
+            return new ReuseScope();
+        }
+
+        sealed class ReuseScope : IDisposable
+        {
+            bool _disposed;
+
+            public void Dispose()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                _reuseDepth--;
+            }
+        }
+
+        static T Existing<T>(Transform parent, string name) where T : Component
+        {
+            if (_reuseDepth <= 0 || parent == null)
+            {
+                return null;
+            }
+
+            var child = parent.Find(name);
+            return child != null ? child.GetComponent<T>() : null;
+        }
+
+        public static T GetOrAdd<T>(Component target) where T : Component
+        {
+            var component = target.GetComponent<T>();
+            return component != null ? component : target.gameObject.AddComponent<T>();
+        }
 
         public static Color RarityColor(ItemRarity rarity)
         {
@@ -89,6 +132,12 @@ namespace ScrapFishing.Gacha
 
         public static RectTransform Rect(Transform parent, string name, Vector2 min, Vector2 max)
         {
+            var existing = Existing<RectTransform>(parent, name);
+            if (existing != null)
+            {
+                return existing;
+            }
+
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
             var rect = (RectTransform)go.transform;
@@ -106,6 +155,12 @@ namespace ScrapFishing.Gacha
 
         public static Image Panel(Transform parent, string name, Vector2 min, Vector2 max, Color color, Color? outline = null, bool raycast = false)
         {
+            var existing = Existing<Image>(parent, name);
+            if (existing != null)
+            {
+                return existing;
+            }
+
             var rect = Rect(parent, name, min, max);
             var image = rect.gameObject.AddComponent<Image>();
             image.color = color;
@@ -122,6 +177,12 @@ namespace ScrapFishing.Gacha
 
         public static Text Label(Transform parent, string name, int size, TextAnchor anchor, Vector2 min, Vector2 max, Color color, string value = "")
         {
+            var existing = Existing<Text>(parent, name);
+            if (existing != null)
+            {
+                return existing;
+            }
+
             var text = UiFonts.CreateText(parent, name, size, anchor);
             text.fontSize = size;
             text.color = color;
@@ -133,6 +194,17 @@ namespace ScrapFishing.Gacha
 
         public static Button MakeButton(RectTransform parent, string name, string label, Vector2 min, Vector2 max, Color accent, int size, Action onClick)
         {
+            var existing = Existing<Button>(parent, name);
+            if (existing != null)
+            {
+                existing.onClick.AddListener(() =>
+                {
+                    AudioManager.Ensure().PlayUiTap();
+                    onClick?.Invoke();
+                });
+                return existing;
+            }
+
             var button = UiButton.Create(parent, name, label, min, max, onClick);
             if (button.targetGraphic is Image fill)
             {
@@ -201,6 +273,13 @@ namespace ScrapFishing.Gacha
 
         public static RectTransform Scroll(RectTransform parent, string name, Vector2 min, Vector2 max, float spacing, out ScrollRect scroll)
         {
+            var existing = Existing<ScrollRect>(parent, name);
+            if (existing != null && existing.content != null)
+            {
+                scroll = existing;
+                return existing.content;
+            }
+
             var root = Rect(parent, name, min, max);
             var hit = root.gameObject.AddComponent<Image>();
             hit.color = new Color(0f, 0f, 0f, 0f);
@@ -269,6 +348,12 @@ namespace ScrapFishing.Gacha
         // 체크 표시를 막대 두 개로 그린다(픽셀 폰트에 ✓ 글리프가 없을 수 있음).
         public static RectTransform CheckMark(Transform parent, string name, Vector2 min, Vector2 max, Color color)
         {
+            var existing = Existing<RectTransform>(parent, name);
+            if (existing != null)
+            {
+                return existing;
+            }
+
             var root = Rect(parent, name, min, max);
             var ring = root.gameObject.AddComponent<Image>();
             ring.color = new Color(color.r, color.g, color.b, 0.18f);

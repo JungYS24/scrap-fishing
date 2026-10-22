@@ -11,6 +11,7 @@ namespace ScrapFishing.Gacha
 {
     // 암시장 머신 목록. 타이틀·결과 화면 위에 덮어 띄우고, 닫으면 아래 화면으로 돌아간다.
     // 확인 팝업 → (연출 없이) 결과 → 환원 확인·완료 또는 보관까지 이 화면이 흐름을 잇는다.
+    // 화면 틀(BlackMarket 아래 패널·버튼·라벨)은 씬 하이러키에 두고 관리한다. 머신 카드·결과 목록만 실행 중에 만든다.
     public class GachaShopView : MonoBehaviour
     {
         const string Notice = "게임 안에서 번 달러로만 뽑습니다 · 실제 결제 없음";
@@ -53,8 +54,25 @@ namespace ScrapFishing.Gacha
                 _refundRates[machine.Id] = GachaService.ExpectedRefundRate(machine);
             }
 
+            BuildLayout(area);
+            _dollarCount.Bind(_settings, string.Empty, true, string.Empty, true);
+            _root.gameObject.SetActive(false);
+        }
+
+        // area 아래에 BlackMarket이 있으면 그 하이러키를 그대로 쓰고, 빠진 오브젝트만 만든다.
+        // 에디터의 Scrap Fishing > Build Oripa UI도 이 함수로 씬에 화면 틀을 만든다.
+        public void BuildLayout(RectTransform area)
+        {
+            using (GachaUi.Reuse())
+            {
+                BuildShell(area);
+            }
+        }
+
+        void BuildShell(RectTransform area)
+        {
             _root = GachaUi.Panel(area, "BlackMarket", Vector2.zero, Vector2.one, GachaUi.Backdrop, null, true).rectTransform;
-            _group = _root.gameObject.AddComponent<CanvasGroup>();
+            _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             GachaUi.Label(_root, "Notice", 16, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.89f), new Vector2(0.97f, 0.922f), GachaUi.Muted, Notice);
             BuildTabs();
@@ -66,15 +84,13 @@ namespace ScrapFishing.Gacha
             BuildTopBar();
 
             _flyLayer = GachaUi.Rect(_root, "FlyLayer", Vector2.zero, Vector2.one);
-            _flyBlocker = _flyLayer.gameObject.AddComponent<Image>();
+            _flyBlocker = GachaUi.GetOrAdd<Image>(_flyLayer);
             _flyBlocker.color = new Color(0f, 0f, 0f, 0f);
             _flyBlocker.raycastTarget = false;
 
             var toast = GachaUi.Panel(_root, "Toast", new Vector2(0.08f, 0.44f), new Vector2(0.92f, 0.52f), GachaUi.Inset, Palette.NeonGreen);
             _toast = GachaUi.Label(toast.transform, "Text", 22, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.NeonGreen);
             toast.gameObject.SetActive(false);
-
-            _root.gameObject.SetActive(false);
         }
 
         public void Open()
@@ -138,8 +154,7 @@ namespace ScrapFishing.Gacha
             _dollarPanel = GachaUi.Panel(bar, "DollarPanel", new Vector2(0.47f, 0.16f), new Vector2(0.83f, 0.84f), GachaUi.Inset, Palette.Gold).rectTransform;
             GachaUi.DollarIcon(_dollarPanel, "DollarIcon", new Vector2(0.03f, 0.1f), new Vector2(0.22f, 0.9f));
             var dollar = GachaUi.Label(_dollarPanel, "DollarText", 22, TextAnchor.MiddleLeft, new Vector2(0.26f, 0f), new Vector2(0.98f, 1f), Palette.Gold);
-            _dollarCount = dollar.gameObject.AddComponent<CountingText>();
-            _dollarCount.Bind(_settings, string.Empty, true, string.Empty, true);
+            _dollarCount = GachaUi.GetOrAdd<CountingText>(dollar);
 
             _close = GachaUi.MakeButton(bar, "Close", "X", new Vector2(0.86f, 0.14f), new Vector2(0.97f, 0.86f), Palette.Magenta, 28, Close);
         }

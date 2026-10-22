@@ -10,16 +10,22 @@ namespace ScrapFishing.UI
     public class TitleView : MonoBehaviour
     {
         public const string VersionLabel = "1014 버전";
+        public const string MarketLabel = "오리파!";
+        public const string OripaButtonName = "OripaButton";
+        // 출항 버튼과 오리파 버튼 사이 간격(화면 높이 비율).
+        public const float MarketGap = 0.02f;
         const float PulseHalf = 0.6f;
         const float PulseScale = 1.05f;
         const float VersionBlinkHalf = 0.7f;
         const float VersionFlashEvery = 2.5f;
 
         [SerializeField] Button startButton;
+        [SerializeField] Button oripaButton;
 
         Action _onStart;
         Action _onMarket;
-        Button _marketButton;
+        RectTransform _marketRect;
+        Vector3 _marketScale = Vector3.one;
         UiFxSettings _settings;
         CanvasGroup _group;
         RectTransform _logo;
@@ -57,6 +63,11 @@ namespace ScrapFishing.UI
         {
             _onMarket = onMarket;
             EnsureMarketButton();
+            if (oripaButton != null)
+            {
+                oripaButton.onClick.RemoveListener(HandleMarket);
+                oripaButton.onClick.AddListener(HandleMarket);
+            }
         }
 
         public void SetVisible(bool visible)
@@ -138,31 +149,84 @@ namespace ScrapFishing.UI
             EnsureMarketButton();
         }
 
-        // 달러 잔액 패널 오른쪽 빈자리(소리 토글 왼쪽)에 암시장 입구를 둔다.
+        // 오리파 버튼은 씬 하이러키(Title/OripaButton)에 둔다. 없을 때만 출항 버튼 아래에 같은 크기로 만든다.
         void EnsureMarketButton()
         {
-            if (_marketButton != null || _onMarket == null)
+            if (oripaButton == null)
             {
-                return;
+                oripaButton = FindOripaButton(transform);
             }
 
-            _marketButton = UiButton.Create((RectTransform)transform, "MarketButton", "암시장", new Vector2(0.53f, 0.905f), new Vector2(0.84f, 0.95f), () =>
+            if (oripaButton == null && _onMarket != null)
             {
-                AudioManager.Ensure().Unlock();
-                _onMarket?.Invoke();
-            });
-            var outline = _marketButton.GetComponent<Outline>();
+                oripaButton = CreateMarketButton((RectTransform)transform, startButton);
+                // UiButton이 붙인 탭 소리 리스너를 지우고, 씬에 있는 버튼과 같이 HandleMarket 하나만 쓴다.
+                oripaButton.onClick.RemoveAllListeners();
+            }
+
+            if (oripaButton != null && _marketRect == null)
+            {
+                _marketRect = oripaButton.transform as RectTransform;
+                _marketScale = _marketRect.localScale;
+            }
+        }
+
+        // 하이러키의 Title/OripaButton. Button 컴포넌트가 빠져 있으면 붙여서 누를 수 있게 한다.
+        public static Button FindOripaButton(Transform title)
+        {
+            var found = title != null ? title.Find(OripaButtonName) : null;
+            if (found == null)
+            {
+                return null;
+            }
+
+            var button = found.GetComponent<Button>();
+            if (button == null)
+            {
+                button = found.gameObject.AddComponent<Button>();
+                button.targetGraphic = found.GetComponent<Graphic>();
+            }
+
+            return button;
+        }
+
+        // 출항 버튼 바로 아래에 같은 크기의 빨간 오리파 버튼을 만든다. 에디터 씬 빌더도 이 함수를 쓴다.
+        public static Button CreateMarketButton(RectTransform parent, Button start)
+        {
+            var min = new Vector2(0.25f, 0.35f);
+            var max = new Vector2(0.75f, 0.45f);
+            var startRect = start != null ? start.transform as RectTransform : null;
+            if (startRect != null)
+            {
+                var height = startRect.anchorMax.y - startRect.anchorMin.y;
+                max = new Vector2(startRect.anchorMax.x, startRect.anchorMin.y - MarketGap);
+                min = new Vector2(startRect.anchorMin.x, max.y - height);
+            }
+
+            var button = UiButton.Create(parent, OripaButtonName, MarketLabel, min, max, null);
+            if (startRect != null)
+            {
+                button.transform.SetSiblingIndex(startRect.GetSiblingIndex() + 1);
+            }
+
+            var outline = button.GetComponent<Outline>();
             if (outline != null)
             {
                 outline.effectColor = Palette.Magenta;
             }
 
-            var label = _marketButton.GetComponentInChildren<Text>(true);
+            var label = button.GetComponentInChildren<Text>(true);
+            var startLabel = start != null ? start.GetComponentInChildren<Text>(true) : null;
             if (label != null)
             {
-                label.fontSize = 22;
                 label.color = Palette.Magenta;
+                if (startLabel != null)
+                {
+                    label.fontSize = startLabel.fontSize;
+                }
             }
+
+            return button;
         }
 
         void EnsureSoundToggle()
@@ -259,6 +323,12 @@ namespace ScrapFishing.UI
                 }
 
                 _intro.Append(_buttonRect.DOScale(_buttonScale, buttonDur).SetEase(Ease.OutBack));
+            }
+
+            if (_marketRect != null)
+            {
+                _marketRect.localScale = Vector3.zero;
+                _intro.Append(_marketRect.DOScale(_marketScale, buttonDur).SetEase(Ease.OutBack));
             }
 
             _intro.OnComplete(BeginPulse);
@@ -360,6 +430,13 @@ namespace ScrapFishing.UI
                 .OnComplete(() => gameObject.SetActive(false));
         }
 
+        void HandleMarket()
+        {
+            AudioManager.Ensure().PlayUiTap();
+            AudioManager.Ensure().Unlock();
+            _onMarket?.Invoke();
+        }
+
         void HandleStart()
         {
             _allowPulse = false;
@@ -442,6 +519,11 @@ namespace ScrapFishing.UI
             }
 
             _intro = null;
+            if (_marketRect != null)
+            {
+                _marketRect.DOKill(false);
+                _marketRect.localScale = _marketScale;
+            }
         }
 
         void KillAll()

@@ -33,7 +33,7 @@ namespace ScrapFishing.Gacha
         {
             _onConfirm = onConfirm;
             _root = GachaUi.Panel(parent, "GachaConfirm", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Dim, null, true).rectTransform;
-            _group = _root.gameObject.AddComponent<CanvasGroup>();
+            _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _panel = GachaUi.Panel(_root, "Panel", new Vector2(0.05f, 0.12f), new Vector2(0.95f, 0.9f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
             _title = GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.89f), new Vector2(0.96f, 0.98f), Palette.Text);

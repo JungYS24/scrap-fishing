@@ -54,7 +54,7 @@ namespace ScrapFishing.Gacha
             _onStore = onStore;
             _onClose = onClose;
             _root = GachaUi.Panel(parent, "GachaResult", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Backdrop, null, true).rectTransform;
-            _group = _root.gameObject.AddComponent<CanvasGroup>();
+            _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _title = GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.92f), new Vector2(0.72f, 0.99f), Palette.Text);
             GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.925f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, () => _onClose?.Invoke());

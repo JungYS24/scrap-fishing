@@ -80,6 +80,7 @@ namespace ScrapFishing.Build
             var so = new SerializedObject(view);
             so.FindProperty("startButton").objectReferenceValue = start;
             so.ApplyModifiedPropertiesWithoutUndo();
+            OripaSceneBuilder.LinkOripaButton(root, view);
             SetLayer(root, UiLayer);
             return view;
         }
