@@ -15,10 +15,11 @@ namespace ScrapFishing.Scrap
             ItemRarity.Normal,
             ItemRarity.Rare,
             ItemRarity.Epic,
-            ItemRarity.Legend
+            ItemRarity.Legend,
+            ItemRarity.Synchro
         };
-        static readonly int[] RarityCounts = new int[4];
-        static readonly int[] RarityWeights = new int[4];
+        static readonly int[] RarityCounts = new int[5];
+        static readonly int[] RarityWeights = new int[5];
         static readonly List<ItemData> PickPool = new List<ItemData>(40);
         static float[] _itemWeights = new float[40];
         static ScrapDefinition[][] _zones;
@@ -39,7 +40,8 @@ namespace ScrapFishing.Scrap
             return table[2];
         }
 
-        public static ItemData PickItem(float depth)
+        // allowSynchro가 false면 싱크로 등급은 뽑지 않는다 (한 판에 1마리 제한).
+        public static ItemData PickItem(float depth, bool allowSynchro = true)
         {
             var db = ItemDatabase.Instance;
             if (db == null || db.Items == null || db.Items.Count == 0)
@@ -72,9 +74,10 @@ namespace ScrapFishing.Scrap
             total += SetRarityWeight(1, row.rare);
             total += SetRarityWeight(2, row.epic);
             total += SetRarityWeight(3, row.legend);
+            total += SetRarityWeight(4, allowSynchro ? row.synchro : 0);
             if (total <= 0)
             {
-                return PickUniform(items);
+                return PickUniform(items, allowSynchro);
             }
 
             var roll = Random.Range(0, total);
@@ -104,7 +107,7 @@ namespace ScrapFishing.Scrap
 
             if (PickPool.Count == 0)
             {
-                return PickUniform(items);
+                return PickUniform(items, allowSynchro);
             }
 
             return PickWeighted(zoneName);
@@ -132,17 +135,19 @@ namespace ScrapFishing.Scrap
                     return 2;
                 case ItemRarity.Legend:
                     return 3;
+                case ItemRarity.Synchro:
+                    return 4;
                 default:
                     return 0;
             }
         }
 
-        static ItemData PickUniform(IReadOnlyList<ItemData> items)
+        static ItemData PickUniform(IReadOnlyList<ItemData> items, bool allowSynchro)
         {
             var count = 0;
             for (var i = 0; i < items.Count; i++)
             {
-                if (items[i] != null)
+                if (Pickable(items[i], allowSynchro))
                 {
                     count++;
                 }
@@ -157,7 +162,7 @@ namespace ScrapFishing.Scrap
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                if (item == null)
+                if (!Pickable(item, allowSynchro))
                 {
                     continue;
                 }
@@ -171,6 +176,11 @@ namespace ScrapFishing.Scrap
             }
 
             return null;
+        }
+
+        static bool Pickable(ItemData item, bool allowSynchro)
+        {
+            return item != null && (allowSynchro || item.Rarity != ItemRarity.Synchro);
         }
 
         static ItemData PickWeighted(string zoneName)

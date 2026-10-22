@@ -31,6 +31,7 @@ namespace ScrapFishing.Gacha
                 case ItemRarity.Rare: return 0.8f;
                 case ItemRarity.Epic: return 3f;
                 case ItemRarity.Legend: return 15f;
+                case ItemRarity.Synchro: return 25f;
                 default: return 0.3f;
             }
         }

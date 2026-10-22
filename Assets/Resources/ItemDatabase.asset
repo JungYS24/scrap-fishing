@@ -46,6 +46,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ef422f6b37846f242954543882a0fbe9, type: 2}
   - {fileID: 11400000, guid: c7ff35f3edba8f8479eb1e2b8afb5b0b, type: 2}
   - {fileID: 11400000, guid: c4d08754993266c4a8ad3ac9d6a78551, type: 2}
+  - {fileID: 11400000, guid: da7ce38e8eef39a4bb39cb6e725ef22a, type: 2}
   zoneRarity:
   - index: 0
     name: "\uD45C\uCE35"
@@ -53,21 +54,25 @@ MonoBehaviour:
     rare: 18
     epic: 2
     legend: 0
+    synchro: 0
   - index: 1
     name: "\uB4DC\uB860 \uBB18\uC9C0"
     normal: 55
     rare: 35
     epic: 9
     legend: 1
+    synchro: 0
   - index: 2
     name: "\uC2AC\uB7EC\uC9C0"
     normal: 30
     rare: 40
     epic: 24
     legend: 6
+    synchro: 0
   - index: 3
     name: "\uC2EC\uC5F0"
-    normal: 15
+    normal: 14
     rare: 35
     epic: 38
     legend: 12
+    synchro: 1

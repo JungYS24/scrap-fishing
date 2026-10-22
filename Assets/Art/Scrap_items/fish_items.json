@@ -1,5 +1,5 @@
 {
-  "_note": "경로는 Assets/Art/Scrap_items/ 기준 상대경로. gold = chip / 20. 에픽 이상은 8프레임 128x128 루프 애니메이션(PPU 64). 노멀/레어는 정지 스프라이트(PPU 100). zone은 이전 폴더 기준 수심대(beach/ocean/abyss), 스크랩은 any. zoneRarity: 깊이 구역(DepthZone.Index 0~3)별 등급 가중치(합 100). 숫자만 고치면 확률이 바뀝니다.",
+  "_note": "경로는 Assets/Art/Scrap_items/ 기준 상대경로. gold = chip / 20. 에픽 이상은 8프레임 128x128 루프 애니메이션(PPU 64). 노멀/레어는 정지 스프라이트(PPU 100). zone은 이전 폴더 기준 수심대(beach/ocean/abyss), 스크랩은 any. zoneRarity: 깊이 구역(DepthZone.Index 0~3)별 등급 가중치(합 100). synchro 아이템은 한 판에 1마리만 스폰된다. placeholder: 스프라이트가 아직 없을 때 대신 쓸 아이템 id. 숫자만 고치면 확률이 바뀝니다.",
   "basePath": "Assets/Art/Scrap_items",
   "spriteSize": 128,
   "chipToGoldRatio": 20,
@@ -23,6 +23,16 @@
       "label": "레전드",
       "animated": true,
       "color": "#FFB020"
+    },
+    "synchro": {
+      "label": "싱크로",
+      "animated": true,
+      "color": "#FFFFFF",
+      "glowColors": [
+        "#FFFFFF",
+        "#FF5FD2",
+        "#B8FF3C"
+      ]
     }
   },
   "zoneRarity": [
@@ -32,7 +42,8 @@
       "normal": 80,
       "rare": 18,
       "epic": 2,
-      "legend": 0
+      "legend": 0,
+      "synchro": 0
     },
     {
       "index": 1,
@@ -40,7 +51,8 @@
       "normal": 55,
       "rare": 35,
       "epic": 9,
-      "legend": 1
+      "legend": 1,
+      "synchro": 0
     },
     {
       "index": 2,
@@ -48,15 +60,17 @@
       "normal": 30,
       "rare": 40,
       "epic": 24,
-      "legend": 6
+      "legend": 6,
+      "synchro": 0
     },
     {
       "index": 3,
       "name": "심연",
-      "normal": 15,
+      "normal": 14,
       "rare": 35,
       "epic": 38,
-      "legend": 12
+      "legend": 12,
+      "synchro": 1
     }
   ],
   "items": [
@@ -525,6 +539,24 @@
       },
       "chip": 8000,
       "gold": 400
+    },
+    {
+      "id": "pegigas",
+      "name": "갑룡 페이기가스",
+      "category": "fish",
+      "rarity": "synchro",
+      "zone": "abyss",
+      "sprite": "Synchro_items/Pegigas/Pegigas.png",
+      "placeholder": "leviathan",
+      "hasAnimation": true,
+      "animation": {
+        "clip": "Synchro_items/Pegigas/AC_Pegigas.anim",
+        "controller": "Synchro_items/Pegigas/AC_Pegigas.controller",
+        "frames": 8,
+        "loop": true
+      },
+      "chip": 20000,
+      "gold": 1000
     }
   ]
 }

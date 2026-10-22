@@ -118,6 +118,34 @@ namespace ScrapFishing.Tests
         }
 
         [Test]
+        public void Synchro_RollsAtBaseRateAndResetsCounter()
+        {
+            var synchroGear = GearData.Create("lure_synchro_test", "싱크로 루어", GearSlot.Lure, ItemRarity.Synchro);
+            var gears = new List<GearData>(_lure.Gears) { synchroGear };
+            var machine = ScriptableObject.CreateInstance<GachaMachineData>();
+            try
+            {
+                machine.Configure("machine_synchro_test", "싱크로 테스트", GearSlot.Lure, 1000, gears);
+                machine.SetRates(70f, 21f, 7f, 1.6f, 0.4f);
+
+                var shares = SinglePullShares(machine, 100000, false);
+                Assert.AreEqual(0.004f, shares[(int)ItemRarity.Synchro], 0.001f, "Synchro");
+
+                var service = new GachaService(new FixedRandom(0.99999f));
+                var counter = 40;
+                var gear = service.Pull(machine, 1, ref counter)[0];
+                Assert.AreEqual(ItemRarity.Synchro, gear.Rarity);
+                Assert.AreEqual(0, counter, "싱크로도 Legend 카운트를 처음으로 돌린다");
+                Assert.AreEqual(25f, synchroGear.RefundMultiplier, 1e-5f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(synchroGear);
+                Object.DestroyImmediate(machine);
+            }
+        }
+
+        [Test]
         public void TenPull_AlwaysContainsRareOrBetter()
         {
             AssertGuarantee(new GachaService(new FixedRandom(0f)), 10, 1, ItemRarity.Rare);

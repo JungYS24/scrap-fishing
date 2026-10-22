@@ -42,6 +42,7 @@ namespace ScrapFishing.Scrap
                     return ScrapGrade.Rare;
                 case ItemRarity.Epic:
                 case ItemRarity.Legend:
+                case ItemRarity.Synchro:
                     return ScrapGrade.Mutant;
                 default:
                     return ScrapGrade.Common;

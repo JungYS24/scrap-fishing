@@ -57,7 +57,8 @@ namespace ScrapFishing.EditorTools
                     continue;
                 }
 
-                var pngPath = ArtPath(item.sprite);
+                var art = ArtSource(item, root.items);
+                var pngPath = ArtPath(art.sprite);
                 var icon = LoadIcon(pngPath, item.id);
                 if (icon == null)
                 {
@@ -69,7 +70,7 @@ namespace ScrapFishing.EditorTools
                 RuntimeAnimatorController controller = null;
                 if (item.hasAnimation)
                 {
-                    var anim = item.animation;
+                    var anim = art.animation;
                     if (anim != null && !string.IsNullOrEmpty(anim.clip))
                     {
                         clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(ArtPath(anim.clip));
@@ -184,10 +185,10 @@ namespace ScrapFishing.EditorTools
                     Debug.LogError("chip/gold 0 이하: " + item.Id + " chip=" + item.Chip + " gold=" + item.Gold);
                 }
 
-                if ((item.Rarity == ItemRarity.Epic || item.Rarity == ItemRarity.Legend) && !item.HasAnimation)
+                if (item.Rarity >= ItemRarity.Epic && !item.HasAnimation)
                 {
                     errors++;
-                    Debug.LogError("epic/legend인데 hasAnimation=false: " + item.Id);
+                    Debug.LogError("epic 이상인데 hasAnimation=false: " + item.Id);
                 }
                 else if ((item.Rarity == ItemRarity.Normal || item.Rarity == ItemRarity.Rare) && item.HasAnimation)
                 {
@@ -206,7 +207,7 @@ namespace ScrapFishing.EditorTools
                 for (var i = 0; i < rows.Count; i++)
                 {
                     var row = rows[i];
-                    var sum = row.normal + row.rare + row.epic + row.legend;
+                    var sum = row.normal + row.rare + row.epic + row.legend + row.synchro;
                     if (sum <= 0)
                     {
                         errors++;
@@ -341,6 +342,33 @@ namespace ScrapFishing.EditorTools
             };
         }
 
+        // 자기 스프라이트가 없고 placeholder가 있으면 그 아이템의 스프라이트·애니메이션을 빌린다.
+        static ItemJson ArtSource(ItemJson item, List<ItemJson> items)
+        {
+            if (string.IsNullOrEmpty(item.placeholder) || HasSprite(ArtPath(item.sprite)))
+            {
+                return item;
+            }
+
+            for (var i = 0; i < items.Count; i++)
+            {
+                var other = items[i];
+                if (other != null && other.id == item.placeholder)
+                {
+                    Debug.LogWarning("스프라이트 없음, 임시로 " + other.id + " 사용: " + item.id + " / " + ArtPath(item.sprite));
+                    return other;
+                }
+            }
+
+            Debug.LogError("placeholder 아이템이 없습니다: " + item.id + " -> " + item.placeholder);
+            return item;
+        }
+
+        static bool HasSprite(string pngPath)
+        {
+            return !string.IsNullOrEmpty(pngPath) && AssetDatabase.LoadAssetAtPath<Sprite>(pngPath) != null;
+        }
+
         static string ArtPath(string relative)
         {
             return (ArtRoot + relative).Replace('\\', '/');
@@ -437,7 +465,7 @@ namespace ScrapFishing.EditorTools
                     continue;
                 }
 
-                var sum = row.normal + row.rare + row.epic + row.legend;
+                var sum = row.normal + row.rare + row.epic + row.legend + row.synchro;
                 if (sum <= 0 || row.index < 0 || row.index > 3)
                 {
                     Debug.LogError("zoneRarity 행 오류: index=" + row.index + " sum=" + sum);
@@ -454,7 +482,8 @@ namespace ScrapFishing.EditorTools
                     normal = row.normal,
                     rare = row.rare,
                     epic = row.epic,
-                    legend = row.legend
+                    legend = row.legend,
+                    synchro = row.synchro
                 });
             }
 
@@ -541,6 +570,8 @@ namespace ScrapFishing.EditorTools
                     return ItemRarity.Epic;
                 case "legend":
                     return ItemRarity.Legend;
+                case "synchro":
+                    return ItemRarity.Synchro;
                 default:
                     Debug.LogWarning("알 수 없는 rarity '" + raw + "' → Normal");
                     return ItemRarity.Normal;

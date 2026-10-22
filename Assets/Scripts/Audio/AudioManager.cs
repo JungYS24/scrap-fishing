@@ -304,6 +304,8 @@ namespace ScrapFishing.Audio
                     PlayCue(SfxId.CatchEpic);
                     return;
                 case ItemRarity.Legend:
+                // 싱크로 전용 큐가 생기기 전까지 레전드 큐를 쓴다.
+                case ItemRarity.Synchro:
                     PlayCue(SfxId.CatchLegend);
                     return;
                 default:
@@ -804,6 +806,7 @@ namespace ScrapFishing.Audio
                     return ScrapGrade.Rare;
                 case ItemRarity.Epic:
                 case ItemRarity.Legend:
+                case ItemRarity.Synchro:
                     return ScrapGrade.Mutant;
                 default:
                     return ScrapGrade.Common;

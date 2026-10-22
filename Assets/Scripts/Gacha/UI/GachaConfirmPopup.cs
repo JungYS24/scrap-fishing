@@ -154,6 +154,11 @@ namespace ScrapFishing.Gacha
             {
                 var rarity = (ItemRarity)r;
                 var share = total > 0f ? machine.BaseRate(rarity) / total : 0f;
+                if (rarity == ItemRarity.Synchro && share <= 0f)
+                {
+                    continue;
+                }
+
                 line += (r > 0 ? " · " : string.Empty) + "<color=" + GachaUi.Hex(GachaUi.RarityColor(rarity)) + ">"
                     + GachaUi.RarityLabel(rarity)[0] + " " + Mathf.RoundToInt(share * 100f) + "%</color>";
             }

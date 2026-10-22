@@ -513,7 +513,19 @@ namespace ScrapFishing.UI
                 .SetEase(Ease.OutBack)
                 .SetUpdate(true)
                 .SetLink(cell);
-            if (rarity == ItemRarity.Epic || rarity == ItemRarity.Legend)
+            if (rarity == ItemRarity.Synchro)
+            {
+                // 테두리가 하양·핑크·연두로 번갈아 바뀌고, 배경도 같은 색으로 은은하게 물든다.
+                var colors = RarityGlow.SynchroColors;
+                var cycle = DOTween.Sequence().SetLoops(-1).SetUpdate(true).SetLink(cell);
+                for (var i = 0; i < colors.Length; i++)
+                {
+                    var next = colors[(i + 1) % colors.Length];
+                    cycle.Append(outline.DOColor(next, 0.45f).SetEase(Ease.InOutSine));
+                    cycle.Join(background.DOColor(Color.Lerp(background.color, next, 0.4f), 0.45f).SetEase(Ease.InOutSine));
+                }
+            }
+            else if (rarity == ItemRarity.Epic || rarity == ItemRarity.Legend)
             {
                 background.DOColor(Color.Lerp(background.color, border, 0.45f), 0.7f)
                     .SetLoops(-1, LoopType.Yoyo)

@@ -13,7 +13,7 @@ namespace ScrapFishing.EditorTools
         const string DatabasePath = "Assets/Resources/ItemDatabase.asset";
 
         static readonly float[] ZoneDepths = { 0.1f, 0.35f, 0.6f, 0.9f };
-        static readonly string[] RarityLabels = { "normal", "rare", "epic", "legend" };
+        static readonly string[] RarityLabels = { "normal", "rare", "epic", "legend", "synchro" };
 
         [MenuItem("Tools/Scrap Fishing/Simulate Spawn Rates")]
         public static void SimulateSpawnRates()
@@ -38,9 +38,9 @@ namespace ScrapFishing.EditorTools
                 }
 
                 var row = db.GetZoneRarity(zone);
-                var expected = new[] { row.normal, row.rare, row.epic, row.legend };
-                var sum = expected[0] + expected[1] + expected[2] + expected[3];
-                var counts = new int[4];
+                var expected = new[] { row.normal, row.rare, row.epic, row.legend, row.synchro };
+                var sum = expected[0] + expected[1] + expected[2] + expected[3] + expected[4];
+                var counts = new int[expected.Length];
                 for (var i = 0; i < Samples; i++)
                 {
                     var item = ScrapCatalog.PickItem(ZoneDepths[zone]);
@@ -100,6 +100,8 @@ namespace ScrapFishing.EditorTools
                     return 2;
                 case ItemRarity.Legend:
                     return 3;
+                case ItemRarity.Synchro:
+                    return 4;
                 default:
                     return 0;
             }

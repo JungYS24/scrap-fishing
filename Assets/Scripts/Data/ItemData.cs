@@ -13,7 +13,8 @@ namespace ScrapFishing.Data
         Normal,
         Rare,
         Epic,
-        Legend
+        Legend,
+        Synchro
     }
 
     [CreateAssetMenu(menuName = "ScrapFishing/ItemData")]

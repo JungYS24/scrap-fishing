@@ -82,7 +82,7 @@ namespace ScrapFishing.Gacha
             _group.DOKill(false);
             _group.DOFade(1f, 0.18f).SetUpdate(true).SetLink(_root.gameObject);
             _scroll.verticalNormalizedPosition = 1f;
-            if (_stacks.Count > 0 && _stacks[0].Gear.Rarity == ItemRarity.Legend)
+            if (_stacks.Count > 0 && _stacks[0].Gear.Rarity >= ItemRarity.Legend)
             {
                 AudioManager.Ensure().PlayLegendAppear();
             }

@@ -21,6 +21,7 @@ namespace ScrapFishing.Data
         public int rare;
         public int epic;
         public int legend;
+        public int synchro;
     }
 
     [Serializable]
@@ -32,6 +33,8 @@ namespace ScrapFishing.Data
         public string zone;
         public string rarity;
         public string sprite;
+        // 스프라이트가 아직 없을 때 대신 쓸 아이템 id. 아트가 들어오면 비워 둔다.
+        public string placeholder;
         public bool hasAnimation;
         public AnimJson animation;
         public int chip;

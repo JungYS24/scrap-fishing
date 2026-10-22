@@ -15,8 +15,15 @@ namespace ScrapFishing.Boat
 
         readonly List<ScrapView> _live = new List<ScrapView>();
         DiveArt _diveArt;
+        bool _synchroSpawned;
 
         public IReadOnlyList<ScrapView> Live => _live;
+
+        // 싱크로 등급은 한 판에 1마리만 나온다. 판을 시작할 때 부른다.
+        public void ResetRun()
+        {
+            _synchroSpawned = false;
+        }
 
         public void SetDiveArt(DiveArt art)
         {
@@ -29,7 +36,7 @@ namespace ScrapFishing.Boat
             var count = 8 + DepthZone.Index(depth);
             for (var i = 0; i < count; i++)
             {
-                var item = ScrapCatalog.PickItem(depth);
+                var item = PickItem(depth);
                 var definition = item != null ? ScrapDefinition.FromItem(item) : ScrapCatalog.Pick(depth);
                 var position = new Vector3(Random.Range(-1.7f, 1.7f), Random.Range(-3.6f, 2.4f), 0f);
                 if (item != null && item.Icon != null)
@@ -64,7 +71,7 @@ namespace ScrapFishing.Boat
                 var along = Random.value < 0.42f ? Random.Range(0.72f, 1f) : Random.Range(0.12f, 0.72f);
                 var y = Mathf.Lerp(surfaceY - 0.45f, targetY + 0.15f, along);
                 var depthHere = DepthZone.FromWorldY(y);
-                var item = ScrapCatalog.PickItem(depthHere);
+                var item = PickItem(depthHere);
                 if (item != null)
                 {
                     SpawnOne(
@@ -74,7 +81,7 @@ namespace ScrapFishing.Boat
                         0.05f,
                         item.Icon,
                         item);
-                    if (!legendCue && item.Rarity == ItemRarity.Legend)
+                    if (!legendCue && item.Rarity >= ItemRarity.Legend)
                     {
                         legendCue = true;
                         AudioManager.Ensure().PlayLegendAppear();
@@ -90,6 +97,17 @@ namespace ScrapFishing.Boat
                     0.05f,
                     null);
             }
+        }
+
+        ItemData PickItem(float depth)
+        {
+            var item = ScrapCatalog.PickItem(depth, !_synchroSpawned);
+            if (item != null && item.Rarity == ItemRarity.Synchro)
+            {
+                _synchroSpawned = true;
+            }
+
+            return item;
         }
 
         ScrapView SpawnOne(ScrapDefinition definition, Vector3 position, float rangeX, float rangeY, Sprite spriteOverride, ItemData item = null)

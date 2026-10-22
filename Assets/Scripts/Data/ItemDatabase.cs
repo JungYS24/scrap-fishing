@@ -12,6 +12,7 @@ namespace ScrapFishing.Data
         public int rare;
         public int epic;
         public int legend;
+        public int synchro;
     }
 
     [CreateAssetMenu(menuName = "ScrapFishing/ItemDatabase")]

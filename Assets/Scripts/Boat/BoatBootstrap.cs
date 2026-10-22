@@ -330,6 +330,7 @@ namespace ScrapFishing.Boat
             Fx.PulseFade(0.22f);
             AudioManager.Ensure().PlayStart();
             _session.StartRun();
+            _spawner.ResetRun();
             _hud.NotifyRunReset();
             _gauge.SetMaxDepth(Progression.MaxDepth);
             _title.SetVisible(false);

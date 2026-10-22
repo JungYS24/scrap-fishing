@@ -393,7 +393,7 @@ namespace ScrapFishing.FX
             seq.OnComplete(() => FXPool.ReturnBit(bit));
         }
 
-        public static void ScreenFlash(Color c, float dur)
+        public static void ScreenFlash(Color c, float dur, float alpha = 0.55f)
         {
             if (!FXConfig.Enabled)
             {
@@ -414,7 +414,7 @@ namespace ScrapFishing.FX
             _fade.color = c;
             _fadeGroup.DOKill(false);
             UnlockFade();
-            _fadeGroup.alpha = 0.55f;
+            _fadeGroup.alpha = alpha;
             _fadeGroup.DOFade(0f, dur).SetUpdate(true).SetLink(_fade.gameObject);
         }
 

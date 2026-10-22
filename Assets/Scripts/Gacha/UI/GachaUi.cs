@@ -14,6 +14,7 @@ namespace ScrapFishing.Gacha
         public static readonly Color RareColor = new Color(0.247f, 0.663f, 1f);
         public static readonly Color EpicColor = new Color(0.706f, 0.361f, 1f);
         public static readonly Color LegendColor = new Color(1f, 0.604f, 0.18f);
+        public static readonly Color SynchroColor = Color.white;
         // Outline은 메시를 테두리 색으로 한 번 더 그리므로, 테두리가 있는 패널은 불투명해야 색이 번지지 않는다.
         public static readonly Color Backdrop = new Color(0.035f, 0.055f, 0.11f, 1f);
         public static readonly Color Card = new Color(0.06f, 0.09f, 0.17f, 1f);
@@ -32,6 +33,7 @@ namespace ScrapFishing.Gacha
                 case ItemRarity.Rare: return RareColor;
                 case ItemRarity.Epic: return EpicColor;
                 case ItemRarity.Legend: return LegendColor;
+                case ItemRarity.Synchro: return SynchroColor;
                 default: return NormalColor;
             }
         }
@@ -43,6 +45,7 @@ namespace ScrapFishing.Gacha
                 case ItemRarity.Rare: return "RARE";
                 case ItemRarity.Epic: return "EPIC";
                 case ItemRarity.Legend: return "LEGEND";
+                case ItemRarity.Synchro: return "SYNCHRO";
                 default: return "NORMAL";
             }
         }

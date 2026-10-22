@@ -17,6 +17,8 @@ namespace ScrapFishing.Gacha
         [SerializeField] float rareRate = 22f;
         [SerializeField] float epicRate = 7f;
         [SerializeField] float legendRate = 1f;
+        [Tooltip("싱크로 확률 (%). 확률 보간을 받지 않는다. 0이면 나오지 않는다.")]
+        [SerializeField] float synchroRate;
 
         [Header("확률 보간 (천장 없음)")]
         [Tooltip("Legend 없이 뽑은 횟수가 이 주기에 닿으면 카운트를 0으로 되돌린다. 확정 당첨은 없다.")]
@@ -46,6 +48,7 @@ namespace ScrapFishing.Gacha
                 case ItemRarity.Rare: return rareRate;
                 case ItemRarity.Epic: return epicRate;
                 case ItemRarity.Legend: return legendRate;
+                case ItemRarity.Synchro: return synchroRate;
                 default: return normalRate;
             }
         }
@@ -60,12 +63,13 @@ namespace ScrapFishing.Gacha
             gears = new List<GearData>(machineGears ?? new GearData[0]);
         }
 
-        public void SetRates(float normal, float rare, float epic, float legend)
+        public void SetRates(float normal, float rare, float epic, float legend, float synchro = 0f)
         {
             normalRate = normal;
             rareRate = rare;
             epicRate = epic;
             legendRate = legend;
+            synchroRate = synchro;
         }
 
         public void SetBoost(int cycle, int start, float legendAtCycleEnd)

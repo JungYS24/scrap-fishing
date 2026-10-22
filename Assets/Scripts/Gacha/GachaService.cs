@@ -9,7 +9,7 @@ namespace ScrapFishing.Gacha
     {
         public const int TenPull = 10;
         public const int HundredPull = 100;
-        public const int RarityCount = 4;
+        public const int RarityCount = 5;
 
         readonly IGachaRandom _random;
         readonly float[] _weights = new float[RarityCount];
@@ -30,7 +30,7 @@ namespace ScrapFishing.Gacha
             return count >= TenPull ? ItemRarity.Rare : ItemRarity.Normal;
         }
 
-        // counter: 이 머신에서 Legend 없이 뽑은 횟수(주기 안). 이번 뽑기는 counter+1 번째다.
+        // counter: 이 머신에서 Legend(또는 Synchro) 없이 뽑은 횟수(주기 안). 이번 뽑기는 counter+1 번째다.
         public static float LegendRate(GachaMachineData machine, int counter, bool boost = true)
         {
             var baseRate = Normalized(machine, ItemRarity.Legend);
@@ -49,7 +49,7 @@ namespace ScrapFishing.Gacha
 
         public static int NextCounter(GachaMachineData machine, int counter, ItemRarity rolled)
         {
-            if (rolled == ItemRarity.Legend)
+            if (rolled >= ItemRarity.Legend)
             {
                 return 0;
             }
@@ -58,19 +58,21 @@ namespace ScrapFishing.Gacha
             return next >= Math.Max(1, machine.BoostCycle) ? 0 : next;
         }
 
-        // Legend 확률이 올라가면 나머지 등급은 기본 비율을 유지한 채 줄어든다.
+        // Legend 확률이 올라가면 나머지 등급은 기본 비율을 유지한 채 줄어든다. Synchro는 보간 없이 기본 확률 그대로다.
         public static void Rates(GachaMachineData machine, int counter, bool boost, float[] into)
         {
             var legend = LegendRate(machine, counter, boost);
+            var synchro = Normalized(machine, ItemRarity.Synchro);
             var normal = Math.Max(0f, machine.BaseRate(ItemRarity.Normal));
             var rare = Math.Max(0f, machine.BaseRate(ItemRarity.Rare));
             var epic = Math.Max(0f, machine.BaseRate(ItemRarity.Epic));
             var rest = normal + rare + epic;
-            var scale = rest > 0f ? (1f - legend) / rest : 0f;
+            var scale = rest > 0f ? Math.Max(0f, 1f - legend - synchro) / rest : 0f;
             into[0] = normal * scale;
             into[1] = rare * scale;
             into[2] = epic * scale;
             into[3] = legend;
+            into[4] = synchro;
         }
 
         // 보간을 포함한 장기 평균 등급 확률. 주기 안 카운트 상태의 정상 분포로 정확히 계산한다.
@@ -91,7 +93,7 @@ namespace ScrapFishing.Gacha
                 }
 
                 total += survive;
-                survive *= 1.0 - step[3];
+                survive *= 1.0 - step[3] - step[4];
             }
 
             for (var r = 0; r < RarityCount; r++)

@@ -28,12 +28,19 @@ namespace ScrapFishing.EditorTools
             Spawn(ItemRarity.Legend, 0f);
         }
 
+        [MenuItem("Tools/Scrap Fishing/Preview Rarity Glow/Synchro")]
+        public static void Synchro()
+        {
+            Spawn(ItemRarity.Synchro, 0f);
+        }
+
         [MenuItem("Tools/Scrap Fishing/Preview Rarity Glow/All")]
         public static void All()
         {
-            Spawn(ItemRarity.Rare, -1.6f);
-            Spawn(ItemRarity.Epic, 0f);
-            Spawn(ItemRarity.Legend, 1.6f);
+            Spawn(ItemRarity.Rare, -2.4f);
+            Spawn(ItemRarity.Epic, -0.8f);
+            Spawn(ItemRarity.Legend, 0.8f);
+            Spawn(ItemRarity.Synchro, 2.4f);
         }
 
         static void Spawn(ItemRarity rarity, float xOffset)

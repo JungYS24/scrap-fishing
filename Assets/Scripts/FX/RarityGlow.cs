@@ -28,7 +28,18 @@ namespace ScrapFishing.FX
             public bool Rays;
             public bool IntroFlash;
             public bool Mark;
+            public Color[] Cycle;
+            public float CycleStep;
+            public bool Crystal;
         }
+
+        // 싱크로: 하양·핑크·연두가 번갈아 빛나는 크리스탈.
+        public static readonly Color[] SynchroColors =
+        {
+            Color.white,
+            new Color(0xFF / 255f, 0x5F / 255f, 0xD2 / 255f, 1f),
+            new Color(0xB8 / 255f, 0xFF / 255f, 0x3C / 255f, 1f)
+        };
 
         static readonly Style HazardStyle = new Style
         {
@@ -85,7 +96,29 @@ namespace ScrapFishing.FX
             IntroFlash = true
         };
 
+        static readonly Style SynchroStyle = new Style
+        {
+            Color = Color.white,
+            ScaleMin = 1.8f,
+            ScaleMax = 2.3f,
+            AlphaMin = 0.5f,
+            AlphaMax = 0.95f,
+            Period = 0.6f,
+            SparkleInterval = 0.25f,
+            SparkleMin = 1,
+            SparkleMax = 2,
+            SparklePool = 8,
+            Rays = true,
+            IntroFlash = true,
+            Cycle = SynchroColors,
+            CycleStep = 0.45f,
+            Crystal = true
+        };
+
+        const int ShardCount = 6;
+
         static Sprite _circle;
+        static Sprite _shard;
         static Sprite _star;
         static Sprite _ray;
         static Sprite _bang;
@@ -107,6 +140,8 @@ namespace ScrapFishing.FX
         SpriteRenderer _mark;
         SpriteRenderer _flash;
         Transform _rayRoot;
+        Transform _shardRoot;
+        readonly List<SpriteRenderer> _shards = new List<SpriteRenderer>();
         readonly List<SpriteRenderer> _rays = new List<SpriteRenderer>();
         readonly List<SpriteRenderer> _sparkles = new List<SpriteRenderer>();
 
@@ -117,6 +152,7 @@ namespace ScrapFishing.FX
                 case ItemRarity.Rare: return RareStyle.Color;
                 case ItemRarity.Epic: return EpicStyle.Color;
                 case ItemRarity.Legend: return LegendStyle.Color;
+                case ItemRarity.Synchro: return SynchroStyle.Color;
                 default: return new Color(0.604f, 0.627f, 0.651f, 1f);
             }
         }
@@ -140,6 +176,25 @@ namespace ScrapFishing.FX
             {
                 Fx.ScreenFlash(LegendStyle.Color, 0.16f);
                 Fx.ShakeCamera(0.05f, 0.12f);
+                return;
+            }
+
+            if (view.data.Rarity == ItemRarity.Synchro)
+            {
+                PlaySynchroFlash();
+            }
+        }
+
+        // 레전드보다 진하고 길게: 하양 → 핑크 → 연두로 이어서 번쩍이고 화면을 더 크게 흔든다.
+        static void PlaySynchroFlash()
+        {
+            Fx.ScreenFlash(SynchroColors[0], 0.3f, 0.85f);
+            Fx.ShakeCamera(0.09f, 0.25f);
+            for (var i = 1; i < SynchroColors.Length; i++)
+            {
+                var color = SynchroColors[i];
+                var alpha = 0.75f - i * 0.08f;
+                DOVirtual.DelayedCall(i * 0.12f, () => Fx.ScreenFlash(color, 0.3f, alpha)).SetUpdate(true);
             }
         }
 
@@ -227,6 +282,9 @@ namespace ScrapFishing.FX
                 case ItemRarity.Legend:
                     style = LegendStyle;
                     return true;
+                case ItemRarity.Synchro:
+                    style = SynchroStyle;
+                    return true;
                 default:
                     return false;
             }
@@ -245,6 +303,7 @@ namespace ScrapFishing.FX
             EnsureGlow();
             EnsureMark();
             EnsureRays();
+            EnsureShards();
             EnsureSparkles();
             EnsureFlash();
             Restart();
@@ -327,6 +386,11 @@ namespace ScrapFishing.FX
                 _rayRoot.Rotate(0f, 0f, _raySpeed * Time.deltaTime);
             }
 
+            if (_shardRoot != null && _shardRoot.gameObject.activeSelf)
+            {
+                _shardRoot.Rotate(0f, 0f, -_raySpeed * 1.6f * Time.deltaTime);
+            }
+
             if (_style.SparkleInterval <= 0f || _style.SparkleMax <= 0)
             {
                 return;
@@ -371,7 +435,7 @@ namespace ScrapFishing.FX
             var scale = _fit * Mathf.Lerp(_style.ScaleMin, _style.ScaleMax, _pulse);
             var order = scrap.sortingOrder;
             var layer = scrap.sortingLayerID;
-            Paint(_glow, layer, order - 1, _style.Color, alpha, scale);
+            Paint(_glow, layer, order - 1, ColorAt(0f), alpha, scale);
             if (_mark != null && _mark.gameObject.activeSelf)
             {
                 var mark = _style.Color;
@@ -383,8 +447,6 @@ namespace ScrapFishing.FX
             {
                 var length = Mathf.Max(0.2f, _fit * _style.ScaleMax * 1.15f);
                 var width = Mathf.Max(0.04f, _fit * 0.16f);
-                var rayColor = _style.Color;
-                rayColor.a = alpha * 0.85f;
                 for (var i = 0; i < _rays.Count; i++)
                 {
                     var ray = _rays[i];
@@ -393,10 +455,32 @@ namespace ScrapFishing.FX
                         continue;
                     }
 
+                    var rayColor = ColorAt(i);
+                    rayColor.a = alpha * 0.85f;
                     ray.sortingLayerID = layer;
                     ray.sortingOrder = order - 2;
                     ray.color = rayColor;
                     ray.transform.localScale = new Vector3(width, length, 1f);
+                }
+            }
+
+            if (_style.Crystal)
+            {
+                var ring = _fit * 0.8f;
+                var shardScale = _fit * Mathf.Lerp(0.2f, 0.26f, _pulse);
+                for (var i = 0; i < _shards.Count; i++)
+                {
+                    var shard = _shards[i];
+                    if (shard == null || !shard.gameObject.activeSelf)
+                    {
+                        continue;
+                    }
+
+                    var angle = i * (360f / _shards.Count);
+                    var radians = angle * Mathf.Deg2Rad;
+                    shard.transform.localPosition = new Vector3(Mathf.Cos(radians) * ring, Mathf.Sin(radians) * ring, 0f);
+                    shard.transform.localRotation = Quaternion.Euler(0f, 0f, angle - 90f);
+                    Paint(shard, layer, order + 1, ColorAt(i + 0.5f), Mathf.Clamp01(alpha * 1.1f), shardScale);
                 }
             }
 
@@ -416,7 +500,7 @@ namespace ScrapFishing.FX
 
                 spark.sortingLayerID = layer;
                 spark.sortingOrder = order + 1;
-                var color = _style.Color;
+                var color = ColorAt(i * 0.7f);
                 color.a = strength;
                 spark.color = color;
             }
@@ -560,6 +644,53 @@ namespace ScrapFishing.FX
                 _rays[i].transform.localScale = new Vector3(width, length, 1f);
                 _rays[i].color = _style.Color;
             }
+        }
+
+        void EnsureShards()
+        {
+            if (!_style.Crystal)
+            {
+                if (_shardRoot != null)
+                {
+                    _shardRoot.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            if (_shardRoot == null)
+            {
+                var root = new GameObject("Shards");
+                root.transform.SetParent(transform, false);
+                root.transform.localPosition = Vector3.zero;
+                root.transform.localRotation = Quaternion.identity;
+                root.transform.localScale = Vector3.one;
+                root.hideFlags = HideFlags.DontSave;
+                _shardRoot = root.transform;
+            }
+
+            _shardRoot.gameObject.SetActive(true);
+            _shardRoot.localRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+            while (_shards.Count < ShardCount)
+            {
+                _shards.Add(CreateRenderer("Shard", ShardSprite(), _shardRoot));
+            }
+        }
+
+        // 순환 색이 있으면 시간에 따라 다음 색으로 부드럽게 넘어간다. offset 1은 한 색만큼 앞선다.
+        Color ColorAt(float offset)
+        {
+            var cycle = _style.Cycle;
+            if (cycle == null || cycle.Length == 0)
+            {
+                return _style.Color;
+            }
+
+            var t = Time.time / Mathf.Max(0.05f, _style.CycleStep) + offset;
+            var from = Mathf.FloorToInt(t);
+            var blend = Mathf.SmoothStep(0f, 1f, t - from);
+            var index = ((from % cycle.Length) + cycle.Length) % cycle.Length;
+            return Color.Lerp(cycle[index], cycle[(index + 1) % cycle.Length], blend);
         }
 
         void EnsureSparkles()
@@ -737,6 +868,16 @@ namespace ScrapFishing.FX
             return _bang;
         }
 
+        static Sprite ShardSprite()
+        {
+            if (_shard == null)
+            {
+                _shard = MakeSprite("RarityGlowShard", 32, 32, 0.5f, 0.5f, 32f, PaintShard);
+            }
+
+            return _shard;
+        }
+
         static Sprite RaySprite()
         {
             if (_ray == null)
@@ -815,6 +956,26 @@ namespace ScrapFishing.FX
                     var bar = ny > 0.28f && ny < 0.78f && Mathf.Abs(nx) < 0.16f;
                     var dot = ny < 0.2f && nx * nx + ((ny - 0.1f) / 0.12f) * ((ny - 0.1f) / 0.12f) < 1f;
                     var alpha = bar || dot ? 1f : 0f;
+                    pixels[y * width + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
+                }
+            }
+        }
+
+        // 세로로 긴 마름모. 왼쪽 면을 밝게 칠해 프리즘 조각처럼 보이게 한다.
+        static void PaintShard(Color32[] pixels, int width, int height)
+        {
+            var cx = (width - 1) * 0.5f;
+            var cy = (height - 1) * 0.5f;
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                {
+                    var nx = (x - cx) / cx;
+                    var ny = (y - cy) / cy;
+                    var d = Mathf.Abs(nx) * 2.2f + Mathf.Abs(ny);
+                    var edge = Mathf.Clamp01((1f - d) * 8f);
+                    var facet = nx < 0f ? 1f : 0.6f;
+                    var alpha = edge * facet;
                     pixels[y * width + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
                 }
             }
