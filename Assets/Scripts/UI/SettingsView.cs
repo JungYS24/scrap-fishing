@@ -17,6 +17,7 @@ namespace ScrapFishing.UI
         const float OpenDuration = 0.2f;
         const float CloseDuration = 0.15f;
         const string LanguageLabel = "언어: 한국어";
+        const string GearIconResource = "UI/icon_settings";
 
         static readonly VolumeChannel[] Channels = { VolumeChannel.Master, VolumeChannel.Bgm, VolumeChannel.Sfx };
         static readonly string[] ChannelNames = { "전체 음량", "배경음", "효과음" };
@@ -115,21 +116,16 @@ namespace ScrapFishing.UI
             HideOverlay(_group, _panel, () => _root.gameObject.SetActive(false));
         }
 
-        // 톱니 아이콘 버튼. 소리 토글과 같은 크기·테두리로 맞춘다.
+        // 톱니 아이콘(Resources/UI/icon_settings) 자체가 버튼이다. 테두리 없이 이미지만 그린다.
         public static Button CreateGearButton(RectTransform parent, Vector2 min, Vector2 max, Action onClick)
         {
             var rect = GachaUi.Rect(parent, "SettingsButton", min, max);
             var image = rect.gameObject.AddComponent<Image>();
-            image.color = Palette.Panel;
-            var outline = rect.gameObject.AddComponent<Outline>();
-            outline.effectColor = Palette.NeonGreen;
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            image.sprite = GearSprite();
+            image.color = Color.white;
+            image.preserveAspect = true;
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
-
-            var icon = GachaUi.Panel(rect, "Icon", new Vector2(0.14f, 0.14f), new Vector2(0.86f, 0.86f), Palette.NeonGreen);
-            icon.sprite = GearSprite();
-            icon.preserveAspect = true;
 
             button.onClick.AddListener(() =>
             {
@@ -326,39 +322,13 @@ namespace ScrapFishing.UI
 
         static Sprite GearSprite()
         {
-            if (_gear != null)
+            if (_gear == null)
             {
-                return _gear;
+                // 임포트가 Multiple로 잘라 둔 경우(icon_settings_0)도 있어서 하위 스프라이트까지 찾는다.
+                var sprites = Resources.LoadAll<Sprite>(GearIconResource);
+                _gear = sprites != null && sprites.Length > 0 ? sprites[0] : null;
             }
 
-            const int size = 64;
-            var pixels = new Color32[size * size];
-            var center = (size - 1) * 0.5f;
-            for (var y = 0; y < size; y++)
-            {
-                for (var x = 0; x < size; x++)
-                {
-                    var dx = (x - center) / center;
-                    var dy = (y - center) / center;
-                    var radius = Mathf.Sqrt(dx * dx + dy * dy);
-                    var angle = Mathf.Atan2(dy, dx);
-                    var tooth = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.15f, 0.45f, Mathf.Cos(angle * 8f)));
-                    var outer = Mathf.Lerp(0.68f, 0.96f, tooth);
-                    var alpha = Mathf.Clamp01((outer - radius) * center) * Mathf.Clamp01((radius - 0.3f) * center);
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
-                }
-            }
-
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
-            {
-                name = "SettingsGear",
-                wrapMode = TextureWrapMode.Clamp,
-                filterMode = FilterMode.Bilinear
-            };
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            _gear = Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
-            _gear.name = "SettingsGear";
             return _gear;
         }
     }
