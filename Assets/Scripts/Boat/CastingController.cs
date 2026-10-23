@@ -102,6 +102,9 @@ namespace ScrapFishing.Boat
             ResetHook();
         }
 
+        // 피셔 장비의 조종 속도는 스와이프 감도와 최고 속도 둘 다에 곱한다.
+        float MaxSteerSpeed => maxSteerSpeed * GearBonuses.Scale(GearStat.SteerSpeedPercent);
+
         public void AddSteerDelta(float worldDeltaX)
         {
             if (!AcceptsSteer)
@@ -403,7 +406,7 @@ namespace ScrapFishing.Boat
                     _steerTargetX,
                     ref _steerVelocity,
                     Mathf.Max(0.0001f, steerSmoothTime),
-                    maxSteerSpeed,
+                    MaxSteerSpeed,
                     Time.deltaTime);
             }
 
@@ -429,12 +432,12 @@ namespace ScrapFishing.Boat
 
         float SteerTilt(float speed)
         {
-            if (maxSteerSpeed <= 0.01f)
+            if (MaxSteerSpeed <= 0.01f)
             {
                 return 0f;
             }
 
-            var amount = Mathf.Clamp(speed / maxSteerSpeed, -1f, 1f);
+            var amount = Mathf.Clamp(speed / MaxSteerSpeed, -1f, 1f);
             return -amount * maxTiltDegrees;
         }
     }

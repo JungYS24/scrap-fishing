@@ -35,7 +35,7 @@ namespace ScrapFishing.Boat
 
             var hookPos = _hook.Position;
             var distanceToSwipe = DistanceToSegment(hookPos, swipe.StartWorld, swipe.EndWorld);
-            if (distanceToSwipe > hookHitRadius)
+            if (distanceToSwipe > hookHitRadius * GearBonuses.Scale(GearStat.HookHitRadiusPercent))
             {
                 return false;
             }

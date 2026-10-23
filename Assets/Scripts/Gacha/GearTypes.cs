@@ -2,13 +2,15 @@ using System;
 
 namespace ScrapFishing.Gacha
 {
+    // 정수 값은 저장 데이터(장착 칸 순서)와 맞물려 있어서, 이름만 바꾸고 새 슬롯은 맨 뒤에 붙인다. 3번은 예전 Suit였다.
     public enum GearSlot
     {
         Lure,
         Boat,
         Drone,
-        Suit,
-        Fisher
+        Helmet,
+        Fisher,
+        Rod
     }
 
     public enum GearState
@@ -38,7 +40,10 @@ namespace ScrapFishing.Gacha
         SteerSpeedPercent,
         ReelSpeedPercent,
         DiveSpeedPercent,
-        DiveEveryCastsBonus
+        DiveEveryCastsBonus,
+        HookHitRadiusPercent,
+        MaxDepthPercent,
+        BonusCatchChancePercent
     }
 
     [Serializable]

@@ -4,6 +4,7 @@ using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.FX;
+using ScrapFishing.Gacha;
 using ScrapFishing.Scrap;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -410,6 +411,23 @@ namespace ScrapFishing.Fishing
                 });
         }
 
+        // 레전드 이상 낚싯대: 수면에서 정산할 때 확률로 같은 스크랩을 하나 더 얻는다. 싱크로(한 판 1마리)는 늘리지 않는다.
+        static bool RollBonusCatch(ScrapView view)
+        {
+            var chance = GearBonuses.Get(GearStat.BonusCatchChancePercent);
+            if (chance <= 0f || view == null || LureLoad.IsHazard(view.ChipValue))
+            {
+                return false;
+            }
+
+            if (view.data != null && view.data.Rarity == Data.ItemRarity.Synchro)
+            {
+                return false;
+            }
+
+            return UnityEngine.Random.value * 100f < chance;
+        }
+
         void Cash(AttachedScrap item, bool popup)
         {
             if (item.View == null)
@@ -428,6 +446,13 @@ namespace ScrapFishing.Fishing
             if (_session != null)
             {
                 _session.AddSettledCatch(item.View.Definition, item.View.data, pos, out chip, out gold);
+                if (RollBonusCatch(item.View))
+                {
+                    _session.AddSettledCatch(item.View.Definition, item.View.data, pos, out var bonusChip, out var bonusGold);
+                    chip += bonusChip;
+                    gold += bonusGold;
+                    Fx.FloatText(pos + Vector3.up * 0.3f, "+1 보너스", Palette.NeonGreen);
+                }
             }
 
             if (popup)

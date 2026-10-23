@@ -8,6 +8,7 @@ namespace ScrapFishing.Gacha
     public static class GearBonuses
     {
         static readonly float[] Totals = new float[Enum.GetValues(typeof(GearStat)).Length];
+        static readonly GearData[] EquippedGear = new GearData[GearInventory.SlotCount];
 
         public static event Action Changed;
 
@@ -16,9 +17,23 @@ namespace ScrapFishing.Gacha
             return Totals[(int)stat];
         }
 
+        // 슬롯에 장착한 장비(없으면 null). 피셔 틴트처럼 등급을 보여 줄 때 쓴다.
+        public static GearData Equipped(GearSlot slot)
+        {
+            var index = (int)slot;
+            return index >= 0 && index < EquippedGear.Length ? EquippedGear[index] : null;
+        }
+
         public static int Count(GearStat stat)
         {
             return Mathf.RoundToInt(Get(stat));
+        }
+
+        // 낚싯대 장비의 최대 수심: 강화로 정한 수심에서 바닥(1.0)까지 남은 거리의 %만큼 더 내려간다.
+        public static float MaxDepth(float baseDepth)
+        {
+            var depth = Mathf.Clamp01(baseDepth);
+            return depth + (1f - depth) * Mathf.Clamp01(Get(GearStat.MaxDepthPercent) / 100f);
         }
 
         // % 효과를 배수로 바꾼다. 음수(게이지 느려짐)도 0.2배 아래로는 내려가지 않는다.
@@ -30,11 +45,14 @@ namespace ScrapFishing.Gacha
         public static void Refresh(GearInventory inventory)
         {
             Array.Clear(Totals, 0, Totals.Length);
+            Array.Clear(EquippedGear, 0, EquippedGear.Length);
             if (inventory != null)
             {
                 for (var s = 0; s < GearInventory.SlotCount; s++)
                 {
-                    Add(inventory.Equipped((GearSlot)s));
+                    var gear = inventory.Equipped((GearSlot)s);
+                    EquippedGear[s] = gear;
+                    Add(gear);
                 }
             }
 
@@ -44,6 +62,7 @@ namespace ScrapFishing.Gacha
         public static void Clear()
         {
             Array.Clear(Totals, 0, Totals.Length);
+            Array.Clear(EquippedGear, 0, EquippedGear.Length);
             Changed?.Invoke();
         }
 
@@ -83,6 +102,9 @@ namespace ScrapFishing.Gacha
                 case GearStat.ReelSpeedPercent: return "릴 속도 " + Signed(v) + "%";
                 case GearStat.DiveSpeedPercent: return "잠수 이동 " + Signed(v) + "%";
                 case GearStat.DiveEveryCastsBonus: return "잠수 주기 -" + v.ToString("0") + "캐스트";
+                case GearStat.HookHitRadiusPercent: return "바늘 판정 " + Signed(v) + "%";
+                case GearStat.MaxDepthPercent: return "최대 수심 " + Signed(v) + "%";
+                case GearStat.BonusCatchChancePercent: return "추가 획득 " + v.ToString("0") + "%";
                 default: return effect.stat + " " + Signed(v);
             }
         }

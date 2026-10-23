@@ -267,7 +267,7 @@ namespace ScrapFishing.Tests
             Assert.AreEqual("lure_rusty_magnet", lures[0].Gear.Id);
             Assert.AreEqual(1, inventory.List(GearState.Stored, GearSlot.Boat).Count);
             Assert.AreEqual(1, inventory.List(GearState.Stored, GearSlot.Drone).Count);
-            Assert.AreEqual(0, inventory.List(GearState.Stored, GearSlot.Suit).Count);
+            Assert.AreEqual(0, inventory.List(GearState.Stored, GearSlot.Helmet).Count);
             Assert.AreEqual(3, inventory.List(GearState.Stored).Count);
             Assert.AreEqual(1, inventory.List(GearState.Equipped, GearSlot.Lure).Count);
         }
@@ -278,7 +278,7 @@ namespace ScrapFishing.Tests
             var inventory = new GearInventory(_catalog);
             var gear = _catalog.FindGear("suit_raincoat");
             inventory.AddPulled(new List<GearData> { gear, gear, gear }, "test", 0);
-            var list = inventory.List(GearState.Unprocessed, GearSlot.Suit);
+            var list = inventory.List(GearState.Unprocessed, GearSlot.Helmet);
             Assert.AreEqual(1, list.Count);
             Assert.AreEqual(3, list[0].Count);
         }
@@ -296,7 +296,7 @@ namespace ScrapFishing.Tests
 
             Assert.IsTrue(SaveMigration.Run(store));
 
-            Assert.AreEqual(3, store.GetInt(SaveMigration.VersionKey, 0));
+            Assert.AreEqual(SaveMigration.CurrentVersion, store.GetInt(SaveMigration.VersionKey, 0));
             Assert.AreEqual(123456, store.GetInt(Progression.DollarKey, 0));
             Assert.AreEqual(3, store.GetInt(Progression.LevelKey(UpgradeKind.Reel), 0));
             Assert.AreEqual(7, store.GetInt(Progression.LevelKey(UpgradeKind.Boat), 0));
@@ -307,10 +307,10 @@ namespace ScrapFishing.Tests
         }
 
         [Test]
-        public void Migration_V3IsNoOp()
+        public void Migration_CurrentVersionIsNoOp()
         {
             var store = new MemoryKeyValueStore();
-            store.SetInt(SaveMigration.VersionKey, 3);
+            store.SetInt(SaveMigration.VersionKey, SaveMigration.CurrentVersion);
             store.SetInt(Progression.DollarKey, 500);
             Assert.IsFalse(SaveMigration.Run(store));
             Assert.AreEqual(500, store.GetInt(Progression.DollarKey, 0));
@@ -339,7 +339,7 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(SaveMigration.Run(store));
             Assert.IsFalse(store.HasKey(Progression.DollarKey));
             Assert.IsFalse(store.HasKey(Progression.LevelKey(UpgradeKind.Reel)));
-            Assert.AreEqual(3, store.GetInt(SaveMigration.VersionKey, 0));
+            Assert.AreEqual(SaveMigration.CurrentVersion, store.GetInt(SaveMigration.VersionKey, 0));
         }
 
         [Test]
@@ -354,7 +354,7 @@ namespace ScrapFishing.Tests
                 var view = canvas.AddComponent<GachaShopView>();
                 view.Build(area);
                 Assert.IsFalse(view.IsOpen);
-                Assert.AreEqual(5, view.Shop.Catalog.Machines.Count, "oripa_rewards.json: 루어·보트·드론·피셔·수트");
+                Assert.AreEqual(6, view.Shop.Catalog.Machines.Count, "oripa_rewards.json: 루어·낚싯대·보트·드론·피셔·헬멧");
                 Assert.IsNotNull(area.Find("BlackMarket/Machines/Viewport/Content"));
                 Assert.IsNotNull(area.Find("BlackMarket/GachaInventory/List/Viewport/Content"));
                 Assert.IsNotNull(area.Find("BlackMarket/TopBar/Inventory"));

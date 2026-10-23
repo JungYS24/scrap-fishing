@@ -17,6 +17,7 @@ namespace ScrapFishing.Gacha
         public static readonly Color LegendColor = new Color(1f, 0.604f, 0.18f);
         public static readonly Color SynchroColor = Color.white;
         public static readonly Color FisherColor = new Color(1f, 0.45f, 0.3f);
+        public static readonly Color RodColor = new Color(0.62f, 0.72f, 1f);
         // Outline은 메시를 테두리 색으로 한 번 더 그리므로, 테두리가 있는 패널은 불투명해야 색이 번지지 않는다.
         public static readonly Color Backdrop = new Color(0.035f, 0.055f, 0.11f, 1f);
         public static readonly Color Card = new Color(0.06f, 0.09f, 0.17f, 1f);
@@ -100,8 +101,9 @@ namespace ScrapFishing.Gacha
             {
                 case GearSlot.Boat: return "보트";
                 case GearSlot.Drone: return "드론";
-                case GearSlot.Suit: return "수트";
+                case GearSlot.Helmet: return "헬멧";
                 case GearSlot.Fisher: return "피셔";
+                case GearSlot.Rod: return "낚싯대";
                 default: return "루어";
             }
         }
@@ -112,8 +114,9 @@ namespace ScrapFishing.Gacha
             {
                 case GearSlot.Boat: return Palette.Cyan;
                 case GearSlot.Drone: return Palette.Magenta;
-                case GearSlot.Suit: return Palette.Gold;
+                case GearSlot.Helmet: return Palette.Gold;
                 case GearSlot.Fisher: return FisherColor;
+                case GearSlot.Rod: return RodColor;
                 default: return Palette.NeonGreen;
             }
         }
@@ -231,6 +234,25 @@ namespace ScrapFishing.Gacha
             var colors = button.colors;
             colors.disabledColor = new Color(0.55f, 0.55f, 0.6f, 0.6f);
             button.colors = colors;
+            return button;
+        }
+
+        // 슬롯 탭. 탭 수·글자는 슬롯 목록(데이터)을 따르므로, 씬에 있던 탭이어도 글자·가로 배치·크기를 코드가 다시 맞춘다.
+        public static Button SlotTab(RectTransform bar, int index, int count, GearSlot? slot, Action onClick)
+        {
+            var min = new Vector2(index / (float)count + 0.005f, 0f);
+            var max = new Vector2((index + 1) / (float)count - 0.005f, 1f);
+            var label = slot.HasValue ? SlotLabel(slot.Value) : "전체";
+            var size = count >= 7 ? 18 : 22;
+            var button = MakeButton(bar, "Tab" + index, label, min, max, Muted, size, onClick);
+            Stretch((RectTransform)button.transform, min, max);
+            var text = LabelOf(button);
+            if (text != null)
+            {
+                text.text = label;
+                text.fontSize = size;
+            }
+
             return button;
         }
 

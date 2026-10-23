@@ -17,7 +17,7 @@ namespace ScrapFishing.Gacha
         const string Notice = "게임 안에서 번 달러로만 뽑습니다 · 실제 결제 없음";
         const float FlySafety = 0.6f;
 
-        static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Suit };
+        static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Rod, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Helmet };
 
         GachaShop _shop;
         UiFxSettings _settings;
@@ -171,10 +171,7 @@ namespace ScrapFishing.Gacha
             for (var i = 0; i < Tabs.Length; i++)
             {
                 var slot = Tabs[i];
-                var min = new Vector2(i / (float)Tabs.Length + 0.006f, 0f);
-                var max = new Vector2((i + 1) / (float)Tabs.Length - 0.006f, 1f);
-                var label = slot.HasValue ? GachaUi.SlotLabel(slot.Value) : "전체";
-                _tabButtons[i] = GachaUi.MakeButton(bar, "Tab" + i, label, min, max, GachaUi.Muted, 22, () => SelectTab(slot));
+                _tabButtons[i] = GachaUi.SlotTab(bar, i, Tabs.Length, slot, () => SelectTab(slot));
             }
         }
 

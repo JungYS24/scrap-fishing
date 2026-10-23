@@ -62,6 +62,12 @@ namespace ScrapFishing.Core
             Time.timeScale = 0f;
         }
 
+        // 피셔 장비로 잠수 주기를 줄여도 1캐스트 아래로는 내려가지 않는다.
+        public static int CastsPerDiveFor(int bonus)
+        {
+            return Mathf.Max(1, BaseCastsPerDive - Mathf.Max(0, bonus));
+        }
+
         public void StartRun()
         {
             CastDepth = 0f;
@@ -74,7 +80,7 @@ namespace ScrapFishing.Core
             GearBonusDollars = 0;
             Elapsed = 0f;
             DiveProgress = 0;
-            CastsPerDive = Mathf.Max(1, BaseCastsPerDive - GearBonuses.Count(GearStat.DiveEveryCastsBonus));
+            CastsPerDive = CastsPerDiveFor(GearBonuses.Count(GearStat.DiveEveryCastsBonus));
             _running = true;
             _chipMultiplier = Progression.ChipMultiplier * GearBonuses.Scale(GearStat.SellPercent);
             _caught.Clear();

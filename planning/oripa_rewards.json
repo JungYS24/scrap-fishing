@@ -1,0 +1,1688 @@
+{
+  "schemaVersion": 1,
+  "currency": "dollar",
+  "priceUnit": "P = 기본 1회 가격. 실제 금액은 밸런스 확정 후 basePrice에 입력",
+  "basePrice": 5000,
+  "expectedRefundRate": 0.76,
+  "pullOptions": [
+    {
+      "count": 1,
+      "guarantee": null
+    },
+    {
+      "count": 10,
+      "guarantee": "Rare"
+    },
+    {
+      "count": 100,
+      "guarantee": "Epic"
+    }
+  ],
+  "grades": [
+    {
+      "id": "Normal",
+      "nameKo": "노멀",
+      "dropRate": 0.7,
+      "refundMultiplier": 0.3,
+      "color": "#9AA3B5",
+      "fx": "none"
+    },
+    {
+      "id": "Rare",
+      "nameKo": "레어",
+      "dropRate": 0.21,
+      "refundMultiplier": 0.7,
+      "color": "#3FA9FF",
+      "fx": "glow"
+    },
+    {
+      "id": "Epic",
+      "nameKo": "에픽",
+      "dropRate": 0.07,
+      "refundMultiplier": 2.5,
+      "color": "#B45CFF",
+      "fx": "glow_pulse"
+    },
+    {
+      "id": "Legend",
+      "nameKo": "레전드",
+      "dropRate": 0.016,
+      "refundMultiplier": 8.0,
+      "color": "#FF9A2E",
+      "fx": "glow_pulse_flash"
+    },
+    {
+      "id": "Synchro",
+      "nameKo": "싱크로",
+      "dropRate": 0.004,
+      "refundMultiplier": 25.0,
+      "color": "#FFFFFF",
+      "fx": "crystal_tri_glow",
+      "glowColors": [
+        "#FFFFFF",
+        "#FF5FD2",
+        "#B8FF3C"
+      ],
+      "fxNote": "테라스탈풍 크리스탈. 카드 뒤에서 하양·핑크·연두 3색이 번갈아 굴절되며 빛나고, 프리즘 파편이 회전한다."
+    }
+  ],
+  "effectKeys": {
+    "lureCapacity": "루어 용량 가산(개)",
+    "magnetRadiusPct": "흡착 반경 증가(%)",
+    "rareChancePct": "레어 이상 출현 확률 가산(%p)",
+    "spawnCapBonus": "스폰 상한 가산(개). 레전드 이상 루어만 보유",
+    "sellPricePct": "판매가 증가(%)",
+    "gaugeSpeedPct": "수심 게이지 속도 변화(%). 음수면 느려져 맞추기 쉬움",
+    "runBonusPct": "판 종료 보너스 달러(%)",
+    "autoCollectSec": "잠수 중 자동 회수 주기(초). 0이면 없음",
+    "hazardWarning": "위험물 사전 경고(0/1)",
+    "hazardBlock": "잠수 1회당 위험물 피해 무효 횟수",
+    "oxygenPct": "최대 산소 증가(%)",
+    "hazardDamageReductionPct": "위험물 피해 감소(%). 100이면 무효",
+    "steerSpeedPct": "좌우 스와이프 루어 조종 속도 증가(%)",
+    "reelSpeedPct": "끌어올리기(릴 감기) 속도 증가(%)",
+    "diveSpeedPct": "잠수 중 이동 속도 증가(%)",
+    "hookHitRadiusPct": "끌어올릴 때 바늘 판정 반경 증가(%)",
+    "maxDepthPct": "최대 캐스팅 수심 증가(%)",
+    "bonusCatchChancePct": "끌어올릴 때 같은 스크랩 1개 추가 획득 확률(%). 레전드 이상 낚싯대만 보유",
+    "diveEveryCastsBonus": "잠수 진입 주기 단축(캐스트). 기본 3캐스트마다 → 1이면 2캐스트마다. 레전드 이상 피셔만 보유"
+  },
+  "machines": [
+    {
+      "id": "lure",
+      "nameKo": "루어 머신",
+      "nameEn": "LURE VENDOR",
+      "slot": "Lure",
+      "pricePerPull": 1.0,
+      "pityLegendAt": 100,
+      "bannerCopy": "가부키초 뒷골목 미끼 자판기",
+      "items": {
+        "Normal": [
+          {
+            "id": "lure_normal_01",
+            "nameKo": "캔커피 지그",
+            "nameEn": "Can Coffee Jig",
+            "desc": "자판기 옆에서 주운 빈 캔을 접은 미끼.",
+            "sprite": "Gear/Lure/lure_normal_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 0,
+              "magnetRadiusPct": 2,
+              "rareChancePct": 0,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_normal_02",
+            "nameKo": "편의점 비닐 스푼",
+            "nameEn": "Konbini Bag Spoon",
+            "desc": "봉투 손잡이를 꼬아 만든 스푼.",
+            "sprite": "Gear/Lure/lure_normal_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 0,
+              "magnetRadiusPct": 3,
+              "rareChancePct": 0,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_normal_03",
+            "nameKo": "파칭코 구슬 싱커",
+            "nameEn": "Pachinko Ball Sinker",
+            "desc": "은색 구슬 세 알을 묶은 추.",
+            "sprite": "Gear/Lure/lure_normal_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 0,
+              "magnetRadiusPct": 4,
+              "rareChancePct": 0,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_normal_04",
+            "nameKo": "전단지 플라이",
+            "nameEn": "Flyer Fly",
+            "desc": "젖은 클럽 전단지로 감은 플라이.",
+            "sprite": "Gear/Lure/lure_normal_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 0,
+              "magnetRadiusPct": 5,
+              "rareChancePct": 0,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_normal_05",
+            "nameKo": "녹슨 볼트 루어",
+            "nameEn": "Rusty Bolt Lure",
+            "desc": "고가도로에서 떨어진 볼트 하나.",
+            "sprite": "Gear/Lure/lure_normal_05",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 0,
+              "magnetRadiusPct": 6,
+              "rareChancePct": 0,
+              "spawnCapBonus": 0
+            }
+          }
+        ],
+        "Rare": [
+          {
+            "id": "lure_rare_01",
+            "nameKo": "네온 사쿠라 미노우",
+            "nameEn": "Neon Sakura Minnow",
+            "desc": "분홍 LED 꽃잎이 깜빡이는 미노우.",
+            "sprite": "Gear/Lure/lure_rare_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 1,
+              "magnetRadiusPct": 8,
+              "rareChancePct": 1,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_rare_02",
+            "nameKo": "가부키초 LED 스피너",
+            "nameEn": "Kabukicho LED Spinner",
+            "desc": "간판 조각을 갈아 만든 회전 날개.",
+            "sprite": "Gear/Lure/lure_rare_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 1,
+              "magnetRadiusPct": 9,
+              "rareChancePct": 1,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_rare_03",
+            "nameKo": "홀로 킨교 루어",
+            "nameEn": "Holo Kingyo Lure",
+            "desc": "홀로그램 금붕어가 헤엄치는 루어.",
+            "sprite": "Gear/Lure/lure_rare_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 1,
+              "magnetRadiusPct": 10,
+              "rareChancePct": 2,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_rare_04",
+            "nameKo": "오니 마스크 크랭크",
+            "nameEn": "Oni Mask Crank",
+            "desc": "축제 가면을 깎은 크랭크베이트.",
+            "sprite": "Gear/Lure/lure_rare_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 1,
+              "magnetRadiusPct": 12,
+              "rareChancePct": 2,
+              "spawnCapBonus": 0
+            }
+          }
+        ],
+        "Epic": [
+          {
+            "id": "lure_epic_01",
+            "nameKo": "자이바츠 위성 미끼",
+            "nameEn": "Zaibatsu Sat-Bait",
+            "desc": "폐기된 위성 안테나가 신호를 끌어당긴다.",
+            "sprite": "Gear/Lure/lure_epic_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 2,
+              "magnetRadiusPct": 15,
+              "rareChancePct": 4,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_epic_02",
+            "nameKo": "카타나 블레이드 스푼",
+            "nameEn": "Katana Blade Spoon",
+            "desc": "단조 칼날 반사광으로 변이어를 홀린다.",
+            "sprite": "Gear/Lure/lure_epic_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 2,
+              "magnetRadiusPct": 16,
+              "rareChancePct": 5,
+              "spawnCapBonus": 0
+            }
+          },
+          {
+            "id": "lure_epic_03",
+            "nameKo": "류진 해킹 지그",
+            "nameEn": "Ryujin Hack Jig",
+            "desc": "수중 센서망을 해킹해 먹잇감을 모은다.",
+            "sprite": "Gear/Lure/lure_epic_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 2,
+              "magnetRadiusPct": 18,
+              "rareChancePct": 6,
+              "spawnCapBonus": 0
+            }
+          }
+        ],
+        "Legend": [
+          {
+            "id": "lure_legend_01",
+            "nameKo": "야마타 8연 멀티훅",
+            "nameEn": "Yamata Octo-Hook",
+            "desc": "여덟 갈래 훅이 한 번에 더 많은 스크랩을 부른다.",
+            "sprite": "Gear/Lure/lure_legend_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 3,
+              "magnetRadiusPct": 22,
+              "rareChancePct": 9,
+              "spawnCapBonus": 2
+            }
+          },
+          {
+            "id": "lure_legend_02",
+            "nameKo": "츠쿠요미 월광 루어",
+            "nameEn": "Tsukuyomi Moonlight Lure",
+            "desc": "달빛 펄스가 심해 무리를 끌어올린다.",
+            "sprite": "Gear/Lure/lure_legend_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 3,
+              "magnetRadiusPct": 25,
+              "rareChancePct": 10,
+              "spawnCapBonus": 2
+            }
+          }
+        ],
+        "Synchro": [
+          {
+            "id": "lure_synchro_01",
+            "nameKo": "아마테라스 싱크로 코어",
+            "nameEn": "Amaterasu Synchro Core",
+            "desc": "만(灣) 전체의 신호와 동기화되는 결정체 미끼.",
+            "sprite": "Gear/Lure/lure_synchro_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "lureCapacity": 4,
+              "magnetRadiusPct": 35,
+              "rareChancePct": 18,
+              "spawnCapBonus": 4
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "rod",
+      "nameKo": "낚싯대 머신",
+      "nameEn": "ROD FORGE",
+      "slot": "Rod",
+      "pricePerPull": 1.0,
+      "pityLegendAt": 100,
+      "bannerCopy": "아메요코 시장 뒷골목 낚싯대 대장간",
+      "items": {
+        "Normal": [
+          {
+            "id": "rod_normal_01",
+            "nameKo": "빨래 장대 낚싯대",
+            "nameEn": "Laundry Pole Rod",
+            "desc": "베란다 대나무 빨래 장대에 줄을 묶었다.",
+            "sprite": "Gear/Rod/rod_normal_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 2,
+              "maxDepthPct": 0,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_normal_02",
+            "nameKo": "비닐우산 낚싯대",
+            "nameEn": "Umbrella Rod",
+            "desc": "살 하나만 남은 비닐우산 손잡이 낚싯대.",
+            "sprite": "Gear/Rod/rod_normal_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 3,
+              "maxDepthPct": 0,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_normal_03",
+            "nameKo": "셀카봉 낚싯대",
+            "nameEn": "Selfie Stick Rod",
+            "desc": "관광객이 버린 셀카봉을 늘렸다.",
+            "sprite": "Gear/Rod/rod_normal_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 4,
+              "maxDepthPct": 0,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_normal_04",
+            "nameKo": "자동차 안테나 낚싯대",
+            "nameEn": "Car Antenna Rod",
+            "desc": "폐차장에서 뽑아 온 접이식 안테나.",
+            "sprite": "Gear/Rod/rod_normal_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 5,
+              "maxDepthPct": 0,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_normal_05",
+            "nameKo": "휘어진 배관 낚싯대",
+            "nameEn": "Bent Pipe Rod",
+            "desc": "하수관 파이프를 두드려 폈다.",
+            "sprite": "Gear/Rod/rod_normal_05",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 6,
+              "maxDepthPct": 0,
+              "bonusCatchChancePct": 0
+            }
+          }
+        ],
+        "Rare": [
+          {
+            "id": "rod_rare_01",
+            "nameKo": "네온관 낚싯대",
+            "nameEn": "Neon Tube Rod",
+            "desc": "깨진 네온관 안에 LED를 채워 넣었다.",
+            "sprite": "Gear/Rod/rod_rare_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 8,
+              "maxDepthPct": 3,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_rare_02",
+            "nameKo": "접이식 출근 로드",
+            "nameEn": "Folding Commuter Rod",
+            "desc": "서류 가방에 들어가는 3단 접이식 로드.",
+            "sprite": "Gear/Rod/rod_rare_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 9,
+              "maxDepthPct": 4,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_rare_03",
+            "nameKo": "판토그래프 로드",
+            "nameEn": "Pantograph Rod",
+            "desc": "전철 집전 장치를 개조한 탄성 로드.",
+            "sprite": "Gear/Rod/rod_rare_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 10,
+              "maxDepthPct": 5,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_rare_04",
+            "nameKo": "홀로 사쿠라 로드",
+            "nameEn": "Holo Sakura Rod",
+            "desc": "홀로그램 벚꽃잎이 줄을 따라 흩날린다.",
+            "sprite": "Gear/Rod/rod_rare_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 12,
+              "maxDepthPct": 6,
+              "bonusCatchChancePct": 0
+            }
+          }
+        ],
+        "Epic": [
+          {
+            "id": "rod_epic_01",
+            "nameKo": "시키가미 부적 로드",
+            "nameEn": "Shikigami Talisman Rod",
+            "desc": "부적을 감은 대로 스크랩을 홀린다.",
+            "sprite": "Gear/Rod/rod_epic_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 15,
+              "maxDepthPct": 8,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_epic_02",
+            "nameKo": "무라마사 블레이드 로드",
+            "nameEn": "Muramasa Blade Rod",
+            "desc": "요도 칼날을 깎아 만든 낚싯대.",
+            "sprite": "Gear/Rod/rod_epic_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 18,
+              "maxDepthPct": 10,
+              "bonusCatchChancePct": 0
+            }
+          },
+          {
+            "id": "rod_epic_03",
+            "nameKo": "자이바츠 레일건 로드",
+            "nameEn": "Zaibatsu Railgun Rod",
+            "desc": "전자기 레일로 바늘을 깊이 쏘아 보낸다.",
+            "sprite": "Gear/Rod/rod_epic_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 20,
+              "maxDepthPct": 12,
+              "bonusCatchChancePct": 0
+            }
+          }
+        ],
+        "Legend": [
+          {
+            "id": "rod_legend_01",
+            "nameKo": "뇌신 번개 로드",
+            "nameEn": "Raijin Thunder Rod",
+            "desc": "번개가 줄을 타고 내려가 주변 스크랩까지 끌어온다.",
+            "sprite": "Gear/Rod/rod_legend_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 25,
+              "maxDepthPct": 15,
+              "bonusCatchChancePct": 8
+            }
+          },
+          {
+            "id": "rod_legend_02",
+            "nameKo": "스사노오 해신 작살",
+            "nameEn": "Susanoo Sea-God Harpoon",
+            "desc": "폭풍의 신이 쓰던 작살형 낚싯대.",
+            "sprite": "Gear/Rod/rod_legend_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 28,
+              "maxDepthPct": 18,
+              "bonusCatchChancePct": 10
+            }
+          }
+        ],
+        "Synchro": [
+          {
+            "id": "rod_synchro_01",
+            "nameKo": "아메노누보코 싱크로 로드",
+            "nameEn": "Ame-no-Nuboko Synchro Rod",
+            "desc": "바다를 휘저어 섬을 만든 신화의 창과 동기화된 결정 로드.",
+            "sprite": "Gear/Rod/rod_synchro_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "hookHitRadiusPct": 40,
+              "maxDepthPct": 25,
+              "bonusCatchChancePct": 20
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "boat",
+      "nameKo": "보트 머신",
+      "nameEn": "DOCK BROKER",
+      "slot": "Boat",
+      "pricePerPull": 1.5,
+      "pityLegendAt": 100,
+      "bannerCopy": "오다이바 폐부두 중고선 브로커",
+      "items": {
+        "Normal": [
+          {
+            "id": "boat_normal_01",
+            "nameKo": "폐타이어 뗏목",
+            "nameEn": "Tire Raft",
+            "desc": "타이어 여섯 개를 묶은 뗏목.",
+            "sprite": "Gear/Boat/boat_normal_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 1,
+              "gaugeSpeedPct": 0,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_normal_02",
+            "nameKo": "스티로폼 바지선",
+            "nameEn": "Styro Barge",
+            "desc": "생선 상자를 이어 붙인 바지선.",
+            "sprite": "Gear/Boat/boat_normal_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 1,
+              "gaugeSpeedPct": 0,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_normal_03",
+            "nameKo": "우산 돛 카누",
+            "nameEn": "Umbrella Sail Canoe",
+            "desc": "비닐우산 돛이 바람을 조금 받는다.",
+            "sprite": "Gear/Boat/boat_normal_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 2,
+              "gaugeSpeedPct": 0,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_normal_04",
+            "nameKo": "자판기 개조 보트",
+            "nameEn": "Vending Hull Boat",
+            "desc": "뒤집은 자판기에 모터를 달았다.",
+            "sprite": "Gear/Boat/boat_normal_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 2,
+              "gaugeSpeedPct": 0,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_normal_05",
+            "nameKo": "택배 컨테이너 부선",
+            "nameEn": "Parcel Pontoon",
+            "desc": "택배 컨테이너 두 개를 띄운 부선.",
+            "sprite": "Gear/Boat/boat_normal_05",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 3,
+              "gaugeSpeedPct": 0,
+              "runBonusPct": 0
+            }
+          }
+        ],
+        "Rare": [
+          {
+            "id": "boat_rare_01",
+            "nameKo": "야타이 포장마차선",
+            "nameEn": "Yatai Food Barge",
+            "desc": "라멘 노점 겸 선상 거래소.",
+            "sprite": "Gear/Boat/boat_rare_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 4,
+              "gaugeSpeedPct": -5,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_rare_02",
+            "nameKo": "캡슐호텔 하우스보트",
+            "nameEn": "Capsule Houseboat",
+            "desc": "캡슐 객실을 매물 창고로 쓴다.",
+            "sprite": "Gear/Boat/boat_rare_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 5,
+              "gaugeSpeedPct": -5,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_rare_03",
+            "nameKo": "시부야 교차로 페리",
+            "nameEn": "Shibuya Crossing Ferry",
+            "desc": "전광판이 매물 시세를 띄운다.",
+            "sprite": "Gear/Boat/boat_rare_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 5,
+              "gaugeSpeedPct": -6,
+              "runBonusPct": 0
+            }
+          },
+          {
+            "id": "boat_rare_04",
+            "nameKo": "네온 간판 바지선",
+            "nameEn": "Neon Sign Barge",
+            "desc": "간판 불빛에 암시장 상인이 모인다.",
+            "sprite": "Gear/Boat/boat_rare_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 6,
+              "gaugeSpeedPct": -8,
+              "runBonusPct": 0
+            }
+          }
+        ],
+        "Epic": [
+          {
+            "id": "boat_epic_01",
+            "nameKo": "아키하바라 서버선",
+            "nameEn": "Akiba Server Ship",
+            "desc": "선상 서버가 실시간 시세를 긁어 온다.",
+            "sprite": "Gear/Boat/boat_epic_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 8,
+              "gaugeSpeedPct": -10,
+              "runBonusPct": 2
+            }
+          },
+          {
+            "id": "boat_epic_02",
+            "nameKo": "야쿠자 밀수 쾌속선",
+            "nameEn": "Yakuza Runner",
+            "desc": "단골 장물아비 연줄이 딸려 온다.",
+            "sprite": "Gear/Boat/boat_epic_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 9,
+              "gaugeSpeedPct": -11,
+              "runBonusPct": 3
+            }
+          },
+          {
+            "id": "boat_epic_03",
+            "nameKo": "신칸센 폐차 쾌속정",
+            "nameEn": "Shinkansen Hull Racer",
+            "desc": "유선형 선체로 수심 조준이 안정된다.",
+            "sprite": "Gear/Boat/boat_epic_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 10,
+              "gaugeSpeedPct": -12,
+              "runBonusPct": 3
+            }
+          }
+        ],
+        "Legend": [
+          {
+            "id": "boat_legend_01",
+            "nameKo": "부유 신사선 '토리이'",
+            "nameEn": "Floating Shrine 'Torii'",
+            "desc": "붉은 도리이 아래에서는 값이 더 붙는다.",
+            "sprite": "Gear/Boat/boat_legend_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 13,
+              "gaugeSpeedPct": -15,
+              "runBonusPct": 6
+            }
+          },
+          {
+            "id": "boat_legend_02",
+            "nameKo": "자이바츠 기함 '쇼군'",
+            "nameEn": "Zaibatsu Flagship 'Shogun'",
+            "desc": "기업 기함을 통째로 훔쳐 왔다.",
+            "sprite": "Gear/Boat/boat_legend_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 15,
+              "gaugeSpeedPct": -15,
+              "runBonusPct": 8
+            }
+          }
+        ],
+        "Synchro": [
+          {
+            "id": "boat_synchro_01",
+            "nameKo": "네오도쿄 아크 '타카마가하라'",
+            "nameEn": "Neo-Tokyo Ark 'Takamagahara'",
+            "desc": "만 위에 뜬 천상의 방주. 모든 거래가 이 배를 거친다.",
+            "sprite": "Gear/Boat/boat_synchro_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "sellPricePct": 22,
+              "gaugeSpeedPct": -20,
+              "runBonusPct": 15
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "drone",
+      "nameKo": "드론 머신",
+      "nameEn": "DRONE CRANE",
+      "slot": "Drone",
+      "pricePerPull": 1.5,
+      "pityLegendAt": 100,
+      "bannerCopy": "아키하바라 정크 드론 크레인",
+      "items": {
+        "Normal": [
+          {
+            "id": "drone_normal_01",
+            "nameKo": "택배 드론 잔해",
+            "nameEn": "Courier Drone Scrap",
+            "desc": "프로펠러 하나가 없다.",
+            "sprite": "Gear/Drone/drone_normal_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 3,
+              "autoCollectSec": 0,
+              "hazardWarning": 0,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_normal_02",
+            "nameKo": "광고 전광판 드론",
+            "nameEn": "Ad Blimp Drone",
+            "desc": "잠수 중에도 광고를 튼다.",
+            "sprite": "Gear/Drone/drone_normal_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 3,
+              "autoCollectSec": 0,
+              "hazardWarning": 0,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_normal_03",
+            "nameKo": "파파라치 드론",
+            "nameEn": "Paparazzi Drone",
+            "desc": "플래시만 요란하다.",
+            "sprite": "Gear/Drone/drone_normal_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 4,
+              "autoCollectSec": 0,
+              "hazardWarning": 0,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_normal_04",
+            "nameKo": "장난감 펫 드론",
+            "nameEn": "Toy Pet Drone",
+            "desc": "다마고치처럼 밥을 달라고 운다.",
+            "sprite": "Gear/Drone/drone_normal_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 5,
+              "autoCollectSec": 0,
+              "hazardWarning": 0,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_normal_05",
+            "nameKo": "고장난 순찰 드론",
+            "nameEn": "Busted Patrol Drone",
+            "desc": "경고음이 고장 나 조용하다.",
+            "sprite": "Gear/Drone/drone_normal_05",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 6,
+              "autoCollectSec": 0,
+              "hazardWarning": 0,
+              "hazardBlock": 0
+            }
+          }
+        ],
+        "Rare": [
+          {
+            "id": "drone_rare_01",
+            "nameKo": "카라스 정찰기",
+            "nameEn": "Karasu Scout",
+            "desc": "까마귀형 정찰기가 위험물을 먼저 본다.",
+            "sprite": "Gear/Drone/drone_rare_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 10,
+              "autoCollectSec": 0,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_rare_02",
+            "nameKo": "마네키네코 회수 드론",
+            "nameEn": "Maneki Retriever",
+            "desc": "앞발을 흔들어 스크랩을 손짓한다.",
+            "sprite": "Gear/Drone/drone_rare_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 11,
+              "autoCollectSec": 0,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_rare_03",
+            "nameKo": "코이 수중 드론",
+            "nameEn": "Koi Sub Drone",
+            "desc": "비단잉어 꼬리로 물살을 가른다.",
+            "sprite": "Gear/Drone/drone_rare_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 12,
+              "autoCollectSec": 0,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_rare_04",
+            "nameKo": "닌자 스텔스 드론",
+            "nameEn": "Shinobi Stealth Drone",
+            "desc": "광학 위장으로 위험물 사이를 누빈다.",
+            "sprite": "Gear/Drone/drone_rare_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 14,
+              "autoCollectSec": 0,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          }
+        ],
+        "Epic": [
+          {
+            "id": "drone_epic_01",
+            "nameKo": "하치 군집 드론",
+            "nameEn": "Hachi Swarm",
+            "desc": "벌떼형 소형 드론이 주변을 쓸어 담는다.",
+            "sprite": "Gear/Drone/drone_epic_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 18,
+              "autoCollectSec": 12,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_epic_02",
+            "nameKo": "시키가미 종이학 드론",
+            "nameEn": "Shikigami Crane",
+            "desc": "부적 종이학이 스크랩을 물어 온다.",
+            "sprite": "Gear/Drone/drone_epic_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 20,
+              "autoCollectSec": 11,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          },
+          {
+            "id": "drone_epic_03",
+            "nameKo": "텐구 강습 드론",
+            "nameEn": "Tengu Raider",
+            "desc": "긴 코 집게로 낚아챈다.",
+            "sprite": "Gear/Drone/drone_epic_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 22,
+              "autoCollectSec": 10,
+              "hazardWarning": 1,
+              "hazardBlock": 0
+            }
+          }
+        ],
+        "Legend": [
+          {
+            "id": "drone_legend_01",
+            "nameKo": "후진 뇌신 드론",
+            "nameEn": "Fujin-Raijin Drone",
+            "desc": "북을 울려 위험물을 한 번 튕겨 낸다.",
+            "sprite": "Gear/Drone/drone_legend_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 28,
+              "autoCollectSec": 8,
+              "hazardWarning": 1,
+              "hazardBlock": 1
+            }
+          },
+          {
+            "id": "drone_legend_02",
+            "nameKo": "키츠네 9미 군집기",
+            "nameEn": "Kitsune Ninefold",
+            "desc": "아홉 꼬리 드론이 사방에서 회수한다.",
+            "sprite": "Gear/Drone/drone_legend_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 30,
+              "autoCollectSec": 7,
+              "hazardWarning": 1,
+              "hazardBlock": 1
+            }
+          }
+        ],
+        "Synchro": [
+          {
+            "id": "drone_synchro_01",
+            "nameKo": "츠쿠요미 싱크로 오비탈",
+            "nameEn": "Tsukuyomi Synchro Orbital",
+            "desc": "궤도 위성과 동기화된 결정체 드론.",
+            "sprite": "Gear/Drone/drone_synchro_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "magnetRadiusPct": 40,
+              "autoCollectSec": 4,
+              "hazardWarning": 1,
+              "hazardBlock": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "fisher",
+      "nameKo": "피셔 머신",
+      "nameEn": "FISHER LOUNGE",
+      "slot": "Fisher",
+      "pricePerPull": 1.5,
+      "pityLegendAt": 100,
+      "bannerCopy": "골든가이 뒷골목 낚시꾼 인력소",
+      "items": {
+        "Normal": [
+          {
+            "id": "fisher_normal_01",
+            "nameKo": "편의점 야간 알바 '켄'",
+            "nameEn": "Night-Shift Ken",
+            "desc": "유니폼 위에 구명조끼만 걸쳤다.",
+            "sprite": "Gear/Fisher/fisher_normal_01",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 2,
+              "reelSpeedPct": 0,
+              "diveSpeedPct": 0,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_normal_02",
+            "nameKo": "다리 밑 '겐 씨'",
+            "nameEn": "Gen Under the Bridge",
+            "desc": "고가도로 밑에서 30년째 낚시 중.",
+            "sprite": "Gear/Fisher/fisher_normal_02",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 0,
+              "reelSpeedPct": 2,
+              "diveSpeedPct": 0,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_normal_03",
+            "nameKo": "일용직 해체공 '타로'",
+            "nameEn": "Day-Labor Taro",
+            "desc": "헬멧에 낚싯줄을 감고 다닌다.",
+            "sprite": "Gear/Fisher/fisher_normal_03",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 0,
+              "reelSpeedPct": 0,
+              "diveSpeedPct": 3,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_normal_04",
+            "nameKo": "은퇴 어부 '하루 할배'",
+            "nameEn": "Grandpa Haru",
+            "desc": "바다가 썩기 전을 기억하는 마지막 세대.",
+            "sprite": "Gear/Fisher/fisher_normal_04",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 2,
+              "reelSpeedPct": 2,
+              "diveSpeedPct": 0,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_normal_05",
+            "nameKo": "파칭코 폐인 '긴지'",
+            "nameEn": "Pachinko Ginji",
+            "desc": "잃은 돈을 바다에서 건지려 한다.",
+            "sprite": "Gear/Fisher/fisher_normal_05",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 1,
+              "reelSpeedPct": 1,
+              "diveSpeedPct": 1,
+              "diveEveryCastsBonus": 0
+            }
+          }
+        ],
+        "Rare": [
+          {
+            "id": "fisher_rare_01",
+            "nameKo": "하라주쿠 스트리머 '미쿠루'",
+            "nameEn": "Streamer Mikuru",
+            "desc": "낚시 생방송 구독자 3만 명.",
+            "sprite": "Gear/Fisher/fisher_rare_01",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 8,
+              "reelSpeedPct": 4,
+              "diveSpeedPct": 0,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_rare_02",
+            "nameKo": "야타이 라멘 사장 '다이'",
+            "nameEn": "Ramen Boss Dai",
+            "desc": "육수 재료는 직접 낚는다.",
+            "sprite": "Gear/Fisher/fisher_rare_02",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 4,
+              "reelSpeedPct": 8,
+              "diveSpeedPct": 0,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_rare_03",
+            "nameKo": "전직 샐러리맨 '부장'",
+            "nameEn": "Ex-Manager Bucho",
+            "desc": "정리해고 후 바다로 출근한다.",
+            "sprite": "Gear/Fisher/fisher_rare_03",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 5,
+              "reelSpeedPct": 5,
+              "diveSpeedPct": 4,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_rare_04",
+            "nameKo": "바이크 택배 라이더 '소라'",
+            "nameEn": "Courier Sora",
+            "desc": "배송 루트를 수로까지 넓혔다.",
+            "sprite": "Gear/Fisher/fisher_rare_04",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 4,
+              "reelSpeedPct": 4,
+              "diveSpeedPct": 8,
+              "diveEveryCastsBonus": 0
+            }
+          }
+        ],
+        "Epic": [
+          {
+            "id": "fisher_epic_01",
+            "nameKo": "사이보그 해녀 '아마네'",
+            "nameEn": "Cyborg Ama Amane",
+            "desc": "의수 지느러미로 심해를 가른다.",
+            "sprite": "Gear/Fisher/fisher_epic_01",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 8,
+              "reelSpeedPct": 8,
+              "diveSpeedPct": 18,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_epic_02",
+            "nameKo": "떠돌이 로닌 '무사시'",
+            "nameEn": "Ronin Musashi",
+            "desc": "낚싯대를 칼처럼 휘두른다.",
+            "sprite": "Gear/Fisher/fisher_epic_02",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 18,
+              "reelSpeedPct": 10,
+              "diveSpeedPct": 6,
+              "diveEveryCastsBonus": 0
+            }
+          },
+          {
+            "id": "fisher_epic_03",
+            "nameKo": "넷러너 '제로'",
+            "nameEn": "Netrunner Zero",
+            "desc": "수중 센서를 해킹해 손맛을 미리 안다.",
+            "sprite": "Gear/Fisher/fisher_epic_03",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 12,
+              "reelSpeedPct": 16,
+              "diveSpeedPct": 8,
+              "diveEveryCastsBonus": 0
+            }
+          }
+        ],
+        "Legend": [
+          {
+            "id": "fisher_legend_01",
+            "nameKo": "바다 요괴 사냥꾼 '우미보즈'",
+            "nameEn": "Umibozu Hunter",
+            "desc": "거대 요괴를 낚았다는 전설의 어부.",
+            "sprite": "Gear/Fisher/fisher_legend_01",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 20,
+              "reelSpeedPct": 20,
+              "diveSpeedPct": 15,
+              "diveEveryCastsBonus": 1
+            }
+          },
+          {
+            "id": "fisher_legend_02",
+            "nameKo": "용궁 무녀 '오토히메'",
+            "nameEn": "Shrine Maiden Otohime",
+            "desc": "용궁의 길을 아는 무녀. 바다가 길을 연다.",
+            "sprite": "Gear/Fisher/fisher_legend_02",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 15,
+              "reelSpeedPct": 18,
+              "diveSpeedPct": 25,
+              "diveEveryCastsBonus": 1
+            }
+          }
+        ],
+        "Synchro": [
+          {
+            "id": "fisher_synchro_01",
+            "nameKo": "각성 노마드 · 싱크로",
+            "nameEn": "Nomad Synchro Awakened",
+            "desc": "우버클래스와 동기화한 해체업자 노마드의 각성 형태.",
+            "sprite": "Gear/Fisher/fisher_synchro_01",
+            "spriteSize": [
+              256,
+              256
+            ],
+            "effects": {
+              "steerSpeedPct": 30,
+              "reelSpeedPct": 30,
+              "diveSpeedPct": 35,
+              "diveEveryCastsBonus": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "helmet",
+      "nameKo": "헬멧 머신",
+      "nameEn": "HELMET WORKSHOP",
+      "slot": "Helmet",
+      "pricePerPull": 1.0,
+      "pityLegendAt": 100,
+      "bannerCopy": "츠키지 수산시장 뒤편 잠수 헬멧 공방",
+      "items": {
+        "Normal": [
+          {
+            "id": "helmet_normal_01",
+            "nameKo": "양동이 헬멧",
+            "nameEn": "Bucket Helmet",
+            "desc": "편의점 양동이에 비닐 창을 붙였다.",
+            "sprite": "Gear/Helmet/helmet_normal_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 3,
+              "hazardDamageReductionPct": 0
+            }
+          },
+          {
+            "id": "helmet_normal_02",
+            "nameKo": "페트병 스노클 마스크",
+            "nameEn": "PET Bottle Snorkel",
+            "desc": "페트병 두 개를 이어 숨구멍을 만들었다.",
+            "sprite": "Gear/Helmet/helmet_normal_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 4,
+              "hazardDamageReductionPct": 0
+            }
+          },
+          {
+            "id": "helmet_normal_03",
+            "nameKo": "공사장 안전모 잠수경",
+            "nameEn": "Hard Hat Goggles",
+            "desc": "안전모에 물안경을 테이프로 감았다.",
+            "sprite": "Gear/Helmet/helmet_normal_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 4,
+              "hazardDamageReductionPct": 0
+            }
+          },
+          {
+            "id": "helmet_normal_04",
+            "nameKo": "덕트 테이프 헬멧",
+            "nameEn": "Duct Tape Helmet",
+            "desc": "새는 틈마다 테이프를 겹겹이 붙였다.",
+            "sprite": "Gear/Helmet/helmet_normal_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 5,
+              "hazardDamageReductionPct": 0
+            }
+          },
+          {
+            "id": "helmet_normal_05",
+            "nameKo": "중고 스쿠버 마스크",
+            "nameEn": "Used Scuba Mask",
+            "desc": "전 주인의 이름 스티커가 그대로다.",
+            "sprite": "Gear/Helmet/helmet_normal_05",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 6,
+              "hazardDamageReductionPct": 0
+            }
+          }
+        ],
+        "Rare": [
+          {
+            "id": "helmet_rare_01",
+            "nameKo": "하라주쿠 네온 바이저",
+            "nameEn": "Harajuku Neon Visor",
+            "desc": "형광 바이저가 탁한 물속을 비춘다.",
+            "sprite": "Gear/Helmet/helmet_rare_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 10,
+              "hazardDamageReductionPct": 10
+            }
+          },
+          {
+            "id": "helmet_rare_02",
+            "nameKo": "통근 방독 헬멧",
+            "nameEn": "Commuter Gas Helmet",
+            "desc": "출근길 스모그용 방독면을 잠수용으로 개조했다.",
+            "sprite": "Gear/Helmet/helmet_rare_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 11,
+              "hazardDamageReductionPct": 12
+            }
+          },
+          {
+            "id": "helmet_rare_03",
+            "nameKo": "나노 코팅 돔",
+            "nameEn": "Nano-Coat Dome",
+            "desc": "나노 코팅 유리 돔이 폐수를 튕겨 낸다.",
+            "sprite": "Gear/Helmet/helmet_rare_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 12,
+              "hazardDamageReductionPct": 14
+            }
+          },
+          {
+            "id": "helmet_rare_04",
+            "nameKo": "캇파 접시 헬멧",
+            "nameEn": "Kappa Dish Helmet",
+            "desc": "정수리 접시에 물을 담아 산소를 걸러 낸다.",
+            "sprite": "Gear/Helmet/helmet_rare_04",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 14,
+              "hazardDamageReductionPct": 15
+            }
+          }
+        ],
+        "Epic": [
+          {
+            "id": "helmet_epic_01",
+            "nameKo": "류구 황동 잠수 헬멧",
+            "nameEn": "Ryugu Brass Helmet",
+            "desc": "용궁 탐사용 황동 가압 헬멧.",
+            "sprite": "Gear/Helmet/helmet_epic_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 20,
+              "hazardDamageReductionPct": 30
+            }
+          },
+          {
+            "id": "helmet_epic_02",
+            "nameKo": "시노비 사이버 마스크",
+            "nameEn": "Shinobi Cyber Mask",
+            "desc": "인공 호흡 필터가 산소 소모를 줄인다.",
+            "sprite": "Gear/Helmet/helmet_epic_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 22,
+              "hazardDamageReductionPct": 35
+            }
+          },
+          {
+            "id": "helmet_epic_03",
+            "nameKo": "신젠 기업 잠수 헬멧",
+            "nameEn": "Shinzen Corp Dive Helmet",
+            "desc": "신젠 로고를 긁어낸 사내 장비.",
+            "sprite": "Gear/Helmet/helmet_epic_03",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 24,
+              "hazardDamageReductionPct": 40
+            }
+          }
+        ],
+        "Legend": [
+          {
+            "id": "helmet_legend_01",
+            "nameKo": "류진 비늘 투구",
+            "nameEn": "Ryujin Scale Kabuto",
+            "desc": "용 비늘 투구가 독성 폐수를 막는다.",
+            "sprite": "Gear/Helmet/helmet_legend_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 32,
+              "hazardDamageReductionPct": 60
+            }
+          },
+          {
+            "id": "helmet_legend_02",
+            "nameKo": "오니 강화 헬멧",
+            "nameEn": "Oni Pressure Helmet",
+            "desc": "도깨비 뿔 센서가 심해 압력을 견딘다.",
+            "sprite": "Gear/Helmet/helmet_legend_02",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 35,
+              "hazardDamageReductionPct": 70
+            }
+          }
+        ],
+        "Synchro": [
+          {
+            "id": "helmet_synchro_01",
+            "nameKo": "후지 코어 싱크로 헬멧",
+            "nameEn": "Fuji Core Synchro Helmet",
+            "desc": "후지산 지열 코어와 동기화된 결정 헬멧.",
+            "sprite": "Gear/Helmet/helmet_synchro_01",
+            "spriteSize": [
+              128,
+              128
+            ],
+            "effects": {
+              "oxygenPct": 50,
+              "hazardDamageReductionPct": 100
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

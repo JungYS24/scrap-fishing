@@ -1,6 +1,7 @@
 using ScrapFishing.Audio;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 using ScrapFishing.Dive;
 using ScrapFishing.Fishing;
 using ScrapFishing.FX;
@@ -33,6 +34,9 @@ namespace ScrapFishing.Boat
         BoatCanvas _canvasUi;
         GachaShopView _market;
         SettingsView _settingsView;
+        SpriteRenderer _nomad;
+
+        const float FisherTintStrength = 0.55f;
 
         void Awake()
         {
@@ -64,6 +68,13 @@ namespace ScrapFishing.Boat
             _canvasUi.SetReadyVisible(true);
             _results.Hide();
             RefreshHud();
+            GearBonuses.Changed += ApplyFisherTint;
+            ApplyFisherTint();
+        }
+
+        void OnDestroy()
+        {
+            GearBonuses.Changed -= ApplyFisherTint;
         }
 
         void Update()
@@ -169,6 +180,30 @@ namespace ScrapFishing.Boat
 
             _dive = gameObject.AddComponent<DiveDirector>();
             _dive.Finished += HandleDiveFinished;
+        }
+
+        // 피셔 장비를 장착하면 보트 위 노마드에 등급 색을 입힌다. 피셔 아트가 들어오면 스프라이트 교체로 바꾼다.
+        void ApplyFisherTint()
+        {
+            if (_nomad == null)
+            {
+                var go = GameObject.Find("Nomad");
+                _nomad = go != null ? go.GetComponent<SpriteRenderer>() : null;
+                if (_nomad == null)
+                {
+                    return;
+                }
+            }
+
+            var fisher = GearBonuses.Equipped(GearSlot.Fisher);
+            if (fisher == null)
+            {
+                _nomad.color = Color.white;
+                return;
+            }
+
+            var tint = fisher.Rarity == ItemRarity.Synchro ? RarityGlow.SynchroColors[1] : GachaUi.RarityColor(fisher.Rarity);
+            _nomad.color = Color.Lerp(Color.white, tint, FisherTintStrength);
         }
 
         void BuildSurface()
@@ -348,7 +383,7 @@ namespace ScrapFishing.Boat
             _session.StartRun();
             _spawner.ResetRun();
             _hud.NotifyRunReset();
-            _gauge.SetMaxDepth(Progression.MaxDepth);
+            _gauge.SetMaxDepth(GearBonuses.MaxDepth(Progression.MaxDepth));
             _title.SetVisible(false);
             _canvasUi.SetReadyVisible(false);
             _results.Hide();

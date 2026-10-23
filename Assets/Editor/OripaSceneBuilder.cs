@@ -13,6 +13,7 @@ namespace ScrapFishing.Build
     {
         const string ScenePath = "Assets/Scenes/Boat.unity";
         const int UiLayer = 5;
+        const string OripaPanelPath = "Assets/scrap_fishing_ui/panels/panel_oripa.png";
 
         [MenuItem("Scrap Fishing/Build Oripa UI")]
         public static void Build()
@@ -46,6 +47,57 @@ namespace ScrapFishing.Build
             EditorSceneManager.SaveScene(scene);
             Selection.activeGameObject = market.gameObject;
             Debug.Log("Oripa UI built: Title/" + oripa.name + " 연결, " + market.name);
+        }
+
+        // 타이틀 오리파 버튼의 패널 이미지를 panel_oripa로 바꾼다. 패널 자체 색을 그대로 보이게 틴트는 흰색으로 둔다.
+        [MenuItem("Scrap Fishing/Apply Oripa Button Panel")]
+        public static void ApplyOripaPanel()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return;
+            }
+
+            var sprite = LoadPanelSprite();
+            if (sprite == null)
+            {
+                Debug.LogError("패널 이미지를 찾지 못했습니다: " + OripaPanelPath);
+                return;
+            }
+
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var canvas = Object.FindFirstObjectByType<BoatCanvas>();
+            var title = canvas != null ? canvas.transform.Find("Title") as RectTransform : null;
+            var button = TitleView.FindOripaButton(title);
+            var image = button != null ? button.targetGraphic as Image : null;
+            if (image == null)
+            {
+                Debug.LogError("Title/OripaButton의 Image가 없습니다.");
+                return;
+            }
+
+            image.sprite = sprite;
+            image.type = Image.Type.Simple;
+            image.color = Color.white;
+            EditorUtility.SetDirty(image);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("OripaButton 패널 교체: " + sprite.name);
+        }
+
+        static Sprite LoadPanelSprite()
+        {
+            if (AssetImporter.GetAtPath(OripaPanelPath) is TextureImporter importer
+                && (importer.textureType != TextureImporterType.Sprite || importer.spriteImportMode != SpriteImportMode.Single))
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.mipmapEnabled = false;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(OripaPanelPath);
         }
 
         // 하이러키의 Title/OripaButton을 TitleView.oripaButton에 연결한다. 없을 때만 출항 버튼 아래에 같은 크기로 만든다.

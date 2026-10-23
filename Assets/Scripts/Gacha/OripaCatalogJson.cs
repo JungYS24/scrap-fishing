@@ -66,7 +66,7 @@ namespace ScrapFishing.Gacha
                     continue;
                 }
 
-                if (!Enum.TryParse(Text(machine, "slot"), out GearSlot slot))
+                if (!TrySlot(Text(machine, "slot"), out var slot))
                 {
                     Debug.LogWarning("알 수 없는 슬롯: " + Text(machine, "slot"));
                     continue;
@@ -131,8 +131,26 @@ namespace ScrapFishing.Gacha
 
             var gear = GearData.Create(Text(item, "id"), Text(item, "nameKo"), slot, rarity, effects.ToArray());
             var spritePath = Text(item, "sprite");
-            gear.SetDetails(Text(item, "desc"), refund, string.IsNullOrEmpty(spritePath) ? null : Resources.Load<Sprite>(spritePath));
+            gear.SetDetails(Text(item, "desc"), refund, LoadSprite(spritePath));
             return gear;
+        }
+
+        // Resources/Gear/... PNG. Multiple로 잘려 임포트된 경우(이름_0)도 찾는다. 없으면 null → 등급 색 사각형 + 슬롯 이름.
+        static Sprite LoadSprite(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return null;
+            }
+
+            var sprite = Resources.Load<Sprite>(path);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            var sprites = Resources.LoadAll<Sprite>(path);
+            return sprites != null && sprites.Length > 0 ? sprites[0] : null;
         }
 
         // magnetRadiusPct는 루어에서는 캐스팅 흡착 반경, 드론에서는 잠수 흡착 반경이다.
@@ -156,8 +174,23 @@ namespace ScrapFishing.Gacha
                 case "reelSpeedPct": stat = GearStat.ReelSpeedPercent; return true;
                 case "diveSpeedPct": stat = GearStat.DiveSpeedPercent; return true;
                 case "diveEveryCastsBonus": stat = GearStat.DiveEveryCastsBonus; return true;
+                case "hookHitRadiusPct": stat = GearStat.HookHitRadiusPercent; return true;
+                case "maxDepthPct": stat = GearStat.MaxDepthPercent; return true;
+                case "bonusCatchChancePct": stat = GearStat.BonusCatchChancePercent; return true;
                 default: stat = default; return false;
             }
+        }
+
+        // 예전 기획 데이터의 "Suit"는 헬멧 슬롯(같은 3번 칸)으로 읽는다.
+        static bool TrySlot(string id, out GearSlot slot)
+        {
+            if (id == "Suit")
+            {
+                slot = GearSlot.Helmet;
+                return true;
+            }
+
+            return Enum.TryParse(id, out slot) && Enum.IsDefined(typeof(GearSlot), slot);
         }
 
         static bool TryRarity(string id, out ItemRarity rarity)

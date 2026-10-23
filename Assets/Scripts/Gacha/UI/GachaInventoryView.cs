@@ -14,7 +14,7 @@ namespace ScrapFishing.Gacha
     {
         const float ConfirmWindow = 2f;
 
-        static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Suit };
+        static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Rod, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Helmet };
 
         sealed class Row
         {
@@ -61,10 +61,7 @@ namespace ScrapFishing.Gacha
             for (var i = 0; i < Tabs.Length; i++)
             {
                 var slot = Tabs[i];
-                var min = new Vector2(i / (float)Tabs.Length + 0.005f, 0f);
-                var max = new Vector2((i + 1) / (float)Tabs.Length - 0.005f, 1f);
-                _tabButtons[i] = GachaUi.MakeButton(tabs, "Tab" + i, slot.HasValue ? GachaUi.SlotLabel(slot.Value) : "전체", min, max, GachaUi.Muted, 22,
-                    () => SelectTab(slot));
+                _tabButtons[i] = GachaUi.SlotTab(tabs, i, Tabs.Length, slot, () => SelectTab(slot));
             }
 
             _list = GachaUi.Scroll(_root, "List", new Vector2(0.03f, 0.015f), new Vector2(0.97f, 0.58f), 6f, out _scroll);

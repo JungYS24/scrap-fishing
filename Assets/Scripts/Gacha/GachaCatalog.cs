@@ -74,6 +74,33 @@ namespace ScrapFishing.Gacha
             return gearId != null && _gears.TryGetValue(gearId, out var gear) ? gear : null;
         }
 
+        public GachaMachineData MachineForSlot(GearSlot slot)
+        {
+            for (var i = 0; i < _machines.Count; i++)
+            {
+                if (_machines[i].Slot == slot)
+                {
+                    return _machines[i];
+                }
+            }
+
+            return null;
+        }
+
+        // 카탈로그 안에서 그 등급 장비가 쓰는 환원 배수. 없으면 등급 기본값.
+        public float RefundMultiplier(ItemRarity rarity)
+        {
+            foreach (var gear in _gears.Values)
+            {
+                if (gear.Rarity == rarity)
+                {
+                    return gear.RefundMultiplier;
+                }
+            }
+
+            return GearData.DefaultRefundMultiplier(rarity);
+        }
+
         public GachaMachineData MachineOf(string gearId)
         {
             return gearId != null && _machineOfGear.TryGetValue(gearId, out var machine) ? machine : null;
@@ -97,7 +124,7 @@ namespace ScrapFishing.Gacha
         public const int LurePrice = 5000;
         public const int BoatPrice = 7500;
         public const int DronePrice = 7500;
-        public const int SuitPrice = 5000;
+        public const int HelmetPrice = 5000;
 
         public static GachaMachineData[] CreateMachines()
         {
@@ -140,16 +167,16 @@ namespace ScrapFishing.Gacha
                         new GearEffect(GearStat.DroneRadiusPercent, 40),
                         new GearEffect(GearStat.AutoCollectSeconds, 6),
                         new GearEffect(GearStat.HazardShield, 1))),
-                Machine("machine_suit", "수트 머신", GearSlot.Suit, SuitPrice,
-                    GearData.Create("suit_raincoat", "방수 우비", GearSlot.Suit, ItemRarity.Normal,
+                Machine("machine_helmet", "헬멧 머신", GearSlot.Helmet, HelmetPrice,
+                    GearData.Create("suit_raincoat", "방수 우비", GearSlot.Helmet, ItemRarity.Normal,
                         new GearEffect(GearStat.OxygenPercent, 10)),
-                    GearData.Create("suit_anticorrosion", "침식 방지 코팅", GearSlot.Suit, ItemRarity.Rare,
+                    GearData.Create("suit_anticorrosion", "침식 방지 코팅", GearSlot.Helmet, ItemRarity.Rare,
                         new GearEffect(GearStat.OxygenPercent, 20),
                         new GearEffect(GearStat.HazardDamageReductionPercent, 25)),
-                    GearData.Create("suit_cyber_diver", "사이버 잠수복", GearSlot.Suit, ItemRarity.Epic,
+                    GearData.Create("suit_cyber_diver", "사이버 잠수복", GearSlot.Helmet, ItemRarity.Epic,
                         new GearEffect(GearStat.OxygenPercent, 30),
                         new GearEffect(GearStat.HazardDamageReductionPercent, 50)),
-                    GearData.Create("suit_abyss_exo", "심연 엑소슈트", GearSlot.Suit, ItemRarity.Legend,
+                    GearData.Create("suit_abyss_exo", "심연 엑소슈트", GearSlot.Helmet, ItemRarity.Legend,
                         new GearEffect(GearStat.OxygenPercent, 45),
                         new GearEffect(GearStat.HazardDamageReductionPercent, 100)))
             };
