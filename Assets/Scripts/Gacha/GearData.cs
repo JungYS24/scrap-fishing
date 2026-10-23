@@ -9,6 +9,7 @@ namespace ScrapFishing.Gacha
     {
         [SerializeField] string id;
         [SerializeField] string displayName;
+        [SerializeField] string description;
         [SerializeField] GearSlot slot;
         [SerializeField] ItemRarity rarity;
         [SerializeField] List<GearEffect> effects = new List<GearEffect>();
@@ -18,6 +19,7 @@ namespace ScrapFishing.Gacha
 
         public string Id => id;
         public string DisplayName => displayName;
+        public string Description => description;
         public GearSlot Slot => slot;
         public ItemRarity Rarity => rarity;
         public IReadOnlyList<GearEffect> Effects => effects;
@@ -48,6 +50,13 @@ namespace ScrapFishing.Gacha
             }
 
             return total;
+        }
+
+        public void SetDetails(string desc, float refund, Sprite sprite)
+        {
+            description = desc;
+            refundMultiplier = refund;
+            icon = sprite;
         }
 
         public static GearData Create(string gearId, string name, GearSlot gearSlot, ItemRarity gearRarity, params GearEffect[] gearEffects)

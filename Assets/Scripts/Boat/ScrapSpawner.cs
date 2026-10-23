@@ -4,6 +4,7 @@ using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.Dive;
 using ScrapFishing.Fishing;
+using ScrapFishing.Gacha;
 using ScrapFishing.Scrap;
 using UnityEngine;
 
@@ -64,7 +65,7 @@ namespace ScrapFishing.Boat
         public void SpawnForCast(float surfaceY, float targetY, float depth)
         {
             Clear();
-            var count = DepthZone.SpawnCount(depth, RodStats.MaxAttach);
+            var count = DepthZone.SpawnCount(depth, RodStats.MaxAttach, GearBonuses.Count(GearStat.SpawnCapBonus));
             var legendCue = false;
             for (var i = 0; i < count; i++)
             {

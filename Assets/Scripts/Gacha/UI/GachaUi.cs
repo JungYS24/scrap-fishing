@@ -16,6 +16,7 @@ namespace ScrapFishing.Gacha
         public static readonly Color EpicColor = new Color(0.706f, 0.361f, 1f);
         public static readonly Color LegendColor = new Color(1f, 0.604f, 0.18f);
         public static readonly Color SynchroColor = Color.white;
+        public static readonly Color FisherColor = new Color(1f, 0.45f, 0.3f);
         // Outline은 메시를 테두리 색으로 한 번 더 그리므로, 테두리가 있는 패널은 불투명해야 색이 번지지 않는다.
         public static readonly Color Backdrop = new Color(0.035f, 0.055f, 0.11f, 1f);
         public static readonly Color Card = new Color(0.06f, 0.09f, 0.17f, 1f);
@@ -100,6 +101,7 @@ namespace ScrapFishing.Gacha
                 case GearSlot.Boat: return "보트";
                 case GearSlot.Drone: return "드론";
                 case GearSlot.Suit: return "수트";
+                case GearSlot.Fisher: return "피셔";
                 default: return "루어";
             }
         }
@@ -111,6 +113,7 @@ namespace ScrapFishing.Gacha
                 case GearSlot.Boat: return Palette.Cyan;
                 case GearSlot.Drone: return Palette.Magenta;
                 case GearSlot.Suit: return Palette.Gold;
+                case GearSlot.Fisher: return FisherColor;
                 default: return Palette.NeonGreen;
             }
         }

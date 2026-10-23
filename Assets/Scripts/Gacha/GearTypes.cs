@@ -7,7 +7,8 @@ namespace ScrapFishing.Gacha
         Lure,
         Boat,
         Drone,
-        Suit
+        Suit,
+        Fisher
     }
 
     public enum GearState
@@ -17,7 +18,8 @@ namespace ScrapFishing.Gacha
         Equipped
     }
 
-    // 수치 단위: Capacity는 개수, Seconds는 초, Shield는 횟수, 나머지는 % 값이다.
+    // 수치 단위: Capacity·SpawnCapBonus는 개수, Seconds는 초, Shield는 횟수, DiveEveryCastsBonus는 캐스트 수,
+    // RareChancePercent는 %p, 나머지는 % 값이다. 저장값과 순서를 맞추려고 새 항목은 맨 뒤에만 붙인다.
     public enum GearStat
     {
         LureCapacity,
@@ -31,7 +33,12 @@ namespace ScrapFishing.Gacha
         AutoCollectSeconds,
         HazardShield,
         OxygenPercent,
-        HazardDamageReductionPercent
+        HazardDamageReductionPercent,
+        SpawnCapBonus,
+        SteerSpeedPercent,
+        ReelSpeedPercent,
+        DiveSpeedPercent,
+        DiveEveryCastsBonus
     }
 
     [Serializable]

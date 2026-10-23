@@ -1,5 +1,6 @@
 using ScrapFishing.Core;
 using ScrapFishing.FX;
+using ScrapFishing.Gacha;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -64,7 +65,7 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            Normalized = Mathf.PingPong(Time.time * speed, _maxDepth);
+            Normalized = Mathf.PingPong(Time.time * speed * GearBonuses.Scale(GearStat.GaugeSpeedPercent), _maxDepth);
             if (marker != null)
             {
                 var y = Mathf.Lerp(0.98f, 0.02f, Normalized);

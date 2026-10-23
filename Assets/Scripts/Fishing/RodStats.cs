@@ -1,4 +1,5 @@
 using ScrapFishing.Core;
+using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Fishing
@@ -13,7 +14,9 @@ namespace ScrapFishing.Fishing
 
         public static int MaxLevel => CapacityByLevel.Length - 1;
 
-        public static int MaxAttach => LureLoad.CapacityForLevel(Progression.Level(UpgradeKind.Reel), CapacityByLevel);
+        // 강화 레벨 용량 + 루어 장비 용량.
+        public static int MaxAttach => LureLoad.CapacityForLevel(Progression.Level(UpgradeKind.Reel), CapacityByLevel)
+            + Mathf.Max(0, GearBonuses.Count(GearStat.LureCapacity));
 
         public static bool TryUpgrade()
         {

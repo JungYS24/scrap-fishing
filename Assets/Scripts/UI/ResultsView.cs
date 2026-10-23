@@ -220,7 +220,8 @@ namespace ScrapFishing.UI
             _session = session;
             _bestText.text = $"최고 기록 {session.BestCY} CY";
             var goldHex = ColorUtility.ToHtmlStringRGB(Palette.Gold);
-            _detail.text = $"CY {session.CY:N0}\n<color=#{goldHex}>골드 {session.Gold:N0}G → +${session.GoldDollars:N0}</color>\n─────────";
+            var gearBonus = session.GearBonusDollars > 0 ? $" · 장비 +${session.GearBonusDollars:N0}" : string.Empty;
+            _detail.text = $"CY {session.CY:N0}\n<color=#{goldHex}>골드 {session.Gold:N0}G → +${session.GoldDollars:N0}{gearBonus}</color>\n─────────";
             var goal = Progression.NextGoal();
             _goalText.text = goal.Primary;
             _goalText.color = goal.CanBuy ? Palette.NeonGreen : goal.AllMaxed ? Palette.Gold : Palette.Text;

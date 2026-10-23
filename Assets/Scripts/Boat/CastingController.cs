@@ -3,6 +3,7 @@ using System.Collections;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Fishing;
+using ScrapFishing.Gacha;
 using ScrapFishing.UI;
 using UnityEngine;
 
@@ -108,7 +109,8 @@ namespace ScrapFishing.Boat
                 return;
             }
 
-            _steerTargetX = Mathf.Clamp(_steerTargetX + worldDeltaX * steerSensitivity, steerMinX, steerMaxX);
+            var steer = steerSensitivity * GearBonuses.Scale(GearStat.SteerSpeedPercent);
+            _steerTargetX = Mathf.Clamp(_steerTargetX + worldDeltaX * steer, steerMinX, steerMaxX);
         }
 
         public void CastFromGauge()
@@ -266,7 +268,7 @@ namespace ScrapFishing.Boat
             else if (_flow.Phase == GamePhase.Reeling && !_settling)
             {
                 TickHook();
-                var speed = Mathf.Lerp(4.1f, 2.35f, _session.CastDepth);
+                var speed = Mathf.Lerp(4.1f, 2.35f, _session.CastDepth) * GearBonuses.Scale(GearStat.ReelSpeedPercent);
                 if (ShouldFastReel())
                 {
                     speed *= AutoReelScale;
@@ -342,10 +344,11 @@ namespace ScrapFishing.Boat
             }
 
             _hook.Tint(DepthZone.MarkerColor(DepthZone.FromWorldY(hook.y)));
-            _spawner.AttractToward(hook, attractRadius, attractSpeed);
+            var lureScale = GearBonuses.Scale(GearStat.CatchRadiusPercent);
+            _spawner.AttractToward(hook, attractRadius * lureScale, attractSpeed);
             if (!_settling)
             {
-                _spawner.CollectNear(hook, collectRadius + Progression.CatchRadiusBonus, _session, _collector);
+                _spawner.CollectNear(hook, (collectRadius + Progression.CatchRadiusBonus) * lureScale, _session, _collector);
             }
         }
 

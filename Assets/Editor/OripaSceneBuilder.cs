@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace ScrapFishing.Build
 {
-    // 타이틀의 오리파 버튼을 TitleView에 연결하고, 암시장 화면 틀을 Boat 씬 하이러키에 만든다.
+    // 타이틀의 오리파 버튼을 TitleView에 연결하고, 버전 표기와 암시장 화면 틀(보관함 포함)을 Boat 씬 하이러키에 만든다.
     // 타이틀 배치는 건드리지 않는다. BlackMarket도 이미 있는 오브젝트는 그대로 두고 빠진 것만 채운다.
     public static class OripaSceneBuilder
     {
@@ -39,6 +39,7 @@ namespace ScrapFishing.Build
             }
 
             var oripa = LinkOripaButton(title, view);
+            EnsureVersionText(title);
             var market = BuildMarket((RectTransform)canvas.transform);
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -63,6 +64,17 @@ namespace ScrapFishing.Build
             so.FindProperty("oripaButton").objectReferenceValue = oripa;
             so.ApplyModifiedPropertiesWithoutUndo();
             return oripa;
+        }
+
+        // 이미 있으면 그대로 둔다(씬에서 옮긴 위치 유지).
+        public static void EnsureVersionText(RectTransform title)
+        {
+            if (title.Find(TitleView.VersionTextName) != null)
+            {
+                return;
+            }
+
+            SetLayer(TitleView.CreateVersionText(title).transform, UiLayer);
         }
 
         static RectTransform BuildMarket(RectTransform canvas)

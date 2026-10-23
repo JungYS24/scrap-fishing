@@ -57,7 +57,7 @@ namespace ScrapFishing.Gacha
     {
         public const string SaveKey = "GachaSave";
         public const int HistoryLimit = 50;
-        public const int SlotCount = 4;
+        public const int SlotCount = 5;
 
         readonly GachaCatalog _catalog;
         GachaSaveData _data;

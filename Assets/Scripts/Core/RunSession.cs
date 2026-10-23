@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ScrapFishing.Data;
 using ScrapFishing.Fishing;
+using ScrapFishing.Gacha;
 using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,7 +12,7 @@ namespace ScrapFishing.Core
     public class RunSession : MonoBehaviour
     {
         public const float Duration = 60f;
-        public const int CastsPerDive = 3;
+        public const int BaseCastsPerDive = 3;
         public const float MinDiveSeconds = 8f;
 
         // 아이템 gold는 chip의 1/20. 달러 = CY + gold × 이 값이면, 보트 배율 1일 때 골드가 한 판 수입의 20%다.
@@ -28,6 +29,10 @@ namespace ScrapFishing.Core
         public bool IsNewBest { get; private set; }
         public int LastGain { get; private set; }
         public int EarnedDollars { get; private set; }
+        // 보트 장비(판 종료 보너스 %)로 더 받은 달러. EarnedDollars에 포함된다.
+        public int GearBonusDollars { get; private set; }
+        // 피셔 장비(diveEveryCastsBonus)로 줄어든 잠수 주기. 판을 시작할 때 정한다.
+        public int CastsPerDive { get; private set; } = BaseCastsPerDive;
         public int GoldDollars => Mathf.Max(0, Gold) * GoldToDollarRate;
         public int HazardCount => _hazardCount;
         public IReadOnlyList<LootStack> Loot => _loot;
@@ -66,10 +71,12 @@ namespace ScrapFishing.Core
             IsNewBest = false;
             LastGain = 0;
             EarnedDollars = 0;
+            GearBonusDollars = 0;
             Elapsed = 0f;
             DiveProgress = 0;
+            CastsPerDive = Mathf.Max(1, BaseCastsPerDive - GearBonuses.Count(GearStat.DiveEveryCastsBonus));
             _running = true;
-            _chipMultiplier = Progression.ChipMultiplier;
+            _chipMultiplier = Progression.ChipMultiplier * GearBonuses.Scale(GearStat.SellPercent);
             _caught.Clear();
             _loot.Clear();
             _hazardCount = 0;
@@ -79,7 +86,9 @@ namespace ScrapFishing.Core
         public void EndRun()
         {
             _running = false;
-            EarnedDollars = CY + GoldDollars;
+            var baseDollars = CY + GoldDollars;
+            GearBonusDollars = Mathf.Max(0, Mathf.RoundToInt(baseDollars * Mathf.Max(0f, GearBonuses.Get(GearStat.EndBonusPercent)) / 100f));
+            EarnedDollars = baseDollars + GearBonusDollars;
             Progression.AddDollars(EarnedDollars);
             BestCY = PlayerPrefs.GetInt(BestKey, 0);
             IsNewBest = CY > BestCY;

@@ -629,8 +629,8 @@ namespace ScrapFishing.UI
                 return;
             }
 
-            var filled = Mathf.Min(session.DiveProgress, RunSession.CastsPerDive);
-            _dive.text = "잠수 " + new string('●', filled) + new string('○', RunSession.CastsPerDive - filled);
+            var filled = Mathf.Min(session.DiveProgress, session.CastsPerDive);
+            _dive.text = "잠수 " + new string('●', filled) + new string('○', session.CastsPerDive - filled);
             _dive.color = session.CanDive ? Palette.Cyan : new Color(0.75f, 0.9f, 1f, 0.6f);
         }
 

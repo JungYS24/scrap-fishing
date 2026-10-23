@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
+using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Scrap
@@ -75,6 +76,7 @@ namespace ScrapFishing.Scrap
             total += SetRarityWeight(2, row.epic);
             total += SetRarityWeight(3, row.legend);
             total += SetRarityWeight(4, allowSynchro ? row.synchro : 0);
+            ShiftToRare(GearBonuses.Get(GearStat.RareChancePercent), total);
             if (total <= 0)
             {
                 return PickUniform(items, allowSynchro);
@@ -111,6 +113,45 @@ namespace ScrapFishing.Scrap
             }
 
             return PickWeighted(zoneName);
+        }
+
+        // 루어 장비의 "레어 이상 +N%p": 노멀 가중치에서 덜어 레어·에픽·레전드에 원래 비율대로 나눠 준다(싱크로는 그대로).
+        static void ShiftToRare(float percentPoints, int total)
+        {
+            if (percentPoints <= 0f || total <= 0)
+            {
+                return;
+            }
+
+            var shift = Mathf.Min(RarityWeights[0], Mathf.RoundToInt(total * percentPoints / 100f));
+            if (shift <= 0)
+            {
+                return;
+            }
+
+            var upper = RarityWeights[1] + RarityWeights[2] + RarityWeights[3];
+            if (upper <= 0)
+            {
+                if (RarityCounts[1] <= 0)
+                {
+                    return;
+                }
+
+                RarityWeights[1] += shift;
+                RarityWeights[0] -= shift;
+                return;
+            }
+
+            var given = 0;
+            for (var slot = 2; slot <= 3; slot++)
+            {
+                var part = shift * RarityWeights[slot] / upper;
+                RarityWeights[slot] += part;
+                given += part;
+            }
+
+            RarityWeights[1] += shift - given;
+            RarityWeights[0] -= shift;
         }
 
         static int SetRarityWeight(int slot, int weight)

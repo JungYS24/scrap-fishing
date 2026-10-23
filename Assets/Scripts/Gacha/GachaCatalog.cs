@@ -43,11 +43,17 @@ namespace ScrapFishing.Gacha
             }
         }
 
-        // Resources/Gacha 에 머신 에셋이 있으면 그것을, 없으면 기획서 기본값을 코드로 만든다.
+        // Resources/Gacha 에 머신 에셋이 있으면 그것을, 없으면 oripa_rewards.json을, 그것도 없으면 코드 기본값을 쓴다.
         public static GachaCatalog LoadDefault()
         {
             var assets = Resources.LoadAll<GachaMachineData>(ResourcesFolder);
-            return new GachaCatalog(assets != null && assets.Length > 0 ? assets : GachaDefaults.CreateMachines());
+            if (assets != null && assets.Length > 0)
+            {
+                return new GachaCatalog(assets);
+            }
+
+            var fromJson = OripaCatalogJson.Load();
+            return new GachaCatalog(fromJson != null && fromJson.Length > 0 ? fromJson : GachaDefaults.CreateMachines());
         }
 
         public GachaMachineData FindMachine(string machineId)

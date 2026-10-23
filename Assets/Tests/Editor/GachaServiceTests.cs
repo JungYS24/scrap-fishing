@@ -354,8 +354,10 @@ namespace ScrapFishing.Tests
                 var view = canvas.AddComponent<GachaShopView>();
                 view.Build(area);
                 Assert.IsFalse(view.IsOpen);
-                Assert.AreEqual(4, view.Shop.Catalog.Machines.Count);
+                Assert.AreEqual(5, view.Shop.Catalog.Machines.Count, "oripa_rewards.json: 루어·보트·드론·피셔·수트");
                 Assert.IsNotNull(area.Find("BlackMarket/Machines/Viewport/Content"));
+                Assert.IsNotNull(area.Find("BlackMarket/GachaInventory/List/Viewport/Content"));
+                Assert.IsNotNull(area.Find("BlackMarket/TopBar/Inventory"));
             }
             finally
             {

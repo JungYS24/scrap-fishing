@@ -1,5 +1,6 @@
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
+using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Dive
@@ -84,7 +85,7 @@ namespace ScrapFishing.Dive
             }
             else if (_stick != null)
             {
-                move = (Vector3)_stick.Value * speed * Time.deltaTime;
+                move = (Vector3)_stick.Value * speed * GearBonuses.Scale(GearStat.DiveSpeedPercent) * Time.deltaTime;
             }
             else
             {

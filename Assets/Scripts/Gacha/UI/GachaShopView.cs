@@ -17,7 +17,7 @@ namespace ScrapFishing.Gacha
         const string Notice = "게임 안에서 번 달러로만 뽑습니다 · 실제 결제 없음";
         const float FlySafety = 0.6f;
 
-        static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Boat, GearSlot.Drone, GearSlot.Suit };
+        static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Suit };
 
         GachaShop _shop;
         UiFxSettings _settings;
@@ -35,6 +35,7 @@ namespace ScrapFishing.Gacha
         GachaConfirmPopup _confirm;
         GachaResultView _result;
         GachaRefundPopup _refund;
+        GachaInventoryView _inventory;
         readonly Dictionary<string, float> _refundRates = new Dictionary<string, float>();
         GearSlot? _filter;
         List<RefundPick> _pendingRefund;
@@ -56,6 +57,7 @@ namespace ScrapFishing.Gacha
 
             BuildLayout(area);
             _dollarCount.Bind(_settings, string.Empty, true, string.Empty, true);
+            GearBonuses.Refresh(_shop.Inventory);
             _root.gameObject.SetActive(false);
         }
 
@@ -81,6 +83,7 @@ namespace ScrapFishing.Gacha
             _result = new GachaResultView(_root, RequestRefund, StorePicks, CloseResult);
             _confirm = new GachaConfirmPopup(_root, ConfirmPull);
             _refund = new GachaRefundPopup(_root, ExecuteRefund, (machine, count) => _confirm.Show(_shop, machine, count), RefreshCards);
+            _inventory = new GachaInventoryView(_root, HandleInventoryRefund);
             BuildTopBar();
 
             _flyLayer = GachaUi.Rect(_root, "FlyLayer", Vector2.zero, Vector2.one);
@@ -106,6 +109,7 @@ namespace ScrapFishing.Gacha
             _confirm.Hide();
             _result.Hide();
             _refund.Hide();
+            _inventory.Hide();
             _dollarCount.Snap(_shop.Balance);
             SelectTab(_filter);
             _group.alpha = 0f;
@@ -134,7 +138,7 @@ namespace ScrapFishing.Gacha
                 return;
             }
 
-            var modal = _confirm.IsOpen || _result.IsOpen || _refund.IsOpen || _flying;
+            var modal = _confirm.IsOpen || _result.IsOpen || _refund.IsOpen || _inventory.IsOpen || _flying;
             if (_close != null)
             {
                 GachaUi.SetEnabled(_close, !modal, Palette.Magenta);
@@ -149,13 +153,14 @@ namespace ScrapFishing.Gacha
         void BuildTopBar()
         {
             var bar = GachaUi.Panel(_root, "TopBar", new Vector2(0f, 0.925f), Vector2.one, new Color(0.02f, 0.03f, 0.07f, 1f), Palette.Magenta, true).rectTransform;
-            GachaUi.Label(bar, "Logo", 22, TextAnchor.MiddleLeft, new Vector2(0.035f, 0f), new Vector2(0.45f, 1f), Palette.Magenta, "BLACK MARKET");
+            GachaUi.Label(bar, "Logo", 22, TextAnchor.MiddleLeft, new Vector2(0.03f, 0f), new Vector2(0.34f, 1f), Palette.Magenta, "BLACK MARKET");
 
-            _dollarPanel = GachaUi.Panel(bar, "DollarPanel", new Vector2(0.47f, 0.16f), new Vector2(0.83f, 0.84f), GachaUi.Inset, Palette.Gold).rectTransform;
+            _dollarPanel = GachaUi.Panel(bar, "DollarPanel", new Vector2(0.35f, 0.16f), new Vector2(0.65f, 0.84f), GachaUi.Inset, Palette.Gold).rectTransform;
             GachaUi.DollarIcon(_dollarPanel, "DollarIcon", new Vector2(0.03f, 0.1f), new Vector2(0.22f, 0.9f));
             var dollar = GachaUi.Label(_dollarPanel, "DollarText", 22, TextAnchor.MiddleLeft, new Vector2(0.26f, 0f), new Vector2(0.98f, 1f), Palette.Gold);
             _dollarCount = GachaUi.GetOrAdd<CountingText>(dollar);
 
+            GachaUi.MakeButton(bar, "Inventory", "보관함", new Vector2(0.67f, 0.14f), new Vector2(0.845f, 0.86f), Palette.NeonGreen, 22, OpenInventory);
             _close = GachaUi.MakeButton(bar, "Close", "X", new Vector2(0.86f, 0.14f), new Vector2(0.97f, 0.86f), Palette.Magenta, 28, Close);
         }
 
@@ -227,7 +232,7 @@ namespace ScrapFishing.Gacha
             bannerImage.sprite = banner;
             GachaUi.Label(bannerImage.transform, "Name", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.35f), new Vector2(0.7f, 0.95f), Palette.Text, machine.DisplayName);
             GachaUi.Label(bannerImage.transform, "Slot", 16, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.05f), new Vector2(0.7f, 0.38f), tint,
-                GachaUi.SlotLabel(machine.Slot) + " 장비 " + machine.Gears.Count + "종");
+                (string.IsNullOrEmpty(machine.BannerCopy) ? GachaUi.SlotLabel(machine.Slot) : machine.BannerCopy) + " · " + machine.Gears.Count + "종");
 
             var counter = _shop.Inventory.Counter(machine.Id);
             var boosting = counter + 1 >= machine.BoostStart;
@@ -291,6 +296,22 @@ namespace ScrapFishing.Gacha
         {
             var tag = GachaUi.Panel(parent, name, min, max, new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f), color);
             GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, color, text);
+        }
+
+        void OpenInventory()
+        {
+            if (_flying || _confirm.IsOpen || _result.IsOpen || _refund.IsOpen)
+            {
+                return;
+            }
+
+            _inventory.Show(_shop);
+        }
+
+        void HandleInventoryRefund(int dollars)
+        {
+            _dollarCount.PlayTo(_shop.Balance);
+            RefreshCards();
         }
 
         void ConfirmPull(GachaMachineData machine, int count)

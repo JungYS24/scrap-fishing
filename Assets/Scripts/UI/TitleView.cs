@@ -12,6 +12,7 @@ namespace ScrapFishing.UI
         public const string VersionLabel = "1014 버전";
         public const string MarketLabel = "오리파!";
         public const string OripaButtonName = "OripaButton";
+        public const string VersionTextName = "VersionText";
         // 출항 버튼과 오리파 버튼 사이 간격(화면 높이 비율).
         public const float MarketGap = 0.02f;
         const float PulseHalf = 0.6f;
@@ -182,6 +183,35 @@ namespace ScrapFishing.UI
             }
         }
 
+        // 로고 바로 위에 버전 글자를 만든다. 로고를 씬에서 옮겼어도 그 위치를 따라간다. 에디터 씬 빌더도 이 함수를 쓴다.
+        public static Text CreateVersionText(RectTransform title)
+        {
+            var text = UiFonts.CreateText(title, VersionTextName, 16, TextAnchor.MiddleCenter);
+            text.fontSize = 16;
+            text.text = VersionLabel;
+            text.color = Palette.NeonGreen;
+            text.raycastTarget = false;
+            var rect = text.rectTransform;
+            var logo = title.Find("TitleImage") as RectTransform;
+            if (logo != null)
+            {
+                rect.anchorMin = new Vector2(logo.anchorMin.x, logo.anchorMax.y);
+                rect.anchorMax = new Vector2(logo.anchorMax.x, logo.anchorMax.y);
+                rect.offsetMin = new Vector2(logo.offsetMin.x, logo.offsetMax.y + 6f);
+                rect.offsetMax = new Vector2(logo.offsetMax.x, logo.offsetMax.y + 30f);
+                rect.SetSiblingIndex(logo.GetSiblingIndex() + 1);
+            }
+            else
+            {
+                rect.anchorMin = new Vector2(0.2f, 0.8f);
+                rect.anchorMax = new Vector2(0.8f, 0.86f);
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+            }
+
+            return text;
+        }
+
         // 하이러키의 Title/OripaButton. Button 컴포넌트가 빠져 있으면 붙여서 누를 수 있게 한다.
         public static Button FindOripaButton(Transform title)
         {
@@ -250,9 +280,10 @@ namespace ScrapFishing.UI
             SoundToggle.Create((RectTransform)transform, new Vector2(0.86f, 0.91f), new Vector2(0.98f, 0.98f));
         }
 
+        // 버전 표기는 하이러키(Title/VersionText)에 두고 위치·크기·폰트는 씬에서 관리한다. 글자는 VersionLabel을 쓴다.
         void EnsureVersion()
         {
-            var existing = transform.Find("VersionText");
+            var existing = transform.Find(VersionTextName);
             if (existing != null)
             {
                 _versionRect = existing as RectTransform;
@@ -261,25 +292,8 @@ namespace ScrapFishing.UI
 
             if (_versionText == null)
             {
-                _versionText = UiFonts.CreateText(transform, "VersionText", 16, TextAnchor.MiddleCenter);
-                _versionText.fontSize = 16;
+                _versionText = CreateVersionText((RectTransform)transform);
                 _versionRect = _versionText.rectTransform;
-                if (_logo != null)
-                {
-                    _versionRect.anchorMin = new Vector2(_logo.anchorMin.x, _logo.anchorMax.y);
-                    _versionRect.anchorMax = new Vector2(_logo.anchorMax.x, _logo.anchorMax.y);
-                    _versionRect.pivot = new Vector2(0.5f, 0f);
-                    _versionRect.sizeDelta = new Vector2(0f, 24f);
-                    _versionRect.anchoredPosition = new Vector2(0f, 6f);
-                    _versionRect.SetSiblingIndex(_logo.GetSiblingIndex() + 1);
-                }
-                else
-                {
-                    _versionRect.anchorMin = new Vector2(0.2f, 0.8f);
-                    _versionRect.anchorMax = new Vector2(0.8f, 0.86f);
-                    _versionRect.offsetMin = Vector2.zero;
-                    _versionRect.offsetMax = Vector2.zero;
-                }
             }
 
             _versionText.text = VersionLabel;

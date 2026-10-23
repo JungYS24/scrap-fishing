@@ -9,6 +9,8 @@ namespace ScrapFishing.Gacha
     {
         [SerializeField] string id;
         [SerializeField] string displayName;
+        [SerializeField] string englishName;
+        [SerializeField] string bannerCopy;
         [SerializeField] GearSlot slot;
         [SerializeField] int price = 5000;
 
@@ -33,6 +35,8 @@ namespace ScrapFishing.Gacha
 
         public string Id => id;
         public string DisplayName => displayName;
+        public string EnglishName => englishName;
+        public string BannerCopy => bannerCopy;
         public GearSlot Slot => slot;
         public int Price => price;
         public int BoostCycle => boostCycle;
@@ -70,6 +74,12 @@ namespace ScrapFishing.Gacha
             epicRate = epic;
             legendRate = legend;
             synchroRate = synchro;
+        }
+
+        public void SetCopy(string english, string copy)
+        {
+            englishName = english;
+            bannerCopy = copy;
         }
 
         public void SetBoost(int cycle, int start, float legendAtCycleEnd)

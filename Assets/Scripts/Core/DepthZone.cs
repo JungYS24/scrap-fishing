@@ -44,10 +44,11 @@ namespace ScrapFishing.Core
             return SpawnCount(normalized, 0);
         }
 
-        public static int SpawnCount(float normalized, int capacity)
+        // capBonus: 레전드 이상 루어의 스폰 상한 가산.
+        public static int SpawnCount(float normalized, int capacity, int capBonus = 0)
         {
             var count = Mathf.Max(5 + Index(normalized), capacity + 2);
-            return Mathf.Min(12, count);
+            return Mathf.Min(12 + Mathf.Max(0, capBonus), count);
         }
 
         public static int ExtraMines(float normalized)

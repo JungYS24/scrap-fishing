@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Boat;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
 using ScrapFishing.FX;
+using ScrapFishing.Gacha;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -45,6 +47,8 @@ namespace ScrapFishing.Dive
         readonly List<Hazard> _hazards = new List<Hazard>();
         readonly List<GameObject> _effects = new List<GameObject>();
         bool _active;
+        int _shields;
+        float _autoCollectTimer;
         float _iframe;
         float _bubbleTimer;
 
@@ -102,7 +106,9 @@ namespace ScrapFishing.Dive
             _active = true;
             _iframe = 0.4f;
             _bubbleTimer = 0.3f;
-            _oxygen.ResetMeter(DepthZone.DiveSeconds(_session.DeepestCast));
+            _oxygen.ResetMeter(DepthZone.DiveSeconds(_session.DeepestCast) * GearBonuses.Scale(GearStat.OxygenPercent));
+            _shields = Mathf.Max(0, GearBonuses.Count(GearStat.HazardShield));
+            _autoCollectTimer = GearBonuses.Get(GearStat.AutoCollectSeconds);
             _session.MarkDived();
             if (_diver != null)
             {
@@ -113,7 +119,7 @@ namespace ScrapFishing.Dive
             _spawner.SpawnForDive(_session.DeepestCast);
             if (_magnet != null)
             {
-                _magnet.SetRadius(0.5f + DepthZone.Index(_session.DeepestCast) * 0.08f);
+                _magnet.SetRadius((0.5f + DepthZone.Index(_session.DeepestCast) * 0.08f) * GearBonuses.Scale(GearStat.DroneRadiusPercent));
             }
 
             BuildMines(_session.DeepestCast);
@@ -147,24 +153,12 @@ namespace ScrapFishing.Dive
             }
 
             _magnet.Collect();
+            TickAutoCollect();
             _iframe = Mathf.Max(0f, _iframe - Time.deltaTime);
             var mine = !forced && _iframe <= 0f ? HitMine() : null;
             if (mine != null)
             {
-                _oxygen.Add(DepthZone.MineDamage(_session.DeepestCast));
-                _session.AddCY(mine.Amount);
-                SpawnExplosion(mine.transform.position, mine.Size);
-                mine.gameObject.SetActive(false);
-                _iframe = 0.45f;
-                if (_diver != null)
-                {
-                    _diver.FlashHurt();
-                    Fx.ShakeCamera(FXConfig.Current.hurtShake, FXConfig.Current.hurtShakeDur);
-                    Fx.FlashColor(_diver.GetComponent<SpriteRenderer>(), Color.red, 0.18f);
-                    Fx.FloatText(_diver.Position, mine.Amount.ToString(), Palette.Magenta);
-                }
-
-                AudioManager.Ensure().PlayMineHit();
+                HandleMine(mine);
             }
 
             TickBubbles();
@@ -179,6 +173,61 @@ namespace ScrapFishing.Dive
             {
                 Finish(true);
             }
+        }
+
+        // 드론 장비의 무효 횟수가 남았으면 피해 없이 터뜨리고, 아니면 수트 장비의 피해 감소를 적용한다.
+        void HandleMine(Hazard mine)
+        {
+            SpawnExplosion(mine.transform.position, mine.Size);
+            mine.gameObject.SetActive(false);
+            _iframe = 0.45f;
+            var reduce = Mathf.Clamp01(1f - GearBonuses.Get(GearStat.HazardDamageReductionPercent) / 100f);
+            var blocked = _shields > 0 || reduce <= 0f;
+            if (_shields > 0)
+            {
+                _shields--;
+            }
+
+            AudioManager.Ensure().PlayMineHit();
+            if (blocked)
+            {
+                if (_diver != null)
+                {
+                    Fx.FloatText(_diver.Position, "방어!", Palette.Cyan);
+                }
+
+                return;
+            }
+
+            var amount = Mathf.RoundToInt(mine.Amount * reduce);
+            _oxygen.Add(DepthZone.MineDamage(_session.DeepestCast) * reduce);
+            _session.AddCY(amount);
+            if (_diver != null)
+            {
+                _diver.FlashHurt();
+                Fx.ShakeCamera(FXConfig.Current.hurtShake, FXConfig.Current.hurtShakeDur);
+                Fx.FlashColor(_diver.GetComponent<SpriteRenderer>(), Color.red, 0.18f);
+                Fx.FloatText(_diver.Position, amount.ToString(), Palette.Magenta);
+            }
+        }
+
+        // 드론 장비의 자동 회수: 정해진 초마다 가장 가까운 스크랩 하나를 끌어온다.
+        void TickAutoCollect()
+        {
+            var every = GearBonuses.Get(GearStat.AutoCollectSeconds);
+            if (every <= 0f || _magnet == null)
+            {
+                return;
+            }
+
+            _autoCollectTimer -= Time.deltaTime;
+            if (_autoCollectTimer > 0f)
+            {
+                return;
+            }
+
+            _autoCollectTimer = every;
+            _magnet.CollectNearest();
         }
 
         void BeginForcedAscent()
@@ -330,6 +379,27 @@ namespace ScrapFishing.Dive
             }
         }
 
+        // 드론 장비의 위험물 경고: 기뢰가 붉게 깜빡인다.
+        void WarnMine(SpriteRenderer renderer)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            renderer.DOKill(false);
+            renderer.color = Color.white;
+            if (GearBonuses.Count(GearStat.HazardWarning) <= 0)
+            {
+                return;
+            }
+
+            renderer.DOColor(new Color(1f, 0.35f, 0.35f, 1f), 0.35f)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetEase(Ease.InOutSine)
+                .SetLink(renderer.gameObject);
+        }
+
         static int PickMineSize(int zone)
         {
             var options = MineSizesByZone[Mathf.Clamp(zone, 0, MineSizesByZone.Length - 1)];
@@ -355,6 +425,7 @@ namespace ScrapFishing.Dive
             }
 
             _hazards.Add(hazard);
+            WarnMine(renderer);
             EnsureDrift(go, 0.18f, 0.28f, 0.55f);
         }
 

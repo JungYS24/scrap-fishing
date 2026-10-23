@@ -2,6 +2,7 @@ using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Controls;
 using ScrapFishing.Fishing;
+using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
@@ -39,7 +40,7 @@ namespace ScrapFishing.Boat
                 return false;
             }
 
-            var radius = catchRadius + Progression.CatchRadiusBonus;
+            var radius = (catchRadius + Progression.CatchRadiusBonus) * GearBonuses.Scale(GearStat.CatchRadiusPercent);
             for (var i = _spawner.Live.Count - 1; i >= 0; i--)
             {
                 var scrap = _spawner.Live[i];
