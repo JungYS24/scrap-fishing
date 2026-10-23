@@ -24,6 +24,7 @@ namespace ScrapFishing.UI
 
         Action _onStart;
         Action _onMarket;
+        Action _onSettings;
         RectTransform _marketRect;
         Vector3 _marketScale = Vector3.one;
         UiFxSettings _settings;
@@ -67,6 +68,16 @@ namespace ScrapFishing.UI
             {
                 oripaButton.onClick.RemoveListener(HandleMarket);
                 oripaButton.onClick.AddListener(HandleMarket);
+            }
+        }
+
+        // 소리 토글 왼쪽에 설정(톱니) 버튼을 둔다.
+        public void BindSettings(Action onSettings)
+        {
+            _onSettings = onSettings;
+            if (transform.Find("SettingsButton") == null)
+            {
+                SettingsView.CreateGearButton((RectTransform)transform, new Vector2(0.72f, 0.91f), new Vector2(0.84f, 0.98f), () => _onSettings?.Invoke());
             }
         }
 

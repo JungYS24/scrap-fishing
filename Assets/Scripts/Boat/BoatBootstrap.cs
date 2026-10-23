@@ -32,6 +32,7 @@ namespace ScrapFishing.Boat
         CastCamera _castCamera;
         BoatCanvas _canvasUi;
         GachaShopView _market;
+        SettingsView _settingsView;
 
         void Awake()
         {
@@ -291,11 +292,14 @@ namespace ScrapFishing.Boat
             _title = _canvasUi.Title;
             _title.Bind(BeginRun);
             _title.BindMarket(OpenMarket);
+            _title.BindSettings(OpenSettings);
             _canvasUi.BringReadyToFront();
             _results = canvas.gameObject.AddComponent<ResultsView>();
-            _results.Build(area.Area, _session.Restart, OpenMarket);
+            _results.Build(area.Area, _session.Restart, OpenMarket, OpenSettings);
             _market = canvas.gameObject.AddComponent<GachaShopView>();
             _market.Build(area.Area);
+            _settingsView = canvas.gameObject.AddComponent<SettingsView>();
+            _settingsView.Build(area.Area);
             area.Adopt();
         }
 
@@ -307,6 +311,18 @@ namespace ScrapFishing.Boat
             }
 
             _market.Open();
+        }
+
+        // 설정창은 타이틀·결과 화면에서만 연다. 플레이 중에는 소리 토글만 쓴다.
+        void OpenSettings()
+        {
+            if (_settingsView == null || (_market != null && _market.IsOpen)
+                || (_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results))
+            {
+                return;
+            }
+
+            _settingsView.Open();
         }
 
         void BindDive()

@@ -42,6 +42,9 @@ namespace ScrapFishing.Audio
         int _poolAt;
         int _hitFrame = -1;
         float _bgmTarget = 0.55f;
+        // BGM 소스마다 사용자 음량을 곱하기 전 값. 페이드 트윈은 이 값을 움직이고, 실제 볼륨은 ApplyBgm이 정한다.
+        float _levelA;
+        float _levelB;
         float _countTickAt;
         bool _unlocked;
         bool _wantTitle;
@@ -92,6 +95,7 @@ namespace ScrapFishing.Audio
             }
 
             ApplySoundPref();
+            VolumeSettings.Changed += ApplyBgmVolume;
         }
 
         void Update()
@@ -505,7 +509,7 @@ namespace ScrapFishing.Audio
                 return;
             }
 
-            var volume = (cue != null ? cue.volume : 0.5f) * volumeMul * mix.masterSfx;
+            var volume = Mathf.Clamp01((cue != null ? cue.volume : 0.5f) * volumeMul * mix.masterSfx * VolumeSettings.SfxGain);
             var pitch = Mathf.Clamp(pitchMul, 0.5f, 2f) * (own ? 1f : pitchScale);
             if (cue != null)
             {
@@ -744,7 +748,7 @@ namespace ScrapFishing.Audio
             KillBgm(_bgmLive);
             next.clip = clip;
             next.loop = true;
-            next.volume = 0f;
+            SetBgmLevel(next, 0f);
             next.Play();
             Fade(next, liveVol, mix.crossfade);
             if (_bgmLive != null && _bgmLive.isPlaying && _bgmLive != next)
@@ -766,13 +770,45 @@ namespace ScrapFishing.Audio
             Fade(_bgmLive, volume, dur);
         }
 
-        Tween Fade(AudioSource src, float volume, float dur)
+        Tween Fade(AudioSource src, float level, float dur)
         {
             src.DOKill(false);
-            return DOTween.To(() => src.volume, v => src.volume = v, volume, dur)
+            return DOTween.To(() => BgmLevel(src), v => SetBgmLevel(src, v), level, dur)
                 .SetTarget(src)
                 .SetUpdate(true)
                 .SetLink(gameObject);
+        }
+
+        float BgmLevel(AudioSource src)
+        {
+            return src == _bgmA ? _levelA : src == _bgmB ? _levelB : src.volume;
+        }
+
+        // 최종 BGM 볼륨 = 기존 계산(타이틀·플레이·덕킹) × 전체 × 배경음 배수. AudioSource는 1.0을 넘지 못한다.
+        void SetBgmLevel(AudioSource src, float level)
+        {
+            if (src == null)
+            {
+                return;
+            }
+
+            if (src == _bgmA)
+            {
+                _levelA = level;
+            }
+            else if (src == _bgmB)
+            {
+                _levelB = level;
+            }
+
+            src.volume = Mathf.Clamp01(level * VolumeSettings.BgmGain);
+        }
+
+        // 배경음 슬라이더를 움직이면 진행 중인 페이드는 그대로 두고 지금 볼륨만 새 배수로 다시 계산한다.
+        void ApplyBgmVolume()
+        {
+            SetBgmLevel(_bgmA, _levelA);
+            SetBgmLevel(_bgmB, _levelB);
         }
 
         void KillBgm(AudioSource src)
@@ -872,6 +908,7 @@ namespace ScrapFishing.Audio
 
         void OnDestroy()
         {
+            VolumeSettings.Changed -= ApplyBgmVolume;
             if (_bgmA != null)
             {
                 _bgmA.DOKill(false);

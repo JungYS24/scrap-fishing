@@ -48,7 +48,7 @@ namespace ScrapFishing.UI
         bool _pendingNewBest;
         RunSession _session;
 
-        public void Build(Transform canvas, Action onRestart, Action onMarket = null)
+        public void Build(Transform canvas, Action onRestart, Action onMarket = null, Action onSettings = null)
         {
             _onRestart = onRestart;
             _settings = Resources.Load<UiFxSettings>("UiFxSettings");
@@ -162,6 +162,17 @@ namespace ScrapFishing.UI
                     label.fontSize = 22;
                     label.color = Palette.Magenta;
                 }
+            }
+
+            if (onSettings != null)
+            {
+                SettingsView.CreateGearButton(rect, new Vector2(0.86f, 0.93f), new Vector2(0.98f, 0.99f), () =>
+                {
+                    if (!_restartArmed)
+                    {
+                        onSettings();
+                    }
+                });
             }
 
             Hide();
