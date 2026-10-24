@@ -83,6 +83,8 @@ namespace ScrapFishing.Fishing
             settlePoint = point;
             _hud = hud;
             _lureRenderer = GetComponent<SpriteRenderer>();
+            GearBonuses.Changed -= HandleProgression;
+            GearBonuses.Changed += HandleProgression;
             RefreshCapacity();
             Notify();
         }
@@ -519,6 +521,11 @@ namespace ScrapFishing.Fishing
                     _attached[i].View.transform.DOKill(false);
                 }
             }
+        }
+
+        void OnDestroy()
+        {
+            GearBonuses.Changed -= HandleProgression;
         }
 
         void RefreshCapacity()

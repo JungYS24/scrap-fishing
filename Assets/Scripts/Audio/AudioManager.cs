@@ -124,11 +124,14 @@ namespace ScrapFishing.Audio
 
         public bool SoundOn => PlayerPrefs.GetInt(SoundPref, 1) != 0;
 
+        public static event System.Action SoundChanged;
+
         public void SetSoundOn(bool on)
         {
             PlayerPrefs.SetInt(SoundPref, on ? 1 : 0);
             PlayerPrefs.Save();
             ApplySoundPref();
+            SoundChanged?.Invoke();
         }
 
         public void ToggleSound()

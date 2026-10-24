@@ -34,6 +34,7 @@ namespace ScrapFishing.Boat
         GachaShopView _market;
         SettingsView _settingsView;
         AnglerRig _rig;
+        CompanionDrone _drone;
 
         void Awake()
         {
@@ -179,7 +180,7 @@ namespace ScrapFishing.Boat
             _dive.Finished += HandleDiveFinished;
         }
 
-        // 보트 위 주인공을 장착한 보트·피셔·낚싯대(없으면 normal_01 외형)로 다시 조합한다. 장착은 타이틀·결과 화면에서만 바뀐다.
+        // 보트 위 주인공(보트·피셔·낚싯대), 루어, 드론 외형을 장착 장비(없으면 normal_01)로 다시 맞춘다. 장착은 타이틀·결과 화면에서만 바뀐다.
         void ComposeAngler()
         {
             if (_rig == null)
@@ -191,7 +192,22 @@ namespace ScrapFishing.Boat
                 }
             }
 
-            _rig.Compose(_market != null && _market.Shop != null ? _market.Shop.Catalog : null);
+            _rig.Compose();
+            if (_hook != null)
+            {
+                _hook.ApplySkin();
+            }
+
+            // 피셔 머리 왼쪽 위에 떠 있는 드론. order 9: 피셔·보트·낚싯대(4~7)와 정산 스크랩(8)보다 앞, HUD(오버레이)보다 뒤.
+            if (_drone == null)
+            {
+                // Nomad 아래에 두어 잠수할 때 보트 소품과 같이 숨는다.
+                _drone = CompanionDrone.Create("CompanionDrone", _rig.transform, _rig.Head, new Vector2(-0.5f, 0.12f), 0f, 9);
+            }
+            else
+            {
+                _drone.RefreshSprite();
+            }
         }
 
         void BuildSurface()

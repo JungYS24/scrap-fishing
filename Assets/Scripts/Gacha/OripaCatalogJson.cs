@@ -160,22 +160,9 @@ namespace ScrapFishing.Gacha
             return gear;
         }
 
-        // Resources/Gear/... PNG. Multiple로 잘려 임포트된 경우(이름_0)도 찾는다. 없으면 null → 등급 색 사각형 + 슬롯 이름.
         static Sprite LoadSprite(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                return null;
-            }
-
-            var sprite = Resources.Load<Sprite>(path);
-            if (sprite != null)
-            {
-                return sprite;
-            }
-
-            var sprites = Resources.LoadAll<Sprite>(path);
-            return sprites != null && sprites.Length > 0 ? sprites[0] : null;
+            return GearVisuals.Load(path);
         }
 
         // magnetRadiusPct는 루어에서는 캐스팅 흡착 반경, 드론에서는 잠수 흡착 반경이다.

@@ -261,6 +261,36 @@ namespace ScrapFishing.Gacha
             }
         }
 
+        // 장착 칸이 빈 슬롯마다 {슬롯}_normal_01을 장착한다. 이미 갖고 있으면 그것을 쓰고, 없을 때만 1개를 넣는다(중복 없음).
+        // 이미 장착한 장비와 보관함의 다른 아이템은 건드리지 않는다. 반환값: 바뀐 것이 있으면 true.
+        public bool EnsureStarterGear()
+        {
+            var changed = false;
+            for (var s = 0; s < SlotCount; s++)
+            {
+                var slot = (GearSlot)s;
+                if (EquippedId(slot) != null)
+                {
+                    continue;
+                }
+
+                var id = GearVisuals.DefaultId(slot);
+                if (_catalog.FindGear(id) == null)
+                {
+                    continue;
+                }
+
+                if (Count(id, GearState.Stored) + Count(id, GearState.Unprocessed) == 0)
+                {
+                    GetOrAdd(id).stored++;
+                }
+
+                changed |= Equip(id);
+            }
+
+            return changed;
+        }
+
         // 보관 중 → 미처리 순으로 1개를 꺼내 장착한다. 기존 장착품은 보관 중으로 돌아간다.
         public bool Equip(string gearId)
         {

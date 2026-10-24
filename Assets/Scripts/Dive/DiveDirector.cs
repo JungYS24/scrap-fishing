@@ -47,7 +47,7 @@ namespace ScrapFishing.Dive
         readonly List<Hazard> _hazards = new List<Hazard>();
         readonly List<GameObject> _effects = new List<GameObject>();
         bool _active;
-        DroneBuddy _drone;
+        CompanionDrone _drone;
         int _shields;
         float _autoCollectTimer;
         float _iframe;
@@ -116,6 +116,11 @@ namespace ScrapFishing.Dive
                 _diver.Place(new Vector3(0f, -1.35f, 0f));
             }
 
+            if (_player != null)
+            {
+                HelmetSkin.Attach(_player).Refresh();
+            }
+
             _spawner.SetDiveArt(_art);
             _spawner.SpawnForDive(_session.DeepestCast);
             if (_magnet != null)
@@ -127,7 +132,10 @@ namespace ScrapFishing.Dive
             SpawnSchool();
             if (_diver != null)
             {
-                _drone = DroneBuddy.Spawn(transform, _diver.transform);
+                var diverRenderer = _diver.GetComponent<SpriteRenderer>();
+                // 헬멧이 잠수부+1이라 드론은 +2(헬멧보다 앞).
+                var order = diverRenderer != null ? diverRenderer.sortingOrder + 2 : 7;
+                _drone = CompanionDrone.Create("CompanionDrone", transform, _diver.transform, new Vector2(-0.62f, 0.48f), 0.18f, order, diverRenderer);
             }
             ShowUnderwater();
             _stick.SetVisible(true);

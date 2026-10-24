@@ -10,6 +10,7 @@ namespace ScrapFishing.Gacha
         public const string RodResource = "Gear/Rod/rod_anchors";
         public const string BoatResource = "Gear/Boat/Boat/boat_anchors";
         public const string FisherResource = "Gear/Fisher/fisher_anchors";
+        public const string LureResource = "Gear/Lure/lure_anchors";
 
         public struct Rod
         {
@@ -17,10 +18,13 @@ namespace ScrapFishing.Gacha
             public Vector2 Tip;
         }
 
+        // Top·Bottom은 보트 이미지에서 불투명한 부분의 위아래(bbox y0·y1)다.
         public struct Boat
         {
             public float BottomY;
             public float DeckY;
+            public float Top;
+            public float Bottom;
         }
 
         public struct Fisher
@@ -29,9 +33,15 @@ namespace ScrapFishing.Gacha
             public Vector2 Hand;
         }
 
+        // 피셔 256 레이어의 머리 꼭대기(발끝 footY − 몸 높이 bodyHeight, 가로는 발 중심 footX).
+        public static Vector2 FisherHead { get; private set; } = new Vector2(110f, 80f);
+        // 피셔 256 레이어의 발끝 행(가장 아래 불투명 행).
+        public static float FisherFootY { get; private set; } = 210f;
+
         static Dictionary<string, Rod> _rods;
         static Dictionary<string, Boat> _boats;
         static Dictionary<string, Fisher> _fishers;
+        static Dictionary<string, Vector2> _lureEyes;
 
         public static IReadOnlyDictionary<string, Rod> Rods
         {
@@ -60,6 +70,16 @@ namespace ScrapFishing.Gacha
             }
         }
 
+        // 루어 128 이미지에서 낚싯줄이 묶이는 맨 위 고리.
+        public static IReadOnlyDictionary<string, Vector2> LureEyes
+        {
+            get
+            {
+                Ensure();
+                return _lureEyes;
+            }
+        }
+
         public static void Reload()
         {
             _rods = null;
@@ -76,6 +96,7 @@ namespace ScrapFishing.Gacha
             _rods = new Dictionary<string, Rod>();
             _boats = new Dictionary<string, Boat>();
             _fishers = new Dictionary<string, Fisher>();
+            _lureEyes = new Dictionary<string, Vector2>();
 
             foreach (var pair in Entries(Load(RodResource)))
             {
@@ -84,14 +105,40 @@ namespace ScrapFishing.Gacha
 
             foreach (var pair in Entries(Load(BoatResource)))
             {
-                _boats[pair.Key] = new Boat { BottomY = Number(pair.Value, "bottomY"), DeckY = Number(pair.Value, "deckY") };
+                var box = pair.Value.TryGetValue("bbox", out var raw) ? raw as List<object> : null;
+                var top = box != null && box.Count >= 4 && box[1] is double y0 ? (float)y0 : 0f;
+                var bottom = box != null && box.Count >= 4 && box[3] is double y1 ? (float)y1 : Number(pair.Value, "bottomY");
+                _boats[pair.Key] = new Boat
+                {
+                    BottomY = Number(pair.Value, "bottomY"),
+                    DeckY = Number(pair.Value, "deckY"),
+                    Top = top,
+                    Bottom = bottom
+                };
             }
 
             var fisherRoot = Load(FisherResource);
+            if (fisherRoot != null)
+            {
+                var footX = Number(fisherRoot, "footX");
+                var footY = Number(fisherRoot, "footY");
+                var body = Number(fisherRoot, "bodyHeight");
+                if (footY > 0f && body > 0f)
+                {
+                    FisherHead = new Vector2(footX, footY - body);
+                    FisherFootY = footY;
+                }
+            }
+
             var fishers = fisherRoot != null && fisherRoot.TryGetValue("fishers", out var list) ? list as Dictionary<string, object> : null;
             foreach (var pair in Entries(fishers))
             {
                 _fishers[pair.Key] = new Fisher { WaistY = Number(pair.Value, "waistY"), Hand = Point(pair.Value, "handPos") };
+            }
+
+            foreach (var pair in Entries(Load(LureResource)))
+            {
+                _lureEyes[pair.Key] = Point(pair.Value, "eye");
             }
         }
 

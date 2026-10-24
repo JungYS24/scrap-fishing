@@ -13,7 +13,13 @@ namespace ScrapFishing.UI
     // 타이틀·결과 화면의 톱니 버튼으로 연다. 색·폰트·버튼은 오리파 화면(GachaUi)과 같은 톤을 쓴다.
     public class SettingsView : MonoBehaviour
     {
+        // 핸들 기본 크기 40px에 스케일 0.6을 걸어 24px로 보인다. 크기는 여기서 한 번만 정하고 다른 코드가 덮어쓰지 않는다.
+        // 터치는 슬라이더 줄 전체(투명 히트 영역)로 받으므로 핸들이 작아도 잡기 쉽다.
         const float HandleSize = 40f;
+        public const float HandleScale = 0.6f;
+        const float TrackMin = 0.36f;
+        const float TrackMax = 0.64f;
+        const float MutedRowAlpha = 0.4f;
         const float OpenDuration = 0.2f;
         const float CloseDuration = 0.15f;
         const string LanguageLabel = "언어: 한국어";
@@ -48,6 +54,8 @@ namespace ScrapFishing.UI
         Text _toast;
         readonly Slider[] _sliders = new Slider[3];
         readonly Text[] _values = new Text[3];
+        readonly CanvasGroup[] _rows = new CanvasGroup[3];
+        Text _volumeHeader;
         bool _syncing;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
@@ -62,7 +70,8 @@ namespace ScrapFishing.UI
             GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.06f, 0.905f), new Vector2(0.8f, 0.98f), Palette.Text, "설정");
             GachaUi.MakeButton(_panel, "Close", "X", new Vector2(0.84f, 0.91f), new Vector2(0.96f, 0.975f), Palette.Magenta, 28, Close);
 
-            GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, new Vector2(0.06f, 0.845f), new Vector2(0.94f, 0.895f), GachaUi.Muted, "음량");
+            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, new Vector2(0.06f, 0.845f), new Vector2(0.8f, 0.895f), GachaUi.Muted, "음량");
+            SoundToggle.Create(_panel, new Vector2(0.84f, 0.848f), new Vector2(0.94f, 0.895f));
             for (var i = 0; i < Channels.Length; i++)
             {
                 var top = 0.835f - i * 0.135f;
@@ -83,12 +92,14 @@ namespace ScrapFishing.UI
 
             BuildCredits();
             VolumeSettings.Changed += Sync;
+            AudioManager.SoundChanged += Sync;
             _root.gameObject.SetActive(false);
         }
 
         void OnDestroy()
         {
             VolumeSettings.Changed -= Sync;
+            AudioManager.SoundChanged -= Sync;
         }
 
         public void Open()
@@ -140,6 +151,7 @@ namespace ScrapFishing.UI
         {
             var channel = Channels[index];
             var row = GachaUi.Rect(_panel, "Row_" + channel, min, max);
+            _rows[index] = row.gameObject.AddComponent<CanvasGroup>();
             GachaUi.Label(row, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0f, 0.56f), new Vector2(0.7f, 1f), Palette.Text, ChannelNames[index]);
             _values[index] = GachaUi.Label(row, "Value", 22, TextAnchor.MiddleRight, new Vector2(0.7f, 0.56f), new Vector2(1f, 1f), Palette.NeonGreen);
 
@@ -171,12 +183,12 @@ namespace ScrapFishing.UI
             var hit = root.gameObject.AddComponent<Image>();
             hit.color = new Color(0f, 0f, 0f, 0f);
 
-            var pad = HandleSize * 0.5f;
-            var track = GachaUi.Panel(root, "Track", new Vector2(0f, 0.38f), new Vector2(1f, 0.62f), GachaUi.Inset, GachaUi.Muted);
+            var pad = HandleSize * HandleScale * 0.5f;
+            var track = GachaUi.Panel(root, "Track", new Vector2(0f, TrackMin), new Vector2(1f, TrackMax), GachaUi.Inset, GachaUi.Muted);
             track.rectTransform.offsetMin = new Vector2(pad, 0f);
             track.rectTransform.offsetMax = new Vector2(-pad, 0f);
 
-            var fillArea = GachaUi.Rect(root, "FillArea", new Vector2(0f, 0.38f), new Vector2(1f, 0.62f));
+            var fillArea = GachaUi.Rect(root, "FillArea", new Vector2(0f, TrackMin), new Vector2(1f, TrackMax));
             fillArea.offsetMin = new Vector2(pad, 0f);
             fillArea.offsetMax = new Vector2(-pad, 0f);
             var fill = GachaUi.Panel(fillArea, "Fill", Vector2.zero, Vector2.one, Palette.NeonGreen);
@@ -186,6 +198,7 @@ namespace ScrapFishing.UI
             handleArea.offsetMax = new Vector2(-pad, 0f);
             var handle = GachaUi.Panel(handleArea, "Handle", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Palette.Text, Palette.NeonGreen, true);
             handle.rectTransform.sizeDelta = new Vector2(HandleSize, HandleSize);
+            handle.rectTransform.localScale = new Vector3(HandleScale, HandleScale, 1f);
 
             var slider = root.gameObject.AddComponent<Slider>();
             slider.fillRect = fill.rectTransform;
@@ -198,8 +211,24 @@ namespace ScrapFishing.UI
             return slider;
         }
 
+        // 음소거는 슬라이더 값과 별개로 동작한다. 음소거 중이면 값은 그대로 두고 줄을 흐리게, 머리글에 표시한다.
         void Sync()
         {
+            var muted = !AudioManager.Ensure().SoundOn;
+            if (_volumeHeader != null)
+            {
+                _volumeHeader.text = muted ? "음량 · 음소거 중" : "음량";
+                _volumeHeader.color = muted ? Palette.Magenta : GachaUi.Muted;
+            }
+
+            for (var i = 0; i < _rows.Length; i++)
+            {
+                if (_rows[i] != null)
+                {
+                    _rows[i].alpha = muted ? MutedRowAlpha : 1f;
+                }
+            }
+
             _syncing = true;
             for (var i = 0; i < Channels.Length; i++)
             {

@@ -1,4 +1,5 @@
 using ScrapFishing.Core;
+using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
@@ -34,6 +35,28 @@ namespace ScrapFishing.Boat
             }
             _line.startColor = new Color(0.22f, 1f, 0.61f, 0.9f);
             _line.endColor = new Color(0.22f, 1f, 0.61f, 0.55f);
+            RefreshLine();
+        }
+
+        // 장착 루어(없으면 lure_normal_01)로 외형을 바꾸고, 낚싯줄 끝(LineEnd)을 그 루어의 고리로 옮긴다.
+        // 루어 이미지는 128px·PPU 100·피벗 중앙이라 예전 루어와 같은 크기로 그려진다.
+        public void ApplySkin()
+        {
+            var id = GearVisuals.EquippedOrDefaultId(GearSlot.Lure);
+            var sprite = GearVisuals.Load(GearVisuals.WorldPath(GearSlot.Lure, id));
+            var renderer = GetComponent<SpriteRenderer>();
+            if (sprite == null || renderer == null)
+            {
+                return;
+            }
+
+            renderer.sprite = sprite;
+            if (lineEnd != null && GearAnchors.LureEyes.TryGetValue(id, out var eye))
+            {
+                var half = sprite.rect.width * 0.5f;
+                lineEnd.localPosition = new Vector3((eye.x - half) / sprite.pixelsPerUnit, (half - eye.y) / sprite.pixelsPerUnit, 0f);
+            }
+
             RefreshLine();
         }
 

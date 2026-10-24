@@ -72,13 +72,13 @@ namespace ScrapFishing.UI
             }
         }
 
-        // 소리 토글 왼쪽에 설정(톱니) 버튼을 둔다.
+        // 예전 음소거 버튼 자리(오른쪽 위)에 설정(톱니) 버튼을 둔다. 음소거는 설정창 안에 있다.
         public void BindSettings(Action onSettings)
         {
             _onSettings = onSettings;
             if (transform.Find("SettingsButton") == null)
             {
-                SettingsView.CreateGearButton((RectTransform)transform, new Vector2(0.72f, 0.91f), new Vector2(0.84f, 0.98f), () => _onSettings?.Invoke());
+                SettingsView.CreateGearButton((RectTransform)transform, new Vector2(0.86f, 0.91f), new Vector2(0.98f, 0.98f), () => _onSettings?.Invoke());
             }
         }
 
@@ -157,7 +157,6 @@ namespace ScrapFishing.UI
             }
 
             EnsureVersion();
-            EnsureSoundToggle();
             EnsureMarketButton();
         }
 
@@ -268,16 +267,6 @@ namespace ScrapFishing.UI
             }
 
             return button;
-        }
-
-        void EnsureSoundToggle()
-        {
-            if (transform.Find("SoundToggle") != null)
-            {
-                return;
-            }
-
-            SoundToggle.Create((RectTransform)transform, new Vector2(0.86f, 0.91f), new Vector2(0.98f, 0.98f));
         }
 
         // 버전 표기는 하이러키(Title/VersionText)에 두고 위치·크기·폰트는 씬에서 관리한다. 글자는 VersionLabel을 쓴다.

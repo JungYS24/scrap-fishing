@@ -1,59 +1,68 @@
-using System.Collections.Generic;
 using ScrapFishing.Gacha;
 using UnityEngine;
 
 namespace ScrapFishing.Boat
 {
-    // 보트 위 주인공(Nomad)을 피셔(뒤) → 보트 → 낚싯대(앞) 세 레이어로 조합한다.
+    // 보트 위 주인공(Nomad)을 보트(뒤) → 피셔 → 낚싯대(앞) 세 레이어로 조합한다.
     // Nomad 오브젝트를 부모로 써서 위치·크기·펀치 연출을 그대로 공유하고, 자식 RodTip(낚싯줄 시작점)을 낚싯대 끝으로 옮긴다.
-    // 장착하지 않은 슬롯은 normal_01 외형만 쓴다(효과는 GearBonuses가 따로 다루므로 적용되지 않는다).
+    // 외형은 GearVisuals 규칙(장착 id, 없으면 normal_01)을 따른다. 효과는 GearBonuses가 따로 다룬다.
     public class AnglerRig : MonoBehaviour
     {
-        public const string DefaultBoat = "boat_normal_01";
-        public const string DefaultFisher = "fisher_normal_01";
-        public const string DefaultRod = "rod_normal_01";
-
-        // 보트·피셔 레이어(256)와 낚싯대 아이콘(128)은 모두 PPU 100, 피벗 중앙이다.
+        // 보트·피셔 레이어(256)와 낚싯대 이미지(128)는 모두 PPU 100, 피벗 중앙이다.
         const float PixelsPerUnit = 100f;
         const float LayerSize = 256f;
         const float RodSize = 128f;
         const float GripRatio = 0.25f;
-        // 피셔는 뱃전(deckY)에서 이만큼 아래 행까지만 그린다. 타이어 구멍처럼 보트 레이어의 투명한 틈으로 다리가 비치지 않게 한다.
-        public const float ClipBelowDeckPx = 4f;
-        // 루어(6)와 같은 order가 되지 않게 낚싯대는 Nomad보다 2 위에 둔다.
+        public const float DefaultFootBelowMid = 0.1f;
+        // order: 보트 Nomad−1, 피셔 Nomad, 낚싯대 Nomad+2(루어 6과 겹치지 않게). 드론은 이보다 앞(9).
+        const int BoatOrderOffset = -1;
         const int RodOrderOffset = 2;
+
+        [Tooltip("피셔 발끝을 보트 높이(불투명 범위)의 가운데에서 이 비율만큼 아래에 둔다. 0.1 = 보트 높이의 10%")]
+        [SerializeField] float footBelowMid = DefaultFootBelowMid;
 
         public struct Layout
         {
             public float FisherOffsetY;
-            // 피셔 이미지에서 이 행(y)부터 아래는 그리지 않는다(뱃전 + ClipBelowDeckPx 높이).
-            public float FisherClipY;
+            public float FootTargetY;
             public Vector2 HandPx;
             public Vector2 RodOffsetPx;
             public Vector2 GripPx;
             public Vector2 TipPx;
         }
 
-        static readonly Dictionary<string, Sprite> Clipped = new Dictionary<string, Sprite>();
-
         SpriteRenderer _original;
         SpriteRenderer _fisher;
         SpriteRenderer _boat;
         SpriteRenderer _rod;
         Transform _rodTip;
+        Transform _head;
+        float _appliedFootBelowMid = float.NaN;
 
-        // 256 레이어 픽셀 좌표로 계산한다. 피셔는 보트 뱃전(deckY)에 허리(waistY)를 맞추고,
-        // 낚싯대는 손잡이 끝에서 끝 방향 25% 지점(쥐는 곳)이 피셔 두 손에 오게 놓는다.
-        public static Layout Compute(GearAnchors.Boat boat, GearAnchors.Fisher fisher, GearAnchors.Rod rod)
+        // 피셔 머리 꼭대기 위치. 보트 씬 동반 드론이 이 점을 기준으로 떠다닌다.
+        public Transform Head
         {
-            var offsetY = boat.DeckY - fisher.WaistY;
+            get
+            {
+                EnsureLayers();
+                return _head;
+            }
+        }
+
+        // 256 레이어 픽셀 좌표로 계산한다. 피셔 발끝(footY)을 보트 불투명 범위의 가운데보다 footBelowMid만큼 아래에 두고,
+        // 낚싯대는 손잡이 끝에서 끝 방향 25% 지점(쥐는 곳)이 피셔 두 손에 오게 놓는다.
+        public static Layout Compute(GearAnchors.Boat boat, GearAnchors.Fisher fisher, GearAnchors.Rod rod, float fisherFootY, float footBelowMid)
+        {
+            var height = boat.Bottom - boat.Top;
+            var footTarget = (boat.Top + boat.Bottom) * 0.5f + height * footBelowMid;
+            var offsetY = footTarget - fisherFootY;
             var hand = fisher.Hand + new Vector2(0f, offsetY);
             var grip = rod.HandleEnd + (rod.Tip - rod.HandleEnd) * GripRatio;
             var rodOffset = hand - grip;
             return new Layout
             {
                 FisherOffsetY = offsetY,
-                FisherClipY = boat.DeckY + ClipBelowDeckPx - offsetY,
+                FootTargetY = footTarget,
                 HandPx = hand,
                 RodOffsetPx = rodOffset,
                 GripPx = rodOffset + grip,
@@ -79,28 +88,33 @@ namespace ScrapFishing.Boat
             return rig != null ? rig : nomad.AddComponent<AnglerRig>();
         }
 
-        public void Compose(GachaCatalog catalog)
+        // 장착이 바뀔 때마다(보트 교체 포함) 다시 부른다.
+        public void Compose()
         {
-            var boat = Pick(catalog, GearSlot.Boat, DefaultBoat);
-            var fisher = Pick(catalog, GearSlot.Fisher, DefaultFisher);
-            var rod = Pick(catalog, GearSlot.Rod, DefaultRod);
+            var boatId = GearVisuals.EquippedOrDefaultId(GearSlot.Boat);
+            var fisherId = GearVisuals.EquippedOrDefaultId(GearSlot.Fisher);
+            var rodId = GearVisuals.EquippedOrDefaultId(GearSlot.Rod);
+            var boatSprite = GearVisuals.Load(GearVisuals.WorldPath(GearSlot.Boat, boatId));
+            var fisherSprite = GearVisuals.Load(GearVisuals.WorldPath(GearSlot.Fisher, fisherId));
+            var rodSprite = GearVisuals.Load(GearVisuals.WorldPath(GearSlot.Rod, rodId));
             EnsureLayers();
-            if (boat == null || fisher == null || rod == null || boat.Layer == null || fisher.Layer == null || rod.Icon == null
-                || !GearAnchors.Boats.TryGetValue(boat.Id, out var boatAnchor)
-                || !GearAnchors.Fishers.TryGetValue(fisher.Id, out var fisherAnchor)
-                || !GearAnchors.Rods.TryGetValue(rod.Id, out var rodAnchor))
+            if (boatSprite == null || fisherSprite == null || rodSprite == null
+                || !GearAnchors.Boats.TryGetValue(boatId, out var boatAnchor)
+                || !GearAnchors.Fishers.TryGetValue(fisherId, out var fisherAnchor)
+                || !GearAnchors.Rods.TryGetValue(rodId, out var rodAnchor))
             {
                 Debug.LogWarning("보트·피셔·낚싯대 레이어나 기준점이 없어 기존 Nomad 이미지를 씁니다.");
                 ShowLayers(false);
                 return;
             }
 
-            var layout = Compute(boatAnchor, fisherAnchor, rodAnchor);
-            _boat.sprite = boat.Layer;
+            var layout = Compute(boatAnchor, fisherAnchor, rodAnchor, GearAnchors.FisherFootY, footBelowMid);
+            _appliedFootBelowMid = footBelowMid;
+            _boat.sprite = boatSprite;
             _boat.transform.localPosition = Vector3.zero;
-            _fisher.sprite = ClipBelow(fisher.Layer, layout.FisherClipY);
+            _fisher.sprite = fisherSprite;
             _fisher.transform.localPosition = new Vector3(0f, -layout.FisherOffsetY / PixelsPerUnit, 0f);
-            _rod.sprite = rod.Icon;
+            _rod.sprite = rodSprite;
             var rodCenter = layout.RodOffsetPx + new Vector2(RodSize * 0.5f, RodSize * 0.5f);
             _rod.transform.localPosition = ToLocal(rodCenter);
             if (_rodTip != null)
@@ -108,43 +122,17 @@ namespace ScrapFishing.Boat
                 _rodTip.localPosition = ToLocal(layout.TipPx);
             }
 
+            _head.localPosition = ToLocal(GearAnchors.FisherHead + new Vector2(0f, layout.FisherOffsetY));
             ShowLayers(true);
         }
 
-        // 레이어 위쪽 clipY 행만 남긴 스프라이트. 피벗을 옮겨 원래 자리에 그대로 그려지게 한다.
-        static Sprite ClipBelow(Sprite layer, float clipY)
+        // Inspector에서 footBelowMid를 바꾸면 바로 다시 맞춘다.
+        void Update()
         {
-            var keep = Mathf.Clamp(Mathf.RoundToInt(clipY), 1, (int)LayerSize);
-            if (layer == null || keep >= (int)layer.rect.height)
+            if (!float.IsNaN(_appliedFootBelowMid) && !Mathf.Approximately(_appliedFootBelowMid, footBelowMid))
             {
-                return layer;
+                Compose();
             }
-
-            var key = layer.GetInstanceID() + ":" + keep;
-            if (Clipped.TryGetValue(key, out var cached) && cached != null)
-            {
-                return cached;
-            }
-
-            var full = layer.rect;
-            var cut = full.height - keep;
-            var rect = new Rect(full.x, full.y + cut, full.width, keep);
-            var pivot = new Vector2(0.5f, (full.height * 0.5f - cut) / keep);
-            var sprite = Sprite.Create(layer.texture, rect, pivot, layer.pixelsPerUnit, 0, SpriteMeshType.FullRect);
-            sprite.name = layer.name + "_clip" + keep;
-            Clipped[key] = sprite;
-            return sprite;
-        }
-
-        static GearData Pick(GachaCatalog catalog, GearSlot slot, string fallbackId)
-        {
-            var equipped = GearBonuses.Equipped(slot);
-            if (equipped != null)
-            {
-                return equipped;
-            }
-
-            return catalog != null ? catalog.FindGear(fallbackId) : null;
         }
 
         void EnsureLayers()
@@ -155,10 +143,17 @@ namespace ScrapFishing.Boat
                 _rodTip = transform.Find("RodTip");
             }
 
+            if (_head == null)
+            {
+                _head = new GameObject("FisherHead").transform;
+                _head.SetParent(transform, false);
+                _head.localPosition = ToLocal(GearAnchors.FisherHead);
+            }
+
             var order = _original != null ? _original.sortingOrder : 5;
             var layer = _original != null ? _original.sortingLayerID : 0;
-            _fisher = _fisher != null ? _fisher : CreateLayer("FisherLayer", layer, order - 1);
-            _boat = _boat != null ? _boat : CreateLayer("BoatLayer", layer, order);
+            _boat = _boat != null ? _boat : CreateLayer("BoatLayer", layer, order + BoatOrderOffset);
+            _fisher = _fisher != null ? _fisher : CreateLayer("FisherLayer", layer, order);
             _rod = _rod != null ? _rod : CreateLayer("RodLayer", layer, order + RodOrderOffset);
         }
 

@@ -93,9 +93,17 @@ namespace ScrapFishing.Gacha
             Inventory = GearInventory.Load(store, catalog);
         }
 
+        // 실제 게임용 상점. 장착 칸이 빈 슬롯은 노멀 1번으로 채워 저장한다(첫 시작이면 6종 모두).
         public static GachaShop CreateDefault()
         {
-            return new GachaShop(GachaCatalog.LoadDefault(), new GachaService(new SystemGachaRandom()), ProgressionWallet.Instance, PlayerPrefsStore.Instance);
+            var shop = new GachaShop(GachaCatalog.LoadDefault(), new GachaService(new SystemGachaRandom()), ProgressionWallet.Instance, PlayerPrefsStore.Instance);
+            shop.EnsureStarterGear();
+            return shop;
+        }
+
+        public bool EnsureStarterGear()
+        {
+            return Commit(Inventory.EnsureStarterGear());
         }
 
         public static int CostOf(GachaMachineData machine, int count)

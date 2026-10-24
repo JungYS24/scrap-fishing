@@ -36,17 +36,18 @@ namespace ScrapFishing.UI
             label.rectTransform.offsetMax = Vector2.zero;
             label.color = Palette.NeonGreen;
             Refresh(label);
+            // 다른 음소거 버튼(설정창·HUD)에서 바꿔도 아이콘이 같이 바뀌게 한다.
+            go.AddComponent<SoundToggleLabel>().Bind(label);
 
             button.onClick.AddListener(() =>
             {
                 AudioManager.Ensure().ToggleSound();
-                Refresh(label);
             });
 
             return go;
         }
 
-        static void Refresh(Text label)
+        public static void Refresh(Text label)
         {
             if (label == null)
             {

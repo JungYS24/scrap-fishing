@@ -6,6 +6,9 @@ namespace ScrapFishing.Controls
 {
     public class TapReader : MonoBehaviour
     {
+        // 에디터 디버그용 [Tap] 로그. 결과창 문제를 확인한 뒤 false로 끈다.
+        public static bool LogTaps = true;
+
         [SerializeField] float slopPixels = 40f;
 
         public event Action OnTap;
@@ -63,6 +66,11 @@ namespace ScrapFishing.Controls
 #if UNITY_EDITOR
         void Log(string stage, Vector2 position, bool inGame, bool overUi, bool fired)
         {
+            if (!LogTaps)
+            {
+                return;
+            }
+
             var phase = _flow != null ? _flow.Phase.ToString() : "?";
             Debug.Log(
                 "[Tap] " + stage
