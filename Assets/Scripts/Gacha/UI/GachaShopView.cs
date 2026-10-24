@@ -230,6 +230,7 @@ namespace ScrapFishing.Gacha
             GachaUi.Label(bannerImage.transform, "Name", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.35f), new Vector2(0.7f, 0.95f), Palette.Text, machine.DisplayName);
             GachaUi.Label(bannerImage.transform, "Slot", 16, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.05f), new Vector2(0.7f, 0.38f), tint,
                 (string.IsNullOrEmpty(machine.BannerCopy) ? GachaUi.SlotLabel(machine.Slot) : machine.BannerCopy) + " · " + machine.Gears.Count + "종");
+            GachaUi.Showcase(GachaUi.Rect(bannerImage.transform, "Showcase", new Vector2(0.62f, 0.04f), new Vector2(0.98f, 0.54f)), machine);
 
             var counter = _shop.Inventory.Counter(machine.Id);
             var boosting = counter + 1 >= machine.BoostStart;

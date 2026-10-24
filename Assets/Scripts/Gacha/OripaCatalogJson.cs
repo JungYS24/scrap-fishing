@@ -129,9 +129,34 @@ namespace ScrapFishing.Gacha
                 }
             }
 
-            var gear = GearData.Create(Text(item, "id"), Text(item, "nameKo"), slot, rarity, effects.ToArray());
-            var spritePath = Text(item, "sprite");
-            gear.SetDetails(Text(item, "desc"), refund, LoadSprite(spritePath));
+            var id = Text(item, "id");
+            var gear = GearData.Create(id, Text(item, "nameKo"), slot, rarity, effects.ToArray());
+            // icon이 있으면 icon, 없으면 예전 필드 sprite를 아이콘으로 쓴다.
+            var iconPath = Text(item, "icon");
+            if (string.IsNullOrEmpty(iconPath))
+            {
+                iconPath = Text(item, "sprite");
+            }
+
+            var icon = LoadSprite(iconPath);
+            if (icon == null)
+            {
+                Debug.LogWarning("장비 아이콘을 찾지 못해 등급 색 사각형으로 표시합니다: " + id + " / Resources/" + iconPath);
+            }
+
+            gear.SetDetails(Text(item, "desc"), refund, icon);
+            var layerPath = Text(item, "layer");
+            if (!string.IsNullOrEmpty(layerPath))
+            {
+                var layer = LoadSprite(layerPath);
+                if (layer == null)
+                {
+                    Debug.LogWarning("장비 레이어를 찾지 못했습니다: " + id + " / Resources/" + layerPath);
+                }
+
+                gear.SetLayer(layer);
+            }
+
             return gear;
         }
 

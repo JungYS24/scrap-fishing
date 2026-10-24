@@ -1,0 +1,113 @@
+{
+ "_note": "256x256 기준 픽셀 좌표(왼쪽 위 원점, y 아래로 증가). 발끝 최하단 불투명 행 y=210, 발 중심 x≈110. 배치: 피셔 y오프셋 = 보트 deckY - waistY, 낚싯대 handleEnd를 handPos에 맞춤.",
+ "footY": 210,
+ "footX": 110,
+ "bodyHeight": 130,
+ "fishers": {
+  "fisher_normal_01": {
+   "waistY": 150,
+   "handPos": [
+    127,
+    131
+   ]
+  },
+  "fisher_normal_02": {
+   "waistY": 146,
+   "handPos": [
+    128,
+    132
+   ]
+  },
+  "fisher_normal_03": {
+   "waistY": 147,
+   "handPos": [
+    129,
+    132
+   ]
+  },
+  "fisher_normal_04": {
+   "waistY": 148,
+   "handPos": [
+    128,
+    131
+   ]
+  },
+  "fisher_normal_05": {
+   "waistY": 150,
+   "handPos": [
+    129,
+    129
+   ]
+  },
+  "fisher_rare_01": {
+   "waistY": 148,
+   "handPos": [
+    128,
+    133
+   ]
+  },
+  "fisher_rare_02": {
+   "waistY": 146,
+   "handPos": [
+    129,
+    129
+   ]
+  },
+  "fisher_rare_03": {
+   "waistY": 148,
+   "handPos": [
+    128,
+    131
+   ]
+  },
+  "fisher_rare_04": {
+   "waistY": 152,
+   "handPos": [
+    129,
+    130
+   ]
+  },
+  "fisher_epic_01": {
+   "waistY": 150,
+   "handPos": [
+    128,
+    131
+   ]
+  },
+  "fisher_epic_02": {
+   "waistY": 142,
+   "handPos": [
+    126,
+    129
+   ]
+  },
+  "fisher_epic_03": {
+   "waistY": 147,
+   "handPos": [
+    126,
+    130
+   ]
+  },
+  "fisher_legend_01": {
+   "waistY": 145,
+   "handPos": [
+    130,
+    132
+   ]
+  },
+  "fisher_legend_02": {
+   "waistY": 140,
+   "handPos": [
+    128,
+    130
+   ]
+  },
+  "fisher_synchro_01": {
+   "waistY": 145,
+   "handPos": [
+    124,
+    133
+   ]
+  }
+ }
+}

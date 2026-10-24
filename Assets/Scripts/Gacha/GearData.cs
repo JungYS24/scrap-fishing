@@ -16,6 +16,8 @@ namespace ScrapFishing.Gacha
         [Tooltip("환원가 = 머신 1회 가격 × 이 값. 0 이하면 등급 기본값을 쓴다.")]
         [SerializeField] float refundMultiplier;
         [SerializeField] Sprite icon;
+        [Tooltip("보트 씬 조합용 256 레이어. 보트·피셔만 있다.")]
+        [SerializeField] Sprite layer;
 
         public string Id => id;
         public string DisplayName => displayName;
@@ -25,6 +27,7 @@ namespace ScrapFishing.Gacha
         public IReadOnlyList<GearEffect> Effects => effects;
         public float RefundMultiplier => refundMultiplier > 0f ? refundMultiplier : DefaultRefundMultiplier(rarity);
         public Sprite Icon => icon;
+        public Sprite Layer => layer;
 
         public static float DefaultRefundMultiplier(ItemRarity rarity)
         {
@@ -57,6 +60,11 @@ namespace ScrapFishing.Gacha
             description = desc;
             refundMultiplier = refund;
             icon = sprite;
+        }
+
+        public void SetLayer(Sprite sprite)
+        {
+            layer = sprite;
         }
 
         public static GearData Create(string gearId, string name, GearSlot gearSlot, ItemRarity gearRarity, params GearEffect[] gearEffects)

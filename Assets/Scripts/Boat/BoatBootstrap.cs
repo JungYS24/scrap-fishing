@@ -1,7 +1,6 @@
 using ScrapFishing.Audio;
 using ScrapFishing.Controls;
 using ScrapFishing.Core;
-using ScrapFishing.Data;
 using ScrapFishing.Dive;
 using ScrapFishing.Fishing;
 using ScrapFishing.FX;
@@ -34,9 +33,7 @@ namespace ScrapFishing.Boat
         BoatCanvas _canvasUi;
         GachaShopView _market;
         SettingsView _settingsView;
-        SpriteRenderer _nomad;
-
-        const float FisherTintStrength = 0.55f;
+        AnglerRig _rig;
 
         void Awake()
         {
@@ -68,13 +65,13 @@ namespace ScrapFishing.Boat
             _canvasUi.SetReadyVisible(true);
             _results.Hide();
             RefreshHud();
-            GearBonuses.Changed += ApplyFisherTint;
-            ApplyFisherTint();
+            GearBonuses.Changed += ComposeAngler;
+            ComposeAngler();
         }
 
         void OnDestroy()
         {
-            GearBonuses.Changed -= ApplyFisherTint;
+            GearBonuses.Changed -= ComposeAngler;
         }
 
         void Update()
@@ -182,28 +179,19 @@ namespace ScrapFishing.Boat
             _dive.Finished += HandleDiveFinished;
         }
 
-        // 피셔 장비를 장착하면 보트 위 노마드에 등급 색을 입힌다. 피셔 아트가 들어오면 스프라이트 교체로 바꾼다.
-        void ApplyFisherTint()
+        // 보트 위 주인공을 장착한 보트·피셔·낚싯대(없으면 normal_01 외형)로 다시 조합한다. 장착은 타이틀·결과 화면에서만 바뀐다.
+        void ComposeAngler()
         {
-            if (_nomad == null)
+            if (_rig == null)
             {
-                var go = GameObject.Find("Nomad");
-                _nomad = go != null ? go.GetComponent<SpriteRenderer>() : null;
-                if (_nomad == null)
+                _rig = AnglerRig.Attach(GameObject.Find("Nomad"));
+                if (_rig == null)
                 {
                     return;
                 }
             }
 
-            var fisher = GearBonuses.Equipped(GearSlot.Fisher);
-            if (fisher == null)
-            {
-                _nomad.color = Color.white;
-                return;
-            }
-
-            var tint = fisher.Rarity == ItemRarity.Synchro ? RarityGlow.SynchroColors[1] : GachaUi.RarityColor(fisher.Rarity);
-            _nomad.color = Color.Lerp(Color.white, tint, FisherTintStrength);
+            _rig.Compose(_market != null && _market.Shop != null ? _market.Shop.Catalog : null);
         }
 
         void BuildSurface()

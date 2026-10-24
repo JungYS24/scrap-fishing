@@ -47,6 +47,7 @@ namespace ScrapFishing.Dive
         readonly List<Hazard> _hazards = new List<Hazard>();
         readonly List<GameObject> _effects = new List<GameObject>();
         bool _active;
+        DroneBuddy _drone;
         int _shields;
         float _autoCollectTimer;
         float _iframe;
@@ -124,6 +125,10 @@ namespace ScrapFishing.Dive
 
             BuildMines(_session.DeepestCast);
             SpawnSchool();
+            if (_diver != null)
+            {
+                _drone = DroneBuddy.Spawn(transform, _diver.transform);
+            }
             ShowUnderwater();
             _stick.SetVisible(true);
         }
@@ -246,6 +251,11 @@ namespace ScrapFishing.Dive
             _active = false;
             _stick.SetVisible(false);
             _spawner.Clear();
+            if (_drone != null)
+            {
+                Destroy(_drone.gameObject);
+                _drone = null;
+            }
             ClearMines();
             ClearEffects();
             ShowSurface();

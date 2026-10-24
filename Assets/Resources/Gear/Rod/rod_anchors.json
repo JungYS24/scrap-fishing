@@ -1,0 +1,153 @@
+{
+ "_설명": "128x128 아이콘 기준 픽셀 좌표(원점 왼쪽 위). handleEnd=손잡이 끝, tip=낚싯대 끝(줄이 나오는 위치)",
+ "rod_epic_01": {
+  "handleEnd": [
+   10,
+   117
+  ],
+  "tip": [
+   116,
+   9
+  ]
+ },
+ "rod_epic_02": {
+  "handleEnd": [
+   9,
+   116
+  ],
+  "tip": [
+   117,
+   8
+  ]
+ },
+ "rod_epic_03": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   116,
+   9
+  ]
+ },
+ "rod_legend_01": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   117,
+   10
+  ]
+ },
+ "rod_legend_02": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   118,
+   8
+  ]
+ },
+ "rod_normal_01": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   116,
+   8
+  ]
+ },
+ "rod_normal_02": {
+  "handleEnd": [
+   14,
+   115
+  ],
+  "tip": [
+   114,
+   8
+  ]
+ },
+ "rod_normal_03": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   116,
+   8
+  ]
+ },
+ "rod_normal_04": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   117,
+   9
+  ]
+ },
+ "rod_normal_05": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   116,
+   9
+  ]
+ },
+ "rod_rare_01": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   116,
+   9
+  ]
+ },
+ "rod_rare_02": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   115,
+   10
+  ]
+ },
+ "rod_rare_03": {
+  "handleEnd": [
+   10,
+   117
+  ],
+  "tip": [
+   116,
+   9
+  ]
+ },
+ "rod_rare_04": {
+  "handleEnd": [
+   10,
+   117
+  ],
+  "tip": [
+   117,
+   9
+  ]
+ },
+ "rod_synchro_01": {
+  "handleEnd": [
+   9,
+   117
+  ],
+  "tip": [
+   118,
+   8
+  ]
+ }
+}

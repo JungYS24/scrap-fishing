@@ -1,0 +1,153 @@
+{
+ "_설명": "256x256 레이어 기준(원점 왼쪽 위). bottomY=선체 바닥(전부 210), deckY=가운데(x 108~148) 뱃전 윗선, 피셔 허리를 이 높이에 맞추면 하반신이 가려짐. bbox=[x0,y0,x1,y1]",
+ "boat_epic_01": {
+  "bottomY": 209,
+  "deckY": 166,
+  "bbox": [
+   23,
+   112,
+   232,
+   209
+  ]
+ },
+ "boat_epic_02": {
+  "bottomY": 209,
+  "deckY": 162,
+  "bbox": [
+   23,
+   140,
+   232,
+   209
+  ]
+ },
+ "boat_epic_03": {
+  "bottomY": 209,
+  "deckY": 163,
+  "bbox": [
+   23,
+   142,
+   232,
+   209
+  ]
+ },
+ "boat_legend_01": {
+  "bottomY": 209,
+  "deckY": 165,
+  "bbox": [
+   23,
+   99,
+   232,
+   209
+  ]
+ },
+ "boat_legend_02": {
+  "bottomY": 209,
+  "deckY": 165,
+  "bbox": [
+   23,
+   102,
+   232,
+   209
+  ]
+ },
+ "boat_normal_01": {
+  "bottomY": 209,
+  "deckY": 129,
+  "bbox": [
+   23,
+   129,
+   232,
+   209
+  ]
+ },
+ "boat_normal_02": {
+  "bottomY": 209,
+  "deckY": 134,
+  "bbox": [
+   23,
+   124,
+   232,
+   209
+  ]
+ },
+ "boat_normal_03": {
+  "bottomY": 209,
+  "deckY": 170,
+  "bbox": [
+   23,
+   110,
+   232,
+   209
+  ]
+ },
+ "boat_normal_04": {
+  "bottomY": 209,
+  "deckY": 134,
+  "bbox": [
+   23,
+   133,
+   232,
+   209
+  ]
+ },
+ "boat_normal_05": {
+  "bottomY": 209,
+  "deckY": 140,
+  "bbox": [
+   23,
+   127,
+   232,
+   209
+  ]
+ },
+ "boat_rare_01": {
+  "bottomY": 209,
+  "deckY": 150,
+  "bbox": [
+   23,
+   110,
+   232,
+   209
+  ]
+ },
+ "boat_rare_02": {
+  "bottomY": 209,
+  "deckY": 166,
+  "bbox": [
+   23,
+   114,
+   232,
+   209
+  ]
+ },
+ "boat_rare_03": {
+  "bottomY": 209,
+  "deckY": 166,
+  "bbox": [
+   23,
+   96,
+   232,
+   209
+  ]
+ },
+ "boat_rare_04": {
+  "bottomY": 209,
+  "deckY": 162,
+  "bbox": [
+   23,
+   145,
+   232,
+   209
+  ]
+ },
+ "boat_synchro_01": {
+  "bottomY": 209,
+  "deckY": 166,
+  "bbox": [
+   23,
+   98,
+   232,
+   209
+  ]
+ }
+}

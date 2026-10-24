@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
@@ -368,6 +369,38 @@ namespace ScrapFishing.Gacha
             }
 
             return frame.rectTransform;
+        }
+
+        // 머신의 최고 등급 장비(싱크로·레전드) 아이콘을 가로로 늘어놓는다. 머신 카드와 뽑기 확인 팝업에 쓴다.
+        public static void Showcase(RectTransform parent, GachaMachineData machine, int count = 3)
+        {
+            Clear(parent);
+            if (machine == null)
+            {
+                return;
+            }
+
+            var picks = new List<GearData>();
+            for (var r = GachaService.RarityCount - 1; r >= 0 && picks.Count < count; r--)
+            {
+                foreach (var gear in machine.Gears)
+                {
+                    if (gear != null && (int)gear.Rarity == r && picks.Count < count)
+                    {
+                        picks.Add(gear);
+                    }
+                }
+            }
+
+            for (var i = 0; i < picks.Count; i++)
+            {
+                var min = new Vector2(1f - (i + 1) / (float)count + 0.03f, 0f);
+                var max = new Vector2(1f - i / (float)count - 0.03f, 1f);
+                var icon = GearIcon(parent, "Gear" + i, picks[i], min, max);
+                var fit = icon.gameObject.AddComponent<AspectRatioFitter>();
+                fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+                fit.aspectRatio = 1f;
+            }
         }
 
         // 체크 표시를 막대 두 개로 그린다(픽셀 폰트에 ✓ 글리프가 없을 수 있음).

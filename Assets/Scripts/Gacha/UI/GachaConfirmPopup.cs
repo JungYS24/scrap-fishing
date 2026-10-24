@@ -18,6 +18,7 @@ namespace ScrapFishing.Gacha
         readonly RectTransform _panel;
         readonly Image _banner;
         readonly Text _bannerText;
+        readonly RectTransform _showcase;
         readonly Text _title;
         readonly Text _info;
         readonly Text _balance;
@@ -40,6 +41,7 @@ namespace ScrapFishing.Gacha
 
             _banner = GachaUi.Panel(_panel, "Banner", new Vector2(0.05f, 0.76f), new Vector2(0.95f, 0.88f), GachaUi.Inset, Palette.Magenta);
             _bannerText = GachaUi.Label(_banner.transform, "BannerText", 22, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.Text);
+            _showcase = GachaUi.Rect(_banner.transform, "Showcase", new Vector2(0.7f, 0.08f), new Vector2(0.98f, 0.92f));
 
             _info = GachaUi.Label(_panel, "Info", 16, TextAnchor.UpperLeft, new Vector2(0.06f, 0.37f), new Vector2(0.94f, 0.74f), Palette.Text);
             _info.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -69,6 +71,7 @@ namespace ScrapFishing.Gacha
             _title.text = machine.DisplayName + " · " + CountLabel(count);
             _bannerText.text = "BLACK MARKET · " + GachaUi.SlotLabel(machine.Slot);
             _bannerText.color = GachaUi.SlotTint(machine.Slot);
+            GachaUi.Showcase(_showcase, machine);
             var outline = _banner.GetComponent<Outline>();
             if (outline != null)
             {
