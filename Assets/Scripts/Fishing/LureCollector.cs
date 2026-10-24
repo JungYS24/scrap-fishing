@@ -13,6 +13,8 @@ namespace ScrapFishing.Fishing
 {
     public class LureCollector : MonoBehaviour
     {
+        const int SettleJumpOrder = 8;
+
         static readonly Vector2[] SlotPreset =
         {
             new Vector2(-0.35f, -0.5f),
@@ -391,7 +393,8 @@ namespace ScrapFishing.Fishing
                 return;
             }
 
-            item.View.RestoreLook(item.RestColor, item.RestScale, item.RestOrder);
+            // 보트로 튀어 오르는 동안은 보트·피셔·낚싯대보다 앞에 그린다(매달려 있을 때 order가 보트·피셔와 겹치므로).
+            item.View.RestoreLook(item.RestColor, item.RestScale, SettleJumpOrder);
             var body = item.View.transform;
             body.DOKill(false);
             body.DOJump(target, jumpPower, 1, jumpDuration)

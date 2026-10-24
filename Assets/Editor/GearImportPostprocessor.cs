@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 // Resources/Gear 아래 장비 PNG(아이콘·보트/피셔 레이어·낚싯대)를 픽셀 좌표(anchors JSON)를 그대로 쓸 수 있게 가져온다.
-// Sprite Single, Filter Point, 압축 없음, PPU 100, 피벗 중앙. Multiple로 잘리면 기준점 좌표가 어긋나므로 반드시 Single이다.
+// Sprite Single, Filter Point, Wrap Clamp, 압축 없음, PPU 100, 피벗 중앙. Multiple로 잘리면 기준점 좌표가 어긋나므로 반드시 Single이다.
 public class GearImportPostprocessor : AssetPostprocessor
 {
     public const string GearRoot = "Assets/Resources/Gear/";
@@ -23,6 +23,7 @@ public class GearImportPostprocessor : AssetPostprocessor
         importer.textureType = TextureImporterType.Sprite;
         importer.spriteImportMode = SpriteImportMode.Single;
         importer.filterMode = FilterMode.Point;
+        importer.wrapMode = TextureWrapMode.Clamp;
         importer.textureCompression = TextureImporterCompression.Uncompressed;
         importer.mipmapEnabled = false;
         importer.alphaIsTransparency = true;

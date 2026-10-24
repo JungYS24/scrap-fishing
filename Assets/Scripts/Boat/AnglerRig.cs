@@ -18,11 +18,15 @@ namespace ScrapFishing.Boat
         const float LayerSize = 256f;
         const float RodSize = 128f;
         const float GripRatio = 0.25f;
+        // 피셔는 뱃전(deckY)에서 이만큼 아래 행까지만 그린다. 타이어 구멍처럼 보트 레이어의 투명한 틈으로 다리가 비치지 않게 한다.
+        public const float ClipBelowDeckPx = 4f;
+        // 루어(6)와 같은 order가 되지 않게 낚싯대는 Nomad보다 2 위에 둔다.
+        const int RodOrderOffset = 2;
 
         public struct Layout
         {
             public float FisherOffsetY;
-            // 피셔 이미지에서 이 행(y)부터 아래는 그리지 않는다. 뱃전 아래로 다리가 선체보다 길게 삐져나오는 보트가 있어서 선체 바닥에서 자른다.
+            // 피셔 이미지에서 이 행(y)부터 아래는 그리지 않는다(뱃전 + ClipBelowDeckPx 높이).
             public float FisherClipY;
             public Vector2 HandPx;
             public Vector2 RodOffsetPx;
@@ -49,7 +53,7 @@ namespace ScrapFishing.Boat
             return new Layout
             {
                 FisherOffsetY = offsetY,
-                FisherClipY = boat.BottomY - offsetY,
+                FisherClipY = boat.DeckY + ClipBelowDeckPx - offsetY,
                 HandPx = hand,
                 RodOffsetPx = rodOffset,
                 GripPx = rodOffset + grip,
@@ -155,7 +159,7 @@ namespace ScrapFishing.Boat
             var layer = _original != null ? _original.sortingLayerID : 0;
             _fisher = _fisher != null ? _fisher : CreateLayer("FisherLayer", layer, order - 1);
             _boat = _boat != null ? _boat : CreateLayer("BoatLayer", layer, order);
-            _rod = _rod != null ? _rod : CreateLayer("RodLayer", layer, order + 1);
+            _rod = _rod != null ? _rod : CreateLayer("RodLayer", layer, order + RodOrderOffset);
         }
 
         SpriteRenderer CreateLayer(string name, int sortingLayer, int order)

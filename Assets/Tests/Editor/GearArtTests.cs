@@ -109,7 +109,8 @@ namespace ScrapFishing.Tests
                         var layout = AnglerRig.Compute(boat.Value, fisher.Value, rod.Value);
                         var label = boat.Key + "/" + fisher.Key + "/" + rod.Key;
                         Assert.AreEqual(boat.Value.DeckY - fisher.Value.WaistY, layout.FisherOffsetY, 1e-4f, label);
-                        Assert.AreEqual(boat.Value.BottomY, layout.FisherClipY + layout.FisherOffsetY, 1e-4f, label + " 선체 바닥 아래로 다리가 나오지 않는다");
+                        Assert.AreEqual(boat.Value.DeckY + AnglerRig.ClipBelowDeckPx, layout.FisherClipY + layout.FisherOffsetY, 1e-4f, label + " 뱃전 바로 아래에서 자른다");
+                        Assert.AreEqual(fisher.Value.WaistY + AnglerRig.ClipBelowDeckPx, layout.FisherClipY, 1e-4f, label + " 피셔 이미지 기준으로는 허리 + 4px");
                         Assert.LessOrEqual(Vector2.Distance(layout.GripPx, layout.HandPx), 1f, label);
                         var grip = rod.Value.HandleEnd + (rod.Value.Tip - rod.Value.HandleEnd) * 0.25f;
                         Assert.AreEqual(layout.RodOffsetPx + grip, layout.GripPx, label);
