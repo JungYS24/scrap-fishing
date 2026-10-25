@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66365959bb08fc942ba8707b786ea81e, type: 3}
+  m_Name: GachaVideoConfig
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.Gacha.GachaVideoConfig
+  machines:
+  - machineId: lure
+    videoFile: gacha_lure.mp4
+    sfx: {fileID: 8300000, guid: 03776633a7fb4184d9a0ad1f923572c2, type: 3}
+    flashTime: 3.5
+    cardTime: 6.5
+  - machineId: rod
+    videoFile: gacha_rod.mp4
+    sfx: {fileID: 8300000, guid: b6b8148993559794889b610805f58a25, type: 3}
+    flashTime: 4.3
+    cardTime: 7.7
+  - machineId: boat
+    videoFile: gacha_boat.mp4
+    sfx: {fileID: 8300000, guid: 1d202e791c2c2b04e8ed9f4eb81062fa, type: 3}
+    flashTime: 5.2
+    cardTime: 7.5
+  - machineId: drone
+    videoFile: gacha_drone.mp4
+    sfx: {fileID: 8300000, guid: 0a5a4545dce30134297d0bf7b2b4f528, type: 3}
+    flashTime: 5.5
+    cardTime: 7.5
+  - machineId: fisher
+    videoFile: gacha_fisher.mp4
+    sfx: {fileID: 8300000, guid: a3c8df22c10ee0c489803b1741bfbb58, type: 3}
+    flashTime: 5.2
+    cardTime: 7.2
+  - machineId: helmet
+    videoFile: gacha_helmet.mp4
+    sfx: {fileID: 8300000, guid: fb33767b7b803334da7f0031646b6649, type: 3}
+    flashTime: 5.2
+    cardTime: 7.5
+  flashDuration: 0.6
+  flashAlpha: 0.85
+  legendShakeStrength: 14
+  legendShakeDuration: 0.45
+  legendFlashSfx: {fileID: 0}
+  synchroFlashSfx: {fileID: 0}
+  tenColumns: 2
+  cardFlipInterval: 0.1
+  cardFlipDuration: 0.2
+  startTimeout: 4
+  stallTimeout: 3

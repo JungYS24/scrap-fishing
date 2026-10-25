@@ -124,6 +124,9 @@ namespace ScrapFishing.Audio
 
         public bool SoundOn => PlayerPrefs.GetInt(SoundPref, 1) != 0;
 
+        // 따로 AudioSource를 쓰는 효과음(오리파 연출 등)이 맞출 음량: 믹스의 효과음 기준 × 설정의 마스터·효과음 음량.
+        public float SfxLevel => Mathf.Clamp01((mix != null ? mix.masterSfx : 1f) * VolumeSettings.SfxGain);
+
         public static event System.Action SoundChanged;
 
         public void SetSoundOn(bool on)

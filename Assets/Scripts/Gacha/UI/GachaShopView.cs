@@ -10,7 +10,7 @@ using UnityEngine.UI;
 namespace ScrapFishing.Gacha
 {
     // 암시장 머신 목록. 타이틀·결과 화면 위에 덮어 띄우고, 닫으면 아래 화면으로 돌아간다.
-    // 확인 팝업 → (연출 없이) 결과 → 환원 확인·완료 또는 보관까지 이 화면이 흐름을 잇는다.
+    // 확인 팝업 → 결과 확정 → 머신 연출 영상(1연·10연, GachaVideoView) → 결과 목록 → 환원 확인·완료 또는 보관까지 이 화면이 흐름을 잇는다.
     // 화면 틀(BlackMarket 아래 패널·버튼·라벨)은 씬 하이러키에 두고 관리한다. 머신 카드·결과 목록만 실행 중에 만든다.
     public class GachaShopView : MonoBehaviour
     {
@@ -36,6 +36,8 @@ namespace ScrapFishing.Gacha
         GachaResultView _result;
         GachaRefundPopup _refund;
         GachaInventoryView _inventory;
+        GachaVideoView _video;
+        GachaMachineData _lastMachine;
         readonly Dictionary<string, float> _refundRates = new Dictionary<string, float>();
         GearSlot? _filter;
         List<RefundPick> _pendingRefund;
@@ -45,6 +47,7 @@ namespace ScrapFishing.Gacha
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
         public GachaShop Shop => _shop;
+        public GachaVideoView Video => _video;
 
         public void Build(RectTransform area)
         {
@@ -56,6 +59,7 @@ namespace ScrapFishing.Gacha
             }
 
             BuildLayout(area);
+            _video = GachaVideoView.Create(_root);
             GearBonuses.Refresh(_shop.Inventory);
             _root.gameObject.SetActive(false);
         }
@@ -81,7 +85,7 @@ namespace ScrapFishing.Gacha
 
             _result = new GachaResultView(_root, RequestRefund, StorePicks, CloseResult, PullAgain);
             _confirm = new GachaConfirmPopup(_root, ConfirmPull);
-            _refund = new GachaRefundPopup(_root, ExecuteRefund, (machine, count) => _confirm.Show(_shop, machine, count), RefreshCards);
+            _refund = new GachaRefundPopup(_root, ExecuteRefund, ShowConfirm, RefreshCards);
             _inventory = new GachaInventoryView(_root, HandleInventoryRefund);
             BuildTopBar();
 
@@ -109,6 +113,8 @@ namespace ScrapFishing.Gacha
             _result.Hide();
             _refund.Hide();
             _inventory.Hide();
+            _video?.HideNow();
+            SetDollarVisible(true);
             SelectTab(_filter);
             _group.alpha = 0f;
             _group.blocksRaycasts = true;
@@ -118,7 +124,7 @@ namespace ScrapFishing.Gacha
 
         public void Close()
         {
-            if (!IsOpen || _flying)
+            if (!IsOpen || _flying || (_video != null && _video.IsPlaying))
             {
                 return;
             }
@@ -136,7 +142,7 @@ namespace ScrapFishing.Gacha
                 return;
             }
 
-            var modal = _confirm.IsOpen || _result.IsOpen || _refund.IsOpen || _inventory.IsOpen || _flying;
+            var modal = _confirm.IsOpen || _result.IsOpen || _refund.IsOpen || _inventory.IsOpen || _flying || (_video != null && _video.IsPlaying);
             if (_close != null)
             {
                 GachaUi.SetEnabled(_close, !modal, Palette.Magenta);
@@ -201,6 +207,40 @@ namespace ScrapFishing.Gacha
 
             RefreshCards();
             _scroll.verticalNormalizedPosition = 1f;
+            PrepareSelected();
+        }
+
+        // 지금 고른 머신(탭의 머신, 전체 탭이면 마지막으로 고른 머신 또는 첫 머신)의 연출 영상을 미리 불러 둔다.
+        void PrepareSelected()
+        {
+            if (_video == null)
+            {
+                return;
+            }
+
+            GachaMachineData pick = null;
+            foreach (var machine in _shop.Catalog.Machines)
+            {
+                if (_filter.HasValue ? machine.Slot == _filter.Value : machine == _lastMachine)
+                {
+                    pick = machine;
+                    break;
+                }
+            }
+
+            if (pick == null && _shop.Catalog.Machines.Count > 0)
+            {
+                pick = _shop.Catalog.Machines[0];
+            }
+
+            _video.Prepare(pick);
+        }
+
+        void ShowConfirm(GachaMachineData machine, int count)
+        {
+            _lastMachine = machine;
+            _video?.Prepare(machine);
+            _confirm.Show(_shop, machine, count);
         }
 
         void RefreshCards()
@@ -268,7 +308,7 @@ namespace ScrapFishing.Gacha
                 var max = new Vector2(0.03f + i * 0.32f + 0.3f, 0.24f);
                 var label = GachaConfirmPopup.CountLabel(count) + "\n<size=16>" + GachaUi.Money(GachaShop.CostOf(machine, count)) + "</size>";
                 var accent = _shop.CanAfford(machine, count) ? Palette.NeonGreen : GachaUi.Muted;
-                var button = GachaUi.MakeButton(card, "Pull" + count, label, min, max, accent, 22, () => _confirm.Show(_shop, machine, count));
+                var button = GachaUi.MakeButton(card, "Pull" + count, label, min, max, accent, 22, () => ShowConfirm(machine, count));
                 var text = GachaUi.LabelOf(button);
                 if (text != null)
                 {
@@ -335,7 +375,32 @@ namespace ScrapFishing.Gacha
             AudioManager.Ensure().PlayUpgradeBuy();
             _confirm.Hide();
             RefreshCards();
+            // 결과는 이미 확정·저장됐다. 이 탭과 같은 프레임에 영상과 소리를 시작하고, 끝나면(또는 못 불러오면) 결과 목록을 띄운다.
+            // 연출 중(영상 시작 ~ 결과 카드를 닫을 때)에는 달러 패널을 숨긴다.
+            SetDollarVisible(false);
+            if (_video == null || !_video.Play(result, () => FinishVideo(result)))
+            {
+                FinishVideo(result);
+            }
+        }
+
+        void FinishVideo(GachaPullResult result)
+        {
+            SetDollarVisible(true);
             _result.Show(_shop, result);
+        }
+
+        // 달러 패널은 맨 앞에 유지되므로(UiStayOnTop) 끄지 않고 CanvasGroup으로만 감춘다.
+        void SetDollarVisible(bool visible)
+        {
+            if (_dollarPanel == null)
+            {
+                return;
+            }
+
+            var group = GachaUi.GetOrAdd<CanvasGroup>(_dollarPanel);
+            group.alpha = visible ? 1f : 0f;
+            group.blocksRaycasts = visible;
         }
 
         void RequestRefund(List<RefundPick> picks, RectTransform from)
@@ -430,7 +495,7 @@ namespace ScrapFishing.Gacha
 
             _result.Hide();
             RefreshCards();
-            _confirm.Show(_shop, machine, count);
+            ShowConfirm(machine, count);
         }
 
         void CloseResult()
