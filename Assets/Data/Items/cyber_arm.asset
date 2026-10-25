@@ -23,4 +23,6 @@ MonoBehaviour:
   hasAnimation: 0
   animationClip: {fileID: 0}
   animatorController: {fileID: 0}
+  frames: []
+  frameRate: 8
   prefab: {fileID: 6353419601831093871, guid: f2cf77037dc58184e85fd781bbd5a555, type: 3}

@@ -1,3 +1,4 @@
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.FX;
 using UnityEngine;
@@ -61,6 +62,18 @@ namespace ScrapFishing.Scrap
                 : PlaceholderFactory.Square(definition != null ? definition.PlaceholderColor : Color.white);
             _renderer.color = Color.white;
             _renderer.sortingOrder = 2;
+            if (data != null && data.HasFrames)
+            {
+                // 에픽 이상: 같은 오브젝트가 루어에 붙고 보트로 튀어도 계속 재생된다. 시작 프레임은 무작위.
+                var animator = GetComponent<SpriteAnimator>();
+                if (animator == null)
+                {
+                    animator = gameObject.AddComponent<SpriteAnimator>();
+                }
+
+                animator.Play(data.Frames, data.FrameRate, true);
+            }
+
             RarityGlow.Apply(this);
         }
 

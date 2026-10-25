@@ -23,4 +23,14 @@ MonoBehaviour:
   hasAnimation: 1
   animationClip: {fileID: 7400000, guid: a7df9dbde1f6b0b428e27fe1bd5b8bfb, type: 2}
   animatorController: {fileID: 9100000, guid: d308b5d52b55dd24ab1292eafc443265, type: 2}
+  frames:
+  - {fileID: 5071766062666551965, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: 4482607768264251119, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: -2135524182158883058, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: -4566893765241057728, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: 3369447995093243020, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: 1397423819436993094, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: -3248917731122812594, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  - {fileID: -6352399155208346709, guid: e3cf1839fdb830347bba4c76553031f2, type: 3}
+  frameRate: 8
   prefab: {fileID: 8415360637457281991, guid: 54cba6a4577f2fc4a9f6bac6d77b1c13, type: 3}

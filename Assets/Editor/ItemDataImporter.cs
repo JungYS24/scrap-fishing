@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ScrapFishing.Data;
 using UnityEditor;
+using UnityEditor.U2D.Sprites;
 using UnityEngine;
 
 namespace ScrapFishing.EditorTools
@@ -14,6 +15,7 @@ namespace ScrapFishing.EditorTools
         const string ItemsFolder = "Assets/Data/Items";
         const string PrefabsFolder = "Assets/Prefabs/Items";
         const string DatabasePath = "Assets/Resources/ItemDatabase.asset";
+        const int AnimationFrames = 8;
 
         [MenuItem("Tools/Scrap Fishing/Import Items From JSON")]
         public static void ImportFromJson()
@@ -59,6 +61,11 @@ namespace ScrapFishing.EditorTools
 
                 var art = ArtSource(item, root.items);
                 var pngPath = ArtPath(art.sprite);
+                if (item.hasAnimation)
+                {
+                    CenterSheetPivots(pngPath);
+                }
+
                 var icon = LoadIcon(pngPath, item.id);
                 if (icon == null)
                 {
@@ -110,6 +117,7 @@ namespace ScrapFishing.EditorTools
                     item.hasAnimation,
                     clip,
                     controller);
+                data.SetFrames(item.hasAnimation ? LoadFrames(pngPath, item.id) : null);
                 EditorUtility.SetDirty(data);
 
                 var prefab = SaveItemPrefab(item.id, data, sortingLayer);
@@ -173,10 +181,14 @@ namespace ScrapFishing.EditorTools
                     Debug.LogError("icon null: " + item.Id);
                 }
 
-                if (item.HasAnimation && item.AnimatorController == null)
+                if (item.HasAnimation && item.Frames.Length != AnimationFrames)
                 {
                     errors++;
-                    Debug.LogError("hasAnimation인데 controller null: " + item.Id);
+                    Debug.LogError("hasAnimation인데 프레임이 " + AnimationFrames + "개가 아닙니다: " + item.Id + " (" + item.Frames.Length + ")");
+                }
+                else if (!item.HasAnimation && item.Frames.Length > 0)
+                {
+                    Debug.LogWarning("정지 아이템인데 프레임이 있습니다: " + item.Id);
                 }
 
                 if (item.Chip <= 0 || item.Gold <= 0)
@@ -372,6 +384,78 @@ namespace ScrapFishing.EditorTools
         static string ArtPath(string relative)
         {
             return (ArtRoot + relative).Replace('\\', '/');
+        }
+
+        // 에픽 이상 루프 애니메이션 프레임: 시트에서 잘린 스프라이트를 이름 끝 번호(_0 ~ _7) 순서로 정렬한다.
+        // 프레임 이름이 파일명과 다른 시트(Sucker_Squid → Octopus_SS_n)가 있어서 이름 앞부분은 보지 않는다.
+        static Sprite[] LoadFrames(string pngPath, string id)
+        {
+            var sprites = new List<Sprite>();
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(pngPath))
+            {
+                if (asset is Sprite sprite)
+                {
+                    sprites.Add(sprite);
+                }
+            }
+
+            sprites.Sort((a, b) =>
+            {
+                var byNumber = FrameNumber(a.name).CompareTo(FrameNumber(b.name));
+                return byNumber != 0 ? byNumber : CompareNatural(a.name, b.name);
+            });
+            if (sprites.Count != AnimationFrames)
+            {
+                Debug.LogWarning("프레임이 " + AnimationFrames + "개가 아닙니다: " + id + " / " + pngPath + " (" + sprites.Count + "개)");
+            }
+
+            return sprites.ToArray();
+        }
+
+        static int FrameNumber(string name)
+        {
+            var end = name.Length;
+            var start = end;
+            while (start > 0 && char.IsDigit(name[start - 1]))
+            {
+                start--;
+            }
+
+            return start < end && int.TryParse(name.Substring(start, end - start), out var number) ? number : int.MaxValue;
+        }
+
+        // 잘린 프레임의 피벗을 모두 중앙으로 맞춘다(칼날비늘용 시트만 아래 가운데였다). 바뀐 것이 있을 때만 다시 가져온다.
+        static void CenterSheetPivots(string pngPath)
+        {
+            if (!(AssetImporter.GetAtPath(pngPath) is TextureImporter importer) || importer.spriteImportMode != SpriteImportMode.Multiple)
+            {
+                return;
+            }
+
+            // 예전 spritesheet 속성은 Unity 6에서 메타에 저장되지 않아 스프라이트 편집 데이터 제공자로 바꾼다.
+            var factory = new SpriteDataProviderFactories();
+            factory.Init();
+            var provider = factory.GetSpriteEditorDataProviderFromObject(importer);
+            provider.InitSpriteEditorDataProvider();
+            var rects = provider.GetSpriteRects();
+            var changed = false;
+            foreach (var rect in rects)
+            {
+                if (rect.alignment != SpriteAlignment.Center || rect.pivot != new Vector2(0.5f, 0.5f))
+                {
+                    rect.alignment = SpriteAlignment.Center;
+                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                provider.SetSpriteRects(rects);
+                provider.Apply();
+                importer.SaveAndReimport();
+                Debug.Log("시트 프레임 피벗을 중앙으로 맞췄습니다: " + pngPath);
+            }
         }
 
         static Sprite LoadIcon(string pngPath, string id)

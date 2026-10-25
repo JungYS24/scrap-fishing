@@ -791,7 +791,9 @@ namespace ScrapFishing.FX
 
         static Vector2 ScrapSize(ScrapView view)
         {
-            var sprite = view != null && view.Renderer != null ? view.Renderer.sprite : null;
+            var sprite = view != null && view.data != null && view.data.HasFrames
+                ? view.data.Frames[0]
+                : view != null && view.Renderer != null ? view.Renderer.sprite : null;
             if (sprite == null)
             {
                 return Vector2.one;

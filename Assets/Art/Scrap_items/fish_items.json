@@ -541,17 +541,17 @@
       "gold": 400
     },
     {
-      "id": "pegigas",
-      "name": "갑룡 페이기가스",
+      "id": "blade_glass_snake",
+      "name": "칼날비늘용",
       "category": "fish",
       "rarity": "synchro",
       "zone": "abyss",
-      "sprite": "Synchro_items/Pegigas/Pegigas.png",
+      "sprite": "Synchro_items/Blade-Glass Snake/Blade-Glass Snake.png",
       "placeholder": "leviathan",
       "hasAnimation": true,
       "animation": {
-        "clip": "Synchro_items/Pegigas/AC_Pegigas.anim",
-        "controller": "Synchro_items/Pegigas/AC_Pegigas.controller",
+        "clip": "Synchro_items/Blade-Glass Snake/Blade-Glass Snake.anim",
+        "controller": "",
         "frames": 8,
         "loop": true
       },

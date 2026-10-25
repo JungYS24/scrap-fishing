@@ -461,7 +461,11 @@ namespace ScrapFishing.UI
             for (var i = 0; i < shown; i++)
             {
                 var stack = stacks[i];
-                SpawnCell(stack.Name, stack.Icon, stack.Placeholder, RarityGlow.BorderColor(stack.Rarity), stack.Count, stack.Rarity, index++);
+                var cell = SpawnCell(stack.Name, stack.Icon, stack.Placeholder, RarityGlow.BorderColor(stack.Rarity), stack.Count, stack.Rarity, index++);
+                if (cell != null && stack.Data != null && stack.Data.HasFrames)
+                {
+                    UiSpriteAnimator.Play(cell, stack.Data.Frames, stack.Data.FrameRate);
+                }
             }
 
             if (overflow)
@@ -476,8 +480,10 @@ namespace ScrapFishing.UI
             }
         }
 
-        void SpawnCell(string label, Sprite icon, Color placeholder, Color border, int count, ItemRarity rarity, int index, bool caption = false)
+        // 반환값: 아이템 그림 Image(설명 칸이면 null). 에픽 이상은 호출부에서 프레임 재생을 붙인다.
+        Image SpawnCell(string label, Sprite icon, Color placeholder, Color border, int count, ItemRarity rarity, int index, bool caption = false)
         {
+            Image art = null;
             var cell = new GameObject(caption ? "LootNote" : "LootCell");
             cell.transform.SetParent(_lootRoot, false);
             var background = cell.AddComponent<Image>();
@@ -492,7 +498,7 @@ namespace ScrapFishing.UI
             {
                 var artGo = new GameObject("Icon");
                 artGo.transform.SetParent(cell.transform, false);
-                var art = artGo.AddComponent<Image>();
+                art = artGo.AddComponent<Image>();
                 art.sprite = icon != null ? icon : PlaceholderFactory.Square(placeholder, 16);
                 art.preserveAspect = true;
                 art.raycastTarget = false;
@@ -545,6 +551,8 @@ namespace ScrapFishing.UI
                     .SetUpdate(true)
                     .SetLink(cell);
             }
+
+            return art;
         }
 
         void ClearLoot()

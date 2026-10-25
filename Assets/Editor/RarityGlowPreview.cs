@@ -86,12 +86,8 @@ namespace ScrapFishing.EditorTools
             go.transform.position = position;
             go.transform.localScale = Vector3.one * 0.4f;
             var view = go.AddComponent<ScrapView>();
+            // ScrapView가 ItemData.Frames로 애니메이션을 재생한다.
             view.Bind(item);
-            if (item.HasAnimation && item.AnimatorController != null)
-            {
-                var animator = go.AddComponent<Animator>();
-                animator.runtimeAnimatorController = item.AnimatorController;
-            }
         }
     }
 }
