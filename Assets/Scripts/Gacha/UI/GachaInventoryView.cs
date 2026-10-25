@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.FX;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ScrapFishing.Gacha
 {
-    // 보관함: 슬롯별 장착 칸, 장착 효과 합계, 슬롯 탭, 장비 카드(적용·해제·환원).
+    // 보관함: 슬롯별 장착 칸(아이콘), 총 효과 탭 패널, 일괄 정산, 슬롯 탭, 장비 카드(체크·적용·해제·환원).
     // 적용하면 바로 저장하고 GearBonuses를 갱신한다. 효과는 다음 출항부터 반영된다.
+    // 일괄 정산은 지금 탭에 보이는 보관·미처리 장비 중 체크된 것을 전부 환원한다(장착 중인 것은 제외).
     public sealed class GachaInventoryView
     {
         const float ConfirmWindow = 2f;
@@ -28,6 +30,12 @@ namespace ScrapFishing.Gacha
         readonly CanvasGroup _group;
         readonly RectTransform _slots;
         readonly Text _summary;
+        readonly RectTransform _effectsPanel;
+        readonly Button _effectsTab;
+        readonly Button _bulkRefund;
+        readonly HashSet<string> _unchecked = new HashSet<string>();
+        readonly List<Row> _rows = new List<Row>();
+        bool _bulkArmed;
         readonly RectTransform _list;
         readonly ScrollRect _scroll;
         readonly Text _empty;
@@ -53,9 +61,15 @@ namespace ScrapFishing.Gacha
             GachaUi.Label(_root, "SlotsCaption", 16, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.88f), new Vector2(0.96f, 0.915f), GachaUi.Muted,
                 "장착 중 · 다음 출항부터 반영");
             _slots = GachaUi.Rect(_root, "Slots", new Vector2(0.03f, 0.745f), new Vector2(0.97f, 0.875f));
-            _summary = GachaUi.Label(_root, "Summary", 16, TextAnchor.UpperLeft, new Vector2(0.04f, 0.645f), new Vector2(0.96f, 0.74f), Palette.Cyan);
-            _summary.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _summary.verticalOverflow = VerticalWrapMode.Truncate;
+            // 예전에 늘 보이던 총 효과 글자(씬에 남아 있을 수 있음)는 숨기고 탭 패널로 옮긴다.
+            var legacySummary = _root.Find("Summary");
+            if (legacySummary != null)
+            {
+                legacySummary.gameObject.SetActive(false);
+            }
+
+            _effectsTab = GachaUi.MakeButton(_root, "EffectsTab", "총 효과 보기", new Vector2(0.04f, 0.65f), new Vector2(0.48f, 0.735f), Palette.Cyan, 22, ToggleEffects);
+            _bulkRefund = GachaUi.MakeButton(_root, "BulkRefund", "일괄 정산", new Vector2(0.52f, 0.65f), new Vector2(0.96f, 0.735f), Palette.Gold, 22, BulkRefund);
 
             var tabs = GachaUi.Rect(_root, "Tabs", new Vector2(0.03f, 0.59f), new Vector2(0.97f, 0.635f));
             for (var i = 0; i < Tabs.Length; i++)
@@ -67,6 +81,15 @@ namespace ScrapFishing.Gacha
             _list = GachaUi.Scroll(_root, "List", new Vector2(0.03f, 0.015f), new Vector2(0.97f, 0.58f), 6f, out _scroll);
             _empty = GachaUi.Label(_root, "Empty", 22, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.25f), new Vector2(0.95f, 0.35f), GachaUi.Muted,
                 "보관 중인 장비가 없어요");
+
+            // 총 효과 탭 패널: 탭 버튼으로 열고 닫는다. 장비 목록 위에 덮어 띄운다.
+            _effectsPanel = GachaUi.Panel(_root, "EffectsPanel", new Vector2(0.03f, 0.3f), new Vector2(0.97f, 0.645f), GachaUi.Card, Palette.Cyan, true).rectTransform;
+            GachaUi.Label(_effectsPanel, "Header", 22, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.82f), new Vector2(0.95f, 0.97f), Palette.Cyan, "장착 장비 총 효과");
+            _summary = GachaUi.Label(_effectsPanel, "Summary", 16, TextAnchor.UpperLeft, new Vector2(0.05f, 0.04f), new Vector2(0.95f, 0.8f), Palette.Text);
+            _summary.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _summary.verticalOverflow = VerticalWrapMode.Truncate;
+            _summary.lineSpacing = 1.1f;
+            _effectsPanel.gameObject.SetActive(false);
             _root.gameObject.SetActive(false);
         }
 
@@ -74,6 +97,8 @@ namespace ScrapFishing.Gacha
         {
             _shop = shop;
             _armedRefund = null;
+            _bulkArmed = false;
+            SetEffectsOpen(false);
             _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
             _group.alpha = 0f;
@@ -117,13 +142,130 @@ namespace ScrapFishing.Gacha
             BuildSlots();
             _summary.text = Summary();
             GachaUi.Clear(_list);
-            var rows = Rows();
-            foreach (var row in rows)
+            _rows.Clear();
+            _rows.AddRange(Rows());
+            foreach (var row in _rows)
             {
                 BuildCard(row);
             }
 
-            _empty.gameObject.SetActive(rows.Count == 0);
+            _empty.gameObject.SetActive(_rows.Count == 0);
+            RefreshBulkButton();
+        }
+
+        void ToggleEffects()
+        {
+            SetEffectsOpen(!_effectsPanel.gameObject.activeSelf);
+        }
+
+        void SetEffectsOpen(bool open)
+        {
+            _effectsPanel.gameObject.SetActive(open);
+            if (open)
+            {
+                _effectsPanel.SetAsLastSibling();
+                Fx.Pop(_effectsPanel);
+            }
+
+            var label = GachaUi.LabelOf(_effectsTab);
+            if (label != null)
+            {
+                label.text = open ? "총 효과 닫기" : "총 효과 보기";
+            }
+        }
+
+        // 체크된(제외하지 않은) 보관·미처리 장비 개수와 환원 합계.
+        int BulkTotal(out int pieces)
+        {
+            pieces = 0;
+            var dollars = 0;
+            foreach (var row in _rows)
+            {
+                var spare = row.Stored + row.Unprocessed;
+                if (spare <= 0 || _unchecked.Contains(row.Gear.Id))
+                {
+                    continue;
+                }
+
+                pieces += spare;
+                dollars += _shop.RefundValue(row.Gear.Id, spare);
+            }
+
+            return dollars;
+        }
+
+        void RefreshBulkButton()
+        {
+            var dollars = BulkTotal(out var pieces);
+            var label = GachaUi.LabelOf(_bulkRefund);
+            if (label != null)
+            {
+                label.text = pieces <= 0
+                    ? "일괄 정산"
+                    : _bulkArmed
+                        ? "확인? " + GachaUi.Money(dollars)
+                        : "일괄 정산 " + pieces + "개";
+            }
+
+            GachaUi.SetEnabled(_bulkRefund, pieces > 0, _bulkArmed ? Palette.Magenta : Palette.Gold);
+        }
+
+        // 두 번 눌러야 정산한다. 첫 번째 누름에 합계를 보여 주고, 두 번째 누름에 체크된 장비를 전부 환원한다.
+        void BulkRefund()
+        {
+            BulkTotal(out var pieces);
+            if (pieces <= 0)
+            {
+                return;
+            }
+
+            if (!_bulkArmed || Time.unscaledTime >= _armedUntil)
+            {
+                _bulkArmed = true;
+                _armedRefund = null;
+                _armedUntil = Time.unscaledTime + ConfirmWindow;
+                RefreshBulkButton();
+                return;
+            }
+
+            _bulkArmed = false;
+            var total = 0;
+            foreach (var row in _rows)
+            {
+                if (_unchecked.Contains(row.Gear.Id))
+                {
+                    continue;
+                }
+
+                if (row.Stored > 0 && _shop.TryRefund(row.Gear.Id, GearState.Stored, row.Stored, out var stored))
+                {
+                    total += stored;
+                }
+
+                if (row.Unprocessed > 0 && _shop.TryRefund(row.Gear.Id, GearState.Unprocessed, row.Unprocessed, out var unprocessed))
+                {
+                    total += unprocessed;
+                }
+            }
+
+            if (total > 0)
+            {
+                AudioManager.Ensure().PlayUpgradeBuy();
+                _onRefunded?.Invoke(total);
+            }
+
+            Refresh();
+        }
+
+        void ToggleCheck(string gearId)
+        {
+            if (!_unchecked.Remove(gearId))
+            {
+                _unchecked.Add(gearId);
+            }
+
+            _bulkArmed = false;
+            Refresh();
         }
 
         void BuildSlots()
@@ -136,15 +278,11 @@ namespace ScrapFishing.Gacha
                 var min = new Vector2(s / (float)GearInventory.SlotCount + 0.008f, 0f);
                 var max = new Vector2((s + 1) / (float)GearInventory.SlotCount - 0.008f, 1f);
                 var cell = GachaUi.Panel(_slots, "Slot_" + slot, min, max, GachaUi.Inset, gear != null ? GachaUi.RarityColor(gear.Rarity) : GachaUi.Muted).rectTransform;
-                GachaUi.Label(cell, "Slot", 16, TextAnchor.MiddleCenter, new Vector2(0f, 0.78f), new Vector2(1f, 1f), GachaUi.SlotTint(slot), GachaUi.SlotLabel(slot));
+                GachaUi.Label(cell, "Slot", 16, TextAnchor.MiddleCenter, new Vector2(0f, 0.8f), new Vector2(1f, 1f), GachaUi.SlotTint(slot), GachaUi.SlotLabel(slot));
                 if (gear != null)
                 {
-                    GachaUi.GearIcon(cell, "Icon", gear, new Vector2(0.18f, 0.24f), new Vector2(0.82f, 0.78f));
-                    var name = GachaUi.Label(cell, "Name", 16, TextAnchor.MiddleCenter, new Vector2(0.02f, 0f), new Vector2(0.98f, 0.24f), Palette.Text, gear.DisplayName);
-                    name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    name.resizeTextForBestFit = true;
-                    name.resizeTextMinSize = 10;
-                    name.resizeTextMaxSize = 16;
+                    // 이름은 빼고 아이콘을 칸에 꽉 차게 키운다.
+                    GachaUi.GearIcon(cell, "Icon", gear, new Vector2(0.04f, 0.03f), new Vector2(0.96f, 0.8f));
                 }
                 else
                 {
@@ -225,6 +363,11 @@ namespace ScrapFishing.Gacha
             GachaUi.Height(card, 128f);
 
             GachaUi.GearIcon(card, "Icon", gear, new Vector2(0.02f, 0.12f), new Vector2(0.19f, 0.88f));
+            if (row.Stored + row.Unprocessed > 0)
+            {
+                CheckBox(card, !_unchecked.Contains(gear.Id), () => ToggleCheck(gear.Id));
+            }
+
             GachaUi.Label(card, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.22f, 0.66f), new Vector2(0.74f, 0.96f), Palette.Text,
                 gear.DisplayName + "  <size=16><color=" + GachaUi.Hex(color) + ">" + GachaUi.RarityLabel(gear.Rarity) + "</color></size>");
             var effects = GachaUi.Label(card, "Effects", 16, TextAnchor.UpperLeft, new Vector2(0.22f, 0.06f), new Vector2(0.74f, 0.64f), Palette.Cyan,
@@ -258,6 +401,24 @@ namespace ScrapFishing.Gacha
             }
         }
 
+        // 일괄 정산 체크 칸(아이콘 왼쪽 위). 기본은 체크, 누르면 해제/다시 체크.
+        static void CheckBox(RectTransform card, bool on, Action toggle)
+        {
+            var box = GachaUi.Panel(card, "Check", new Vector2(0.012f, 0.64f), new Vector2(0.075f, 0.95f), GachaUi.Inset, on ? Palette.Gold : GachaUi.Muted, true);
+            var button = box.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            button.targetGraphic = box;
+            button.onClick.AddListener(() =>
+            {
+                AudioManager.Ensure().PlayUiTap();
+                toggle();
+            });
+            if (on)
+            {
+                GachaUi.Panel(box.transform, "Mark", new Vector2(0.22f, 0.22f), new Vector2(0.78f, 0.78f), Palette.Gold);
+            }
+        }
+
         void Equip(GearData gear)
         {
             if (_shop.Equip(gear.Id))
@@ -279,6 +440,7 @@ namespace ScrapFishing.Gacha
         // 환원은 되돌릴 수 없어서 두 번 눌러야 한다. 보관 중 → 미처리 순으로 1개를 판다.
         void Refund(Row row)
         {
+            _bulkArmed = false;
             var id = row.Gear.Id;
             if (_armedRefund != id || Time.unscaledTime >= _armedUntil)
             {

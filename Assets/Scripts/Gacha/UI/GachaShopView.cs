@@ -80,7 +80,7 @@ namespace ScrapFishing.Gacha
             BuildTabs();
             _list = GachaUi.Scroll(_root, "Machines", new Vector2(0.03f, 0.015f), new Vector2(0.97f, 0.828f), 10f, out _scroll);
 
-            _result = new GachaResultView(_root, RequestRefund, StorePicks, CloseResult);
+            _result = new GachaResultView(_root, RequestRefund, StorePicks, CloseResult, PullAgain);
             _confirm = new GachaConfirmPopup(_root, ConfirmPull);
             _refund = new GachaRefundPopup(_root, ExecuteRefund, (machine, count) => _confirm.Show(_shop, machine, count), RefreshCards);
             _inventory = new GachaInventoryView(_root, HandleInventoryRefund);
@@ -410,6 +410,19 @@ namespace ScrapFishing.Gacha
             _result.Hide();
             RefreshCards();
             ShowToast(stored > 0 ? "보관함에 " + stored + "개를 보관했어요" : "보관할 장비가 없어요");
+        }
+
+        // 결과창의 연속 뽑기: 결과를 닫고(고르지 않은 장비는 미처리로 남음) 같은 머신·횟수의 뽑기 확인을 띄운다.
+        void PullAgain(GachaMachineData machine, int count)
+        {
+            if (machine == null || count <= 0)
+            {
+                return;
+            }
+
+            _result.Hide();
+            RefreshCards();
+            _confirm.Show(_shop, machine, count);
         }
 
         void CloseResult()

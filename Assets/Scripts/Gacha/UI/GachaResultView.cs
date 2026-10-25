@@ -41,6 +41,8 @@ namespace ScrapFishing.Gacha
         readonly Action<List<RefundPick>, RectTransform> _onRefund;
         readonly Action<List<RefundPick>> _onStore;
         readonly Action _onClose;
+        readonly Action<GachaMachineData, int> _onAgain;
+        int _count;
         readonly List<Stack> _stacks = new List<Stack>();
         readonly List<Text> _groupTotals = new List<Text>();
         GachaShop _shop;
@@ -48,16 +50,30 @@ namespace ScrapFishing.Gacha
         public GachaMachineData Machine { get; private set; }
         public bool IsOpen => _root.gameObject.activeSelf;
 
-        public GachaResultView(RectTransform parent, Action<List<RefundPick>, RectTransform> onRefund, Action<List<RefundPick>> onStore, Action onClose)
+        // onAgain: 같은 머신·같은 횟수로 다시 뽑기(연속 뽑기). 고르지 않은 장비는 닫기와 같이 미처리로 남는다.
+        public GachaResultView(RectTransform parent, Action<List<RefundPick>, RectTransform> onRefund, Action<List<RefundPick>> onStore, Action onClose,
+            Action<GachaMachineData, int> onAgain = null)
         {
             _onRefund = onRefund;
             _onStore = onStore;
             _onClose = onClose;
+            _onAgain = onAgain;
             _root = GachaUi.Panel(parent, "GachaResult", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Backdrop, null, true).rectTransform;
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _title = GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.92f), new Vector2(0.72f, 0.99f), Palette.Text);
             GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.925f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, () => _onClose?.Invoke());
+            GachaUi.MakeButton(_root, "Again", "연속 뽑기", new Vector2(0.49f, 0.925f), new Vector2(0.72f, 0.985f), Palette.NeonGreen, 22,
+                () => _onAgain?.Invoke(Machine, _count));
+            // 제목이 연속 뽑기 버튼과 겹치지 않게, 씬 기본 폭(0.72)이면 왼쪽 절반으로 줄인다.
+            var titleRect = _title.rectTransform;
+            if (titleRect.anchorMax.x > 0.48f)
+            {
+                titleRect.anchorMax = new Vector2(0.48f, titleRect.anchorMax.y);
+                _title.resizeTextForBestFit = true;
+                _title.resizeTextMinSize = 16;
+                _title.resizeTextMaxSize = 28;
+            }
 
             _list = GachaUi.Scroll(_root, "List", new Vector2(0.03f, 0.235f), new Vector2(0.97f, 0.915f), 6f, out _scroll);
 
@@ -73,6 +89,7 @@ namespace ScrapFishing.Gacha
         {
             _shop = shop;
             Machine = result.Machine;
+            _count = result.Count;
             _title.text = result.Machine.DisplayName + " " + GachaConfirmPopup.CountLabel(result.Count) + " 결과";
             BuildStacks(result);
             Rebuild();
