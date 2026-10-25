@@ -340,6 +340,8 @@ namespace ScrapFishing.Boat
             _settingsView = canvas.gameObject.AddComponent<SettingsView>();
             _settingsView.Build(area.Area);
             area.Adopt();
+            _canvasUi.PinDollarPanel();
+            _market.SetDollarTarget(_canvasUi.DollarPanel);
         }
 
         void OpenMarket()

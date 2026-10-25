@@ -47,6 +47,15 @@ namespace ScrapFishing.UI
         RectTransform _root;
         CanvasGroup _group;
         RectTransform _panel;
+        // 쿠폰 코드(대소문자·앞뒤 공백 무시)와 받는 달러. 몇 번이든 쓸 수 있다.
+        public const string CouponCode = "smtm";
+        public const int CouponDollars = 9999999;
+
+        RectTransform _coupon;
+        CanvasGroup _couponGroup;
+        RectTransform _couponPanel;
+        InputField _couponInput;
+        Text _couponMessage;
         RectTransform _credits;
         CanvasGroup _creditsGroup;
         RectTransform _creditsPanel;
@@ -82,6 +91,7 @@ namespace ScrapFishing.UI
             GachaUi.MakeButton(_panel, "Language", LanguageLabel, new Vector2(0.06f, 0.265f), new Vector2(0.94f, 0.335f), GachaUi.Muted, 22,
                 () => ShowToast("준비 중입니다"));
             GachaUi.MakeButton(_panel, "Credits", "크레딧", new Vector2(0.06f, 0.175f), new Vector2(0.94f, 0.245f), Palette.Gold, 22, OpenCredits);
+            GachaUi.MakeButton(_panel, "Coupon", "쿠폰", new Vector2(0.06f, 0.09f), new Vector2(0.94f, 0.16f), Palette.NeonGreen, 22, OpenCoupon);
             GachaUi.Label(_panel, "Version", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.02f), new Vector2(0.95f, 0.075f), GachaUi.Muted,
                 TitleView.VersionLabel);
 
@@ -91,6 +101,7 @@ namespace ScrapFishing.UI
             toast.gameObject.SetActive(false);
 
             BuildCredits();
+            BuildCoupon();
             VolumeSettings.Changed += Sync;
             AudioManager.SoundChanged += Sync;
             _root.gameObject.SetActive(false);
@@ -112,6 +123,7 @@ namespace ScrapFishing.UI
             _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
             _credits.gameObject.SetActive(false);
+            _coupon.gameObject.SetActive(false);
             Sync();
             ShowOverlay(_group, _panel);
         }
@@ -299,6 +311,89 @@ namespace ScrapFishing.UI
             }
 
             HideOverlay(_creditsGroup, _creditsPanel, () => _credits.gameObject.SetActive(false));
+        }
+
+        // 쿠폰 입력 창: 코드 입력칸, 안내 글자, 취소·확인. 바깥을 눌러도 닫힌다.
+        void BuildCoupon()
+        {
+            _coupon = GachaUi.Rect(_root, "CouponOverlay", Vector2.zero, Vector2.one);
+            _couponGroup = _coupon.gameObject.AddComponent<CanvasGroup>();
+            Clickable(GachaUi.Panel(_coupon, "Dim", Vector2.zero, Vector2.one, GachaUi.Dim, null, true), CloseCoupon);
+
+            _couponPanel = GachaUi.Panel(_coupon, "Panel", new Vector2(0.08f, 0.36f), new Vector2(0.92f, 0.64f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
+            GachaUi.Label(_couponPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.78f), new Vector2(0.95f, 0.96f), Palette.NeonGreen, "쿠폰 입력");
+            _couponInput = CreateInput(_couponPanel, new Vector2(0.08f, 0.5f), new Vector2(0.92f, 0.74f));
+            _couponMessage = GachaUi.Label(_couponPanel, "Message", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.34f), new Vector2(0.95f, 0.48f), GachaUi.Muted,
+                "쿠폰 코드를 입력하세요");
+            GachaUi.MakeButton(_couponPanel, "Cancel", "취소", new Vector2(0.08f, 0.07f), new Vector2(0.46f, 0.3f), GachaUi.Muted, 22, CloseCoupon);
+            GachaUi.MakeButton(_couponPanel, "Confirm", "확인", new Vector2(0.54f, 0.07f), new Vector2(0.92f, 0.3f), Palette.NeonGreen, 22, RedeemCoupon);
+            _coupon.gameObject.SetActive(false);
+        }
+
+        static InputField CreateInput(RectTransform parent, Vector2 min, Vector2 max)
+        {
+            var box = GachaUi.Panel(parent, "Input", min, max, GachaUi.Inset, Palette.NeonGreen, true);
+            var text = GachaUi.Label(box.transform, "Text", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f), Palette.Text);
+            text.supportRichText = false;
+            var placeholder = GachaUi.Label(box.transform, "Placeholder", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f),
+                GachaUi.Disabled, "코드");
+            var input = box.gameObject.AddComponent<InputField>();
+            input.targetGraphic = box;
+            input.textComponent = text;
+            input.placeholder = placeholder;
+            input.lineType = InputField.LineType.SingleLine;
+            input.characterLimit = 24;
+            return input;
+        }
+
+        void OpenCoupon()
+        {
+            _couponInput.text = string.Empty;
+            _couponMessage.text = "쿠폰 코드를 입력하세요";
+            _couponMessage.color = GachaUi.Muted;
+            _coupon.SetAsLastSibling();
+            _coupon.gameObject.SetActive(true);
+            ShowOverlay(_couponGroup, _couponPanel);
+            _couponInput.ActivateInputField();
+        }
+
+        void CloseCoupon()
+        {
+            if (!_coupon.gameObject.activeSelf)
+            {
+                return;
+            }
+
+            HideOverlay(_couponGroup, _couponPanel, () => _coupon.gameObject.SetActive(false));
+        }
+
+        void RedeemCoupon()
+        {
+            var dollars = CouponReward(_couponInput.text, Progression.Dollars);
+            if (dollars <= 0)
+            {
+                _couponMessage.text = "올바르지 않은 쿠폰이에요";
+                _couponMessage.color = Palette.Magenta;
+                AudioManager.Ensure().PlayUpgradeDenied();
+                Fx.Shake(_couponPanel, 8f, 0.22f);
+                return;
+            }
+
+            Progression.AddDollars(dollars);
+            AudioManager.Ensure().PlayUpgradeBuy();
+            CloseCoupon();
+            ShowToast("쿠폰 적용 +" + GachaUi.Money(dollars));
+        }
+
+        // 쿠폰으로 받을 달러. 틀린 코드면 0. 달러가 int 최대값을 넘지 않게 자른다.
+        public static int CouponReward(string code, int currentDollars = 0)
+        {
+            if (!string.Equals((code ?? string.Empty).Trim(), CouponCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return 0;
+            }
+
+            return (int)Math.Min(CouponDollars, (long)int.MaxValue - Math.Max(0, currentDollars));
         }
 
         void ShowToast(string message)

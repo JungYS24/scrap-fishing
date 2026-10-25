@@ -34,6 +34,23 @@ namespace ScrapFishing.Tests
             yield return null;
             var boot = Object.FindFirstObjectByType<BoatBootstrap>();
 
+            // 달러 패널: ReadyPanel 밖으로 나와 있고, 오리파를 열어도 그 위에 보인다. 오리파 상단 로고·달러 패널은 숨긴다.
+            var dollar = GameObject.Find("Dollor_Panel").transform;
+            Assert.AreNotEqual("ReadyPanel", dollar.parent.name, "출항 중에도 보이도록 ReadyPanel 밖");
+            typeof(BoatBootstrap).GetMethod("OpenMarket", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
+            yield return null;
+            yield return null;
+            var market = GameObject.Find("BlackMarket").transform;
+            Assert.IsTrue(dollar.gameObject.activeInHierarchy);
+            Assert.AreSame(market.parent, dollar.parent);
+            Assert.Greater(dollar.GetSiblingIndex(), market.GetSiblingIndex(), "오리파 위에 달러 패널");
+            var logo = market.Find("TopBar/Logo");
+            var marketDollar = market.Find("TopBar/DollarPanel");
+            Assert.IsTrue(logo == null || !logo.gameObject.activeSelf, "BLACK MARKET 글자 숨김");
+            Assert.IsTrue(marketDollar == null || !marketDollar.gameObject.activeSelf, "오리파 달러 패널 숨김");
+            market.Find("TopBar/Close").GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.4f);
+
             // 타이틀: 오른쪽 위에는 설정 버튼만, 음소거 버튼은 없다.
             var title = GameObject.Find("Title").transform;
             var gear = (RectTransform)title.Find("SettingsButton");
@@ -46,6 +63,20 @@ namespace ScrapFishing.Tests
             typeof(BoatBootstrap).GetMethod("OpenSettings", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
             yield return new WaitForSecondsRealtime(0.4f);
             var panel = GameObject.Find("Settings").transform.Find("Panel");
+
+            // 쿠폰: 크레딧 아래 버튼 → 입력 창이 열린다(실제 달러는 건드리지 않는다).
+            var credits = (RectTransform)panel.Find("Credits");
+            var coupon = (RectTransform)panel.Find("Coupon");
+            Assert.IsNotNull(coupon, "Settings/Panel/Coupon");
+            Assert.Less(coupon.anchorMax.y, credits.anchorMin.y, "크레딧 아래");
+            coupon.GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            var couponOverlay = GameObject.Find("Settings").transform.Find("CouponOverlay");
+            Assert.IsTrue(couponOverlay.gameObject.activeSelf);
+            Assert.IsNotNull(couponOverlay.Find("Panel/Input").GetComponent<InputField>());
+            couponOverlay.Find("Panel/Cancel").GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.IsFalse(couponOverlay.gameObject.activeSelf);
             var toggle = panel.Find("SoundToggle");
             Assert.IsNotNull(toggle, "Settings/Panel/SoundToggle");
             var header = panel.Find("VolumeHeader").GetComponent<Text>();
@@ -102,6 +133,8 @@ namespace ScrapFishing.Tests
             typeof(RunSession).GetProperty("DiveProgress").SetValue(session, 3);
             typeof(BoatBootstrap).GetMethod("HandleDiveSwipe", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
             yield return new WaitForSecondsRealtime(0.6f);
+            Assert.IsTrue(dollar.gameObject.activeInHierarchy, "잠수 중에도 달러 패널이 보인다");
+            Assert.IsFalse(GameObject.Find("Canvas").transform.Find("GameArea/ReadyPanel").gameObject.activeSelf, "강화 버튼은 출항 중 숨김");
             Assert.IsFalse(boatDrone.gameObject.activeInHierarchy, "잠수 중에는 보트 드론이 보트와 같이 숨는다");
             var dive = Object.FindFirstObjectByType<DiveDirector>();
             var diveDrone = dive.transform.Find("CompanionDrone");

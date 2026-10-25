@@ -27,8 +27,8 @@ namespace ScrapFishing.Gacha
         ScrollRect _scroll;
         Button[] _tabButtons;
         Button _close;
+        // 타이틀 화면의 달러 패널(오리파 위에도 그대로 보인다). 환원 코인이 날아가고, 달러가 모자라면 흔들린다.
         RectTransform _dollarPanel;
-        CountingText _dollarCount;
         RectTransform _flyLayer;
         Image _flyBlocker;
         Text _toast;
@@ -56,7 +56,6 @@ namespace ScrapFishing.Gacha
             }
 
             BuildLayout(area);
-            _dollarCount.Bind(_settings, string.Empty, true, string.Empty, true);
             GearBonuses.Refresh(_shop.Inventory);
             _root.gameObject.SetActive(false);
         }
@@ -110,7 +109,6 @@ namespace ScrapFishing.Gacha
             _result.Hide();
             _refund.Hide();
             _inventory.Hide();
-            _dollarCount.Snap(_shop.Balance);
             SelectTab(_filter);
             _group.alpha = 0f;
             _group.blocksRaycasts = true;
@@ -153,15 +151,26 @@ namespace ScrapFishing.Gacha
         void BuildTopBar()
         {
             var bar = GachaUi.Panel(_root, "TopBar", new Vector2(0f, 0.925f), Vector2.one, new Color(0.02f, 0.03f, 0.07f, 1f), Palette.Magenta, true).rectTransform;
-            GachaUi.Label(bar, "Logo", 22, TextAnchor.MiddleLeft, new Vector2(0.03f, 0f), new Vector2(0.34f, 1f), Palette.Magenta, "BLACK MARKET");
-
-            _dollarPanel = GachaUi.Panel(bar, "DollarPanel", new Vector2(0.35f, 0.16f), new Vector2(0.65f, 0.84f), GachaUi.Inset, Palette.Gold).rectTransform;
-            GachaUi.DollarIcon(_dollarPanel, "DollarIcon", new Vector2(0.03f, 0.1f), new Vector2(0.22f, 0.9f));
-            var dollar = GachaUi.Label(_dollarPanel, "DollarText", 22, TextAnchor.MiddleLeft, new Vector2(0.26f, 0f), new Vector2(0.98f, 1f), Palette.Gold);
-            _dollarCount = GachaUi.GetOrAdd<CountingText>(dollar);
-
+            // 로고와 달러 패널은 없앤다. 달러는 타이틀 화면의 달러 패널이 오리파 위에 그대로 보인다.
+            HideLegacy(bar, "Logo");
+            HideLegacy(bar, "DollarPanel");
             GachaUi.MakeButton(bar, "Inventory", "보관함", new Vector2(0.67f, 0.14f), new Vector2(0.845f, 0.86f), Palette.NeonGreen, 22, OpenInventory);
             _close = GachaUi.MakeButton(bar, "Close", "X", new Vector2(0.86f, 0.14f), new Vector2(0.97f, 0.86f), Palette.Magenta, 28, Close);
+        }
+
+        public void SetDollarTarget(RectTransform panel)
+        {
+            _dollarPanel = panel;
+        }
+
+        // 씬에 남아 있을 수 있는 예전 오브젝트는 지우지 않고 숨긴다.
+        static void HideLegacy(Transform parent, string name)
+        {
+            var legacy = parent.Find(name);
+            if (legacy != null)
+            {
+                legacy.gameObject.SetActive(false);
+            }
         }
 
         void BuildTabs()
@@ -308,7 +317,6 @@ namespace ScrapFishing.Gacha
 
         void HandleInventoryRefund(int dollars)
         {
-            _dollarCount.PlayTo(_shop.Balance);
             RefreshCards();
         }
 
@@ -317,12 +325,14 @@ namespace ScrapFishing.Gacha
             if (!_shop.TryPull(machine, count, out var result))
             {
                 AudioManager.Ensure().PlayUpgradeDenied();
-                Fx.Shake(_dollarPanel, 8f, 0.22f);
+                if (_dollarPanel != null)
+                {
+                    Fx.Shake(_dollarPanel, 8f, 0.22f);
+                }
                 return;
             }
 
             AudioManager.Ensure().PlayUpgradeBuy();
-            _dollarCount.PlayTo(result.BalanceAfter);
             _confirm.Hide();
             RefreshCards();
             _result.Show(_shop, result);
@@ -365,7 +375,6 @@ namespace ScrapFishing.Gacha
             _pendingRefund = null;
             var after = _shop.Balance;
             _refund.LockConfirm();
-            _dollarCount.Snap(before);
             _result.Hide();
             RefreshCards();
 
@@ -374,7 +383,7 @@ namespace ScrapFishing.Gacha
             _flyLayer.SetAsLastSibling();
             _flyFinish = () => _refund.ShowDone(machine, before, after);
             var duration = DollarFlyFx.Play(_flyLayer, from, _dollarPanel, total, _settings,
-                () => _dollarCount.PlayTo(after),
+                null,
                 FinishFly);
             _flyDeadline = Time.unscaledTime + duration + FlySafety;
             _refund.HideConfirmPanel();
@@ -389,7 +398,6 @@ namespace ScrapFishing.Gacha
 
             _flying = false;
             _flyBlocker.raycastTarget = false;
-            _dollarCount.PlayTo(_shop.Balance);
             var finish = _flyFinish;
             _flyFinish = null;
             finish?.Invoke();
