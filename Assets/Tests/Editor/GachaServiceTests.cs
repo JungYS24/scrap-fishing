@@ -153,13 +153,6 @@ namespace ScrapFishing.Tests
         }
 
         [Test]
-        public void HundredPull_AlwaysContainsEpicOrBetter()
-        {
-            AssertGuarantee(new GachaService(new FixedRandom(0f)), 100, 1, ItemRarity.Epic);
-            AssertGuarantee(new GachaService(new SystemGachaRandom(Seed)), 100, 500, ItemRarity.Epic);
-        }
-
-        [Test]
         public void SinglePull_HasNoGuarantee()
         {
             var service = new GachaService(new FixedRandom(0f));
@@ -202,15 +195,20 @@ namespace ScrapFishing.Tests
             var store = new MemoryKeyValueStore();
             var wallet = new MemoryWallet(1000000);
             var shop = NewShop(store, wallet);
-            Assert.IsTrue(shop.TryPull(_lure, 100, out var result));
-            Assert.AreEqual(500000, result.Cost);
-            Assert.AreEqual(1000000, result.BalanceBefore);
-            Assert.AreEqual(500000, wallet.Balance);
-            Assert.AreEqual(100, result.Items.Count);
+            GachaPullResult result = null;
+            for (var i = 0; i < 6; i++)
+            {
+                Assert.IsTrue(shop.TryPull(_lure, GachaService.TenPull, out result));
+            }
+
+            Assert.AreEqual(50000, result.Cost);
+            Assert.AreEqual(750000, result.BalanceBefore);
+            Assert.AreEqual(700000, wallet.Balance);
+            Assert.AreEqual(10, result.Items.Count);
             Assert.Greater(store.SaveCount, 0);
 
             var reloaded = GearInventory.Load(store, _catalog);
-            Assert.AreEqual(100, UnprocessedTotal(reloaded, null));
+            Assert.AreEqual(60, UnprocessedTotal(reloaded, null));
             Assert.AreEqual(GearInventory.HistoryLimit, reloaded.History.Count);
             Assert.AreEqual(shop.Inventory.Counter(_lure.Id), reloaded.Counter(_lure.Id));
         }

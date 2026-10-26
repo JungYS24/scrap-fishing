@@ -22,7 +22,9 @@ namespace ScrapFishing.Gacha
     [Serializable]
     public class GachaRecord
     {
+        // 장비가 속한 머신 id(데일리·축제도 장비의 머신). banner는 뽑은 배너 id이며, 배너 이전 세이브에는 없다(null).
         public string machine;
+        public string banner;
         public string gear;
         public int rarity;
         public long time;
@@ -218,7 +220,8 @@ namespace ScrapFishing.Gacha
             _data.counters.Add(new GachaCounter { machine = machineId, count = Math.Max(0, count) });
         }
 
-        public void AddPulled(IList<GearData> gears, string machineId, long time)
+        // machineId가 null이면 장비마다 카탈로그의 머신 id를 기록한다(여러 머신이 섞이는 데일리·축제).
+        public void AddPulled(IList<GearData> gears, string machineId, long time, string bannerId = null)
         {
             for (var i = 0; i < gears.Count; i++)
             {
@@ -229,7 +232,14 @@ namespace ScrapFishing.Gacha
                 }
 
                 GetOrAdd(gear.Id).unprocessed++;
-                _data.history.Add(new GachaRecord { machine = machineId, gear = gear.Id, rarity = (int)gear.Rarity, time = time });
+                var machine = machineId;
+                if (machine == null)
+                {
+                    var owner = _catalog.MachineOf(gear.Id);
+                    machine = owner != null ? owner.Id : null;
+                }
+
+                _data.history.Add(new GachaRecord { machine = machine, banner = bannerId, gear = gear.Id, rarity = (int)gear.Rarity, time = time });
             }
 
             var overflow = _data.history.Count - HistoryLimit;

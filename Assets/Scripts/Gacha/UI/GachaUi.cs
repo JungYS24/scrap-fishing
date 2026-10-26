@@ -374,24 +374,18 @@ namespace ScrapFishing.Gacha
         // 머신의 최고 등급 장비(싱크로·레전드) 아이콘을 가로로 늘어놓는다. 머신 카드와 뽑기 확인 팝업에 쓴다.
         public static void Showcase(RectTransform parent, GachaMachineData machine, int count = 3)
         {
+            Showcase(parent, machine != null ? TopGears(machine.Gears, count) : new List<GearData>(), count);
+        }
+
+        public static void Showcase(RectTransform parent, IList<GearData> picks, int count = 3)
+        {
             Clear(parent);
-            if (machine == null)
+            if (picks == null)
             {
                 return;
             }
 
-            var picks = new List<GearData>();
-            for (var r = GachaService.RarityCount - 1; r >= 0 && picks.Count < count; r--)
-            {
-                foreach (var gear in machine.Gears)
-                {
-                    if (gear != null && (int)gear.Rarity == r && picks.Count < count)
-                    {
-                        picks.Add(gear);
-                    }
-                }
-            }
-
+            count = Mathf.Max(count, picks.Count);
             for (var i = 0; i < picks.Count; i++)
             {
                 var min = new Vector2(1f - (i + 1) / (float)count + 0.03f, 0f);
@@ -400,6 +394,57 @@ namespace ScrapFishing.Gacha
                 var fit = icon.gameObject.AddComponent<AspectRatioFitter>();
                 fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
                 fit.aspectRatio = 1f;
+            }
+        }
+
+        // 높은 등급부터 count개.
+        public static List<GearData> TopGears(IReadOnlyList<GearData> gears, int count)
+        {
+            var picks = new List<GearData>();
+            for (var r = GachaService.RarityCount - 1; r >= 0 && picks.Count < count; r--)
+            {
+                foreach (var gear in gears)
+                {
+                    if (gear != null && (int)gear.Rarity == r && picks.Count < count)
+                    {
+                        picks.Add(gear);
+                    }
+                }
+            }
+
+            return picks;
+        }
+
+        // 배너 쇼케이스: 상시는 머신 최고 등급 3개, 픽업은 픽업 장비, 축제는 머신별 싱크로 3개, 데일리는 오늘 머신(일요일은 전체).
+        public static List<GearData> ShowcaseGears(GachaShop shop, GachaBanner banner, int count = 3)
+        {
+            switch (banner.Type)
+            {
+                case BannerType.Pickup:
+                    return new List<GearData> { banner.Featured };
+                case BannerType.Daily:
+                    var today = shop.DailyMachine(banner);
+                    return TopGears(today != null ? today.Gears : shop.Catalog.AllGears, count);
+                case BannerType.Festival:
+                    return TopGears(shop.Catalog.AllGears, count);
+                default:
+                    return TopGears(banner.Machine.Gears, count);
+            }
+        }
+
+        // 배너 테두리·글자 색. 픽업은 레전드 색, 싱크로 픽업은 하양(카드에서 하양·핑크·연두로 번갈아 바뀐다).
+        public static Color BannerTint(GachaBanner banner)
+        {
+            switch (banner.Type)
+            {
+                case BannerType.Pickup:
+                    return banner.Pickup == PickupKind.Synchro ? SynchroColor : LegendColor;
+                case BannerType.Festival:
+                    return Palette.Magenta;
+                case BannerType.Daily:
+                    return Palette.NeonGreen;
+                default:
+                    return SlotTint(banner.Machine.Slot);
             }
         }
 

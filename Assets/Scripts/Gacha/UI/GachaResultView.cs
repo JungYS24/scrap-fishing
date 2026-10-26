@@ -41,18 +41,18 @@ namespace ScrapFishing.Gacha
         readonly Action<List<RefundPick>, RectTransform> _onRefund;
         readonly Action<List<RefundPick>> _onStore;
         readonly Action _onClose;
-        readonly Action<GachaMachineData, int> _onAgain;
+        readonly Action<GachaBanner, int> _onAgain;
         int _count;
         readonly List<Stack> _stacks = new List<Stack>();
         readonly List<Text> _groupTotals = new List<Text>();
         GachaShop _shop;
 
-        public GachaMachineData Machine { get; private set; }
+        public GachaBanner Banner { get; private set; }
         public bool IsOpen => _root.gameObject.activeSelf;
 
-        // onAgain: 같은 머신·같은 횟수로 다시 뽑기(연속 뽑기). 고르지 않은 장비는 닫기와 같이 미처리로 남는다.
+        // onAgain: 같은 배너·같은 횟수로 다시 뽑기(연속 뽑기). 고르지 않은 장비는 닫기와 같이 미처리로 남는다.
         public GachaResultView(RectTransform parent, Action<List<RefundPick>, RectTransform> onRefund, Action<List<RefundPick>> onStore, Action onClose,
-            Action<GachaMachineData, int> onAgain = null)
+            Action<GachaBanner, int> onAgain = null)
         {
             _onRefund = onRefund;
             _onStore = onStore;
@@ -64,7 +64,7 @@ namespace ScrapFishing.Gacha
             _title = GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.92f), new Vector2(0.72f, 0.99f), Palette.Text);
             GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.925f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, () => _onClose?.Invoke());
             GachaUi.MakeButton(_root, "Again", "연속 뽑기", new Vector2(0.49f, 0.925f), new Vector2(0.72f, 0.985f), Palette.NeonGreen, 22,
-                () => _onAgain?.Invoke(Machine, _count));
+                () => _onAgain?.Invoke(Banner, _count));
             // 제목이 연속 뽑기 버튼과 겹치지 않게, 씬 기본 폭(0.72)이면 왼쪽 절반으로 줄인다.
             var titleRect = _title.rectTransform;
             if (titleRect.anchorMax.x > 0.48f)
@@ -88,9 +88,10 @@ namespace ScrapFishing.Gacha
         public void Show(GachaShop shop, GachaPullResult result)
         {
             _shop = shop;
-            Machine = result.Machine;
+            Banner = result.Banner;
             _count = result.Count;
-            _title.text = result.Machine.DisplayName + " " + GachaConfirmPopup.CountLabel(result.Count) + " 결과";
+            var name = result.Banner != null ? result.Banner.NameKo : result.Machine.DisplayName;
+            _title.text = name + " " + GachaConfirmPopup.CountLabel(result.Count) + " 결과";
             BuildStacks(result);
             Rebuild();
             _root.SetAsLastSibling();

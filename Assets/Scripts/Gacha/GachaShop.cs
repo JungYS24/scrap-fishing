@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 
 namespace ScrapFishing.Gacha
 {
@@ -63,6 +64,8 @@ namespace ScrapFishing.Gacha
 
     public sealed class GachaPullResult
     {
+        public GachaBanner Banner;
+        // 연출 영상 머신. standard·pickup은 배너 머신, daily·festival은 이번 결과의 최고 등급(같으면 첫 번째) 장비 머신.
         public GachaMachineData Machine;
         public int Count;
         public int Cost;
@@ -71,9 +74,24 @@ namespace ScrapFishing.Gacha
         public readonly List<PulledGear> Items = new List<PulledGear>();
     }
 
+    // 배너를 지금 뽑을 수 없는 이유.
+    public enum BannerBlock
+    {
+        None,
+        NotOffered,
+        DailyDone,
+        LimitReached,
+        NoDollars,
+    }
+
     // 확인 버튼을 누른 순간 결과를 계산해 달러 차감과 함께 저장한다. 연출은 그 뒤에 시작한다.
     public sealed class GachaShop
     {
+        // 배너 저장 키. GachaSave(장비·머신 카운터)와 따로 둔다. 뒤에 배너 id가 붙는다.
+        public const string DailyDayKey = "GachaDailyDay_";
+        public const string FestivalPullsKey = "GachaFestivalPulls_";
+        public const string FestivalHighKey = "GachaFestivalHigh_";
+
         readonly GachaService _service;
         readonly IGachaWallet _wallet;
         readonly IKeyValueStore _store;
@@ -119,6 +137,11 @@ namespace ScrapFishing.Gacha
 
         public bool TryPull(GachaMachineData machine, int count, out GachaPullResult result)
         {
+            return TryPullMachine(machine, count, null, out result);
+        }
+
+        bool TryPullMachine(GachaMachineData machine, int count, string bannerId, out GachaPullResult result)
+        {
             result = null;
             if (machine == null || count <= 0 || !CanAfford(machine, count))
             {
@@ -143,7 +166,7 @@ namespace ScrapFishing.Gacha
             }
 
             Inventory.SetCounter(machine.Id, counter);
-            Inventory.AddPulled(gears, machine.Id, _clock());
+            Inventory.AddPulled(gears, machine.Id, _clock(), bannerId);
             Inventory.Write(_store);
 
             // ProgressionWallet은 차감과 함께 PlayerPrefs.Save()를 부르므로 가챠 저장도 같이 기록된다.
@@ -165,6 +188,265 @@ namespace ScrapFishing.Gacha
             };
             result.Items.AddRange(pulled);
             return true;
+        }
+
+        public DateTime UtcNow => new DateTime(Math.Max(0L, _clock()), DateTimeKind.Utc);
+
+        public static int CostOf(GachaBanner banner, int count)
+        {
+            return banner != null && count > 0 ? Math.Max(0, banner.Price) * count : 0;
+        }
+
+        public BannerBlock Block(GachaBanner banner, int count)
+        {
+            if (banner == null || count <= 0 || !banner.Offers(count))
+            {
+                return BannerBlock.NotOffered;
+            }
+
+            switch (banner.Type)
+            {
+                case BannerType.Daily:
+                    if (!DailyAvailable(banner))
+                    {
+                        return BannerBlock.DailyDone;
+                    }
+
+                    break;
+                case BannerType.Festival:
+                    if (banner.MaxPulls > 0 && FestivalRemaining(banner) < count)
+                    {
+                        return BannerBlock.LimitReached;
+                    }
+
+                    break;
+            }
+
+            var cost = CostOf(banner, count);
+            return cost > 0 && _wallet.Balance < cost ? BannerBlock.NoDollars : BannerBlock.None;
+        }
+
+        // 데일리: 리셋 시각(KST 05:00) 기준 날짜. 마지막으로 받은 날짜만 저장하므로 기기 시계를 돌리는 것은 막지 않는다.
+        public DateTime DailyDay()
+        {
+            return Catalog.BannerSet.LocalDay(UtcNow);
+        }
+
+        public bool DailyAvailable(GachaBanner banner)
+        {
+            return _store.GetInt(DailyDayKey + banner.Id, 0) != DayStamp(DailyDay());
+        }
+
+        // 오늘 요일의 풀 머신. null이면 전체 머신(또는 요일 설정 없음).
+        public GachaMachineData DailyMachine(GachaBanner banner)
+        {
+            return banner.WeekdayPool.TryGetValue(DailyDay().DayOfWeek, out var machine) ? machine : null;
+        }
+
+        public int FestivalPulls(GachaBanner banner)
+        {
+            return Math.Max(0, _store.GetInt(FestivalPullsKey + banner.Id, 0));
+        }
+
+        public int FestivalRemaining(GachaBanner banner)
+        {
+            return Math.Max(0, banner.MaxPulls - FestivalPulls(banner));
+        }
+
+        public bool FestivalHadHigh(GachaBanner banner)
+        {
+            return _store.GetInt(FestivalHighKey + banner.Id, 0) != 0;
+        }
+
+        // 머신 천장 카운터(standard·pickup). daily·festival은 -1.
+        public int Counter(GachaBanner banner)
+        {
+            return banner.Machine != null ? Inventory.Counter(banner.Machine.Id) : -1;
+        }
+
+        public bool TryPull(GachaBanner banner, int count, out GachaPullResult result)
+        {
+            result = null;
+            if (Block(banner, count) != BannerBlock.None)
+            {
+                return false;
+            }
+
+            if (banner.Type == BannerType.Standard)
+            {
+                if (!TryPullMachine(banner.Machine, count, banner.Id, out result))
+                {
+                    return false;
+                }
+
+                result.Banner = banner;
+                return true;
+            }
+
+            var before = _wallet.Balance;
+            var cost = CostOf(banner, count);
+            var snapshot = Inventory.ToJson();
+            var keys = new BannerKeys(_store, banner);
+            List<GearData> gears;
+            GachaMachineData video;
+            // 기록의 머신 id: 픽업은 배너 머신, 데일리·축제는 null(장비마다 그 장비의 머신).
+            string history = null;
+            switch (banner.Type)
+            {
+                case BannerType.Pickup:
+                {
+                    var counter = Inventory.Counter(banner.Machine.Id);
+                    gears = _service.PullPickup(banner, count, ref counter);
+                    Inventory.SetCounter(banner.Machine.Id, counter);
+                    video = banner.Machine;
+                    history = banner.Machine.Id;
+                    break;
+                }
+                case BannerType.Daily:
+                {
+                    var machine = DailyMachine(banner);
+                    var rates = new float[GachaService.RarityCount];
+                    GachaService.Rates(banner, 0, false, rates, machine ?? Catalog.Machines[0]);
+                    gears = _service.PullPool(machine != null ? machine.Gears : Catalog.AllGears, rates, count, banner.GuaranteeMin);
+                    _store.SetInt(DailyDayKey + banner.Id, DayStamp(DailyDay()));
+                    video = VideoMachineOf(Catalog, gears);
+                    break;
+                }
+                case BannerType.Festival:
+                {
+                    var rates = new float[GachaService.RarityCount];
+                    GachaService.Rates(banner, 0, false, rates);
+                    var pulled = FestivalPulls(banner);
+                    var hadHigh = FestivalHadHigh(banner);
+                    var pityIndex = !hadHigh && banner.PityAt > pulled && banner.PityAt <= pulled + count ? banner.PityAt - pulled - 1 : -1;
+                    gears = _service.PullPool(Catalog.AllGears, rates, count, ItemRarity.Normal, pityIndex, banner.PityMin);
+                    _store.SetInt(FestivalPullsKey + banner.Id, pulled + count);
+                    if (!hadHigh && Highest(gears) >= banner.PityMin)
+                    {
+                        _store.SetInt(FestivalHighKey + banner.Id, 1);
+                    }
+
+                    video = VideoMachineOf(Catalog, gears);
+                    break;
+                }
+                default:
+                    return false;
+            }
+
+            var items = Mark(gears);
+            Inventory.AddPulled(gears, history, _clock(), banner.Id);
+            Inventory.Write(_store);
+
+            if (cost > 0 && !_wallet.TrySpend(cost))
+            {
+                Inventory.RestoreJson(snapshot);
+                Inventory.Write(_store);
+                keys.Restore(_store);
+                return false;
+            }
+
+            _store.Save();
+            result = new GachaPullResult
+            {
+                Banner = banner,
+                Machine = video,
+                Count = count,
+                Cost = cost,
+                BalanceBefore = before,
+                BalanceAfter = _wallet.Balance
+            };
+            result.Items.AddRange(items);
+            return true;
+        }
+
+        // 최고 등급 장비(같은 등급이면 먼저 나온 것)의 머신.
+        public static GachaMachineData VideoMachineOf(GachaCatalog catalog, IList<GearData> gears)
+        {
+            GearData best = null;
+            foreach (var gear in gears)
+            {
+                if (gear != null && (best == null || gear.Rarity > best.Rarity))
+                {
+                    best = gear;
+                }
+            }
+
+            return best != null ? catalog.MachineOf(best.Id) : null;
+        }
+
+        static ItemRarity Highest(IList<GearData> gears)
+        {
+            var best = ItemRarity.Normal;
+            foreach (var gear in gears)
+            {
+                if (gear != null && gear.Rarity > best)
+                {
+                    best = gear.Rarity;
+                }
+            }
+
+            return best;
+        }
+
+        List<PulledGear> Mark(IList<GearData> gears)
+        {
+            var pulled = new List<PulledGear>(gears.Count);
+            var seen = new HashSet<string>();
+            foreach (var gear in gears)
+            {
+                if (gear != null)
+                {
+                    pulled.Add(new PulledGear(gear, Inventory.Owned(gear.Id) > 0 || !seen.Add(gear.Id)));
+                }
+            }
+
+            return pulled;
+        }
+
+        static int DayStamp(DateTime day)
+        {
+            return day.Year * 10000 + day.Month * 100 + day.Day;
+        }
+
+        // 달러 차감이 실패하면 배너 저장 키를 뽑기 전으로 되돌린다.
+        readonly struct BannerKeys
+        {
+            readonly string _id;
+            readonly int? _day;
+            readonly int? _pulls;
+            readonly int? _high;
+
+            public BannerKeys(IKeyValueStore store, GachaBanner banner)
+            {
+                _id = banner.Id;
+                _day = Read(store, DailyDayKey + _id);
+                _pulls = Read(store, FestivalPullsKey + _id);
+                _high = Read(store, FestivalHighKey + _id);
+            }
+
+            public void Restore(IKeyValueStore store)
+            {
+                Write(store, DailyDayKey + _id, _day);
+                Write(store, FestivalPullsKey + _id, _pulls);
+                Write(store, FestivalHighKey + _id, _high);
+            }
+
+            static int? Read(IKeyValueStore store, string key)
+            {
+                return store.HasKey(key) ? store.GetInt(key, 0) : (int?)null;
+            }
+
+            static void Write(IKeyValueStore store, string key, int? value)
+            {
+                if (value.HasValue)
+                {
+                    store.SetInt(key, value.Value);
+                }
+                else
+                {
+                    store.DeleteKey(key);
+                }
+            }
         }
 
         public int RefundValue(string gearId, int count = 1)

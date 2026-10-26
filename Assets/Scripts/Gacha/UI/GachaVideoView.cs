@@ -13,6 +13,7 @@ namespace ScrapFishing.Gacha
 {
     // 오리파 뽑기 연출: 머신 영상(StreamingAssets URL) → 등급 섬광 → 흰 화면 위 결과 카드 → 탭하면 닫고 결과 목록으로.
     // 결과는 버튼을 누른 순간 이미 확정·저장되어 있다. 영상을 못 불러오거나 멈추면 연출 없이 바로 끝낸다(onFinish).
+    // 영상 머신은 result.Machine이다(데일리·축제는 이번 결과의 최고 등급 장비 머신으로 GachaShop이 정해 둔다).
     // 실행 중에만 만든다(씬에는 두지 않는다). VideoPlayer가 꺼진 오브젝트에서는 영상을 불러오지 못하므로
     // 숨길 때도 오브젝트는 켜 두고 CanvasGroup으로만 감춘다.
     public class GachaVideoView : MonoBehaviour

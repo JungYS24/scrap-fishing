@@ -12,13 +12,20 @@ namespace ScrapFishing.Gacha
         readonly List<GachaMachineData> _machines = new List<GachaMachineData>();
         readonly Dictionary<string, GearData> _gears = new Dictionary<string, GearData>();
         readonly Dictionary<string, GachaMachineData> _machineOfGear = new Dictionary<string, GachaMachineData>();
+        readonly List<GearData> _allGears = new List<GearData>();
 
         public IReadOnlyList<GachaMachineData> Machines => _machines;
+        // 전체 머신 장비(머신 순서). 축제·일요일 데일리의 풀.
+        public IReadOnlyList<GearData> AllGears => _allGears;
+        // 배너 파일이 없으면 머신마다 상시 배너 하나씩.
+        public GachaBannerSet BannerSet { get; private set; }
+        public IReadOnlyList<GachaBanner> Banners => BannerSet.Banners;
 
         public GachaCatalog(IEnumerable<GachaMachineData> machines)
         {
             if (machines == null)
             {
+                BannerSet = new GachaBannerSet();
                 return;
             }
 
@@ -39,21 +46,39 @@ namespace ScrapFishing.Gacha
 
                     _gears.Add(gear.Id, gear);
                     _machineOfGear.Add(gear.Id, machine);
+                    _allGears.Add(gear);
                 }
+            }
+
+            BannerSet = GachaBannerSet.FromMachines(_machines);
+        }
+
+        public void SetBanners(GachaBannerSet set)
+        {
+            if (set != null && set.Banners.Count > 0)
+            {
+                BannerSet = set;
             }
         }
 
         // Resources/Gacha 에 머신 에셋이 있으면 그것을, 없으면 oripa_rewards.json을, 그것도 없으면 코드 기본값을 쓴다.
+        // 배너는 oripa_banners.json을 읽고, 없거나 깨졌으면 머신별 상시 배너만 둔다.
         public static GachaCatalog LoadDefault()
         {
             var assets = Resources.LoadAll<GachaMachineData>(ResourcesFolder);
+            GachaCatalog catalog;
             if (assets != null && assets.Length > 0)
             {
-                return new GachaCatalog(assets);
+                catalog = new GachaCatalog(assets);
+            }
+            else
+            {
+                var fromJson = OripaCatalogJson.Load();
+                catalog = new GachaCatalog(fromJson != null && fromJson.Length > 0 ? fromJson : GachaDefaults.CreateMachines());
             }
 
-            var fromJson = OripaCatalogJson.Load();
-            return new GachaCatalog(fromJson != null && fromJson.Length > 0 ? fromJson : GachaDefaults.CreateMachines());
+            catalog.SetBanners(OripaBannerJson.Load(catalog));
+            return catalog;
         }
 
         public GachaMachineData FindMachine(string machineId)

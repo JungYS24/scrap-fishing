@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 using ScrapFishing.FX;
 using ScrapFishing.UI;
 using UnityEngine;
@@ -9,9 +10,9 @@ using UnityEngine.UI;
 
 namespace ScrapFishing.Gacha
 {
-    // 암시장 머신 목록. 타이틀·결과 화면 위에 덮어 띄우고, 닫으면 아래 화면으로 돌아간다.
+    // 암시장 배너 목록(축제·데일리·상시·픽업). 타이틀·결과 화면 위에 덮어 띄우고, 닫으면 아래 화면으로 돌아간다.
     // 확인 팝업 → 결과 확정 → 머신 연출 영상(1연·10연, GachaVideoView) → 결과 목록 → 환원 확인·완료 또는 보관까지 이 화면이 흐름을 잇는다.
-    // 화면 틀(BlackMarket 아래 패널·버튼·라벨)은 씬 하이러키에 두고 관리한다. 머신 카드·결과 목록만 실행 중에 만든다.
+    // 화면 틀(BlackMarket 아래 패널·버튼·라벨)은 씬 하이러키에 두고 관리한다. 배너 카드·결과 목록만 실행 중에 만든다.
     public class GachaShopView : MonoBehaviour
     {
         const string Notice = "게임 안에서 번 달러로만 뽑습니다 · 실제 결제 없음";
@@ -39,6 +40,7 @@ namespace ScrapFishing.Gacha
         GachaVideoView _video;
         GachaMachineData _lastMachine;
         readonly Dictionary<string, float> _refundRates = new Dictionary<string, float>();
+        readonly List<BannerCard> _cards = new List<BannerCard>();
         GearSlot? _filter;
         List<RefundPick> _pendingRefund;
         bool _flying;
@@ -53,9 +55,9 @@ namespace ScrapFishing.Gacha
         {
             _settings = Resources.Load<UiFxSettings>("UiFxSettings");
             _shop = GachaShop.CreateDefault();
-            foreach (var machine in _shop.Catalog.Machines)
+            foreach (var banner in _shop.Catalog.Banners)
             {
-                _refundRates[machine.Id] = GachaService.ExpectedRefundRate(machine);
+                _refundRates[banner.Id] = RefundRate(banner);
             }
 
             BuildLayout(area);
@@ -236,13 +238,37 @@ namespace ScrapFishing.Gacha
             _video.Prepare(pick);
         }
 
-        void ShowConfirm(GachaMachineData machine, int count)
+        void ShowConfirm(GachaBanner banner, int count)
         {
-            _lastMachine = machine;
-            _video?.Prepare(machine);
-            _confirm.Show(_shop, machine, count);
+            if (banner.Machine != null)
+            {
+                _lastMachine = banner.Machine;
+                _video?.Prepare(banner.Machine);
+            }
+
+            _confirm.Show(_shop, banner, count);
         }
 
+        // 배너 카드 하나. 처음 한 번 만들고, 상점이 다시 보일 때마다 바뀌는 값(남은 횟수·비활성·게이지·데일리 머신)만 고친다.
+        sealed class BannerCard
+        {
+            public GachaBanner Banner;
+            public RectTransform Root;
+            public Text Subtitle;
+            public RectTransform Showcase;
+            public string ShowcaseKey;
+            public Text StateTag;
+            public GameObject BoostTag;
+            public GameObject NewTag;
+            public Text GaugeLabel;
+            public Text GaugeCount;
+            public Image GaugeFill;
+            public Text Status;
+            public Button[] Buttons;
+        }
+
+        // 탭 전환·오리파 화면 복귀·결과 닫힘 때 부른다. 카드는 처음 한 번만 만들고, 이후에는 켜고 끄며 값만 갱신한다.
+        // 데일리 완료 여부는 부를 때마다 KST 날짜를 다시 계산한다.
         void RefreshCards()
         {
             if (_list == null)
@@ -250,99 +276,327 @@ namespace ScrapFishing.Gacha
                 return;
             }
 
-            GachaUi.Clear(_list);
-            var index = 0;
-            foreach (var machine in _shop.Catalog.Machines)
+            if (_cards.Count == 0)
             {
-                if (_filter.HasValue && machine.Slot != _filter.Value)
+                foreach (var banner in OrderedBanners())
+                {
+                    _cards.Add(BuildCard(banner));
+                }
+            }
+
+            var index = 0;
+            foreach (var card in _cards)
+            {
+                var visible = !_filter.HasValue || (card.Banner.Machine != null && card.Banner.Machine.Slot == _filter.Value);
+                card.Root.gameObject.SetActive(visible);
+                if (!visible)
                 {
                     continue;
                 }
 
-                var card = BuildCard(machine);
-                var group = card.gameObject.AddComponent<CanvasGroup>();
+                UpdateCard(card);
+                var group = GachaUi.GetOrAdd<CanvasGroup>(card.Root);
+                group.DOKill(false);
                 group.alpha = 0f;
-                group.DOFade(1f, 0.2f).SetDelay(index++ * 0.06f).SetUpdate(true).SetLink(card.gameObject);
+                group.DOFade(1f, 0.2f).SetDelay(Mathf.Min(index++, 8) * 0.06f).SetUpdate(true).SetLink(card.Root.gameObject);
             }
         }
 
-        RectTransform BuildCard(GachaMachineData machine)
+        // 전체 탭 순서: 대축제 → 오늘의 암시장 → 상시 6종 → 픽업 18종. 머신 탭은 같은 순서에서 그 머신(상시 1 + 픽업)만 켠다.
+        List<GachaBanner> OrderedBanners()
         {
-            var tint = GachaUi.SlotTint(machine.Slot);
-            var card = GachaUi.Panel(_list, "Machine_" + machine.Id, Vector2.zero, Vector2.one, GachaUi.Card, tint, true).rectTransform;
-            GachaUi.Height(card, 236f);
-
-            var banner = machine.Banner;
-            var bannerImage = GachaUi.Panel(card, "Banner", new Vector2(0.03f, 0.6f), new Vector2(0.97f, 0.96f),
-                banner != null ? Color.white : new Color(tint.r * 0.2f, tint.g * 0.2f, tint.b * 0.2f, 1f), tint);
-            bannerImage.sprite = banner;
-            GachaUi.Label(bannerImage.transform, "Name", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.35f), new Vector2(0.7f, 0.95f), Palette.Text, machine.DisplayName);
-            GachaUi.Label(bannerImage.transform, "Slot", 16, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.05f), new Vector2(0.7f, 0.38f), tint,
-                (string.IsNullOrEmpty(machine.BannerCopy) ? GachaUi.SlotLabel(machine.Slot) : machine.BannerCopy) + " · " + machine.Gears.Count + "종");
-            GachaUi.Showcase(GachaUi.Rect(bannerImage.transform, "Showcase", new Vector2(0.62f, 0.04f), new Vector2(0.98f, 0.54f)), machine);
-
-            var counter = _shop.Inventory.Counter(machine.Id);
-            var boosting = counter + 1 >= machine.BoostStart;
-            if (boosting)
+            var list = new List<GachaBanner>(_shop.Catalog.Banners);
+            list.Sort((a, b) =>
             {
-                Tag(bannerImage.rectTransform, "BoostTag", "확률 상승 중", GachaUi.LegendColor, new Vector2(0.66f, 0.56f), new Vector2(0.97f, 0.92f));
-            }
-            else if (_shop.Inventory.History.Count == 0)
+                var byRank = Rank(a.Type).CompareTo(Rank(b.Type));
+                return byRank != 0 ? byRank : a.Order.CompareTo(b.Order);
+            });
+            return list;
+        }
+
+        static int Rank(BannerType type)
+        {
+            switch (type)
             {
-                Tag(bannerImage.rectTransform, "NewTag", "신규", Palette.NeonGreen, new Vector2(0.78f, 0.56f), new Vector2(0.97f, 0.92f));
+                case BannerType.Festival: return 0;
+                case BannerType.Daily: return 1;
+                case BannerType.Standard: return 2;
+                default: return 3;
+            }
+        }
+
+        BannerCard BuildCard(GachaBanner banner)
+        {
+            var card = new BannerCard { Banner = banner };
+            var tint = GachaUi.BannerTint(banner);
+            var cardImage = GachaUi.Panel(_list, "Banner_" + banner.Id, Vector2.zero, Vector2.one, GachaUi.Card, tint, true);
+            var root = cardImage.rectTransform;
+            card.Root = root;
+            GachaUi.Height(root, 236f);
+            if (banner.Type == BannerType.Pickup && banner.Pickup == PickupKind.Synchro)
+            {
+                CycleSynchro(cardImage.GetComponent<Outline>());
             }
 
-            GachaUi.Label(card, "Price", 22, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.46f), new Vector2(0.55f, 0.58f), Palette.Gold,
-                "1회 " + GachaUi.Money(machine.Price));
-            var rate = _refundRates.TryGetValue(machine.Id, out var cached) ? cached : GachaService.ExpectedRefundRate(machine);
-            GachaUi.Label(card, "RefundRate", 16, TextAnchor.MiddleRight, new Vector2(0.45f, 0.46f), new Vector2(0.96f, 0.58f), Palette.Cyan,
-                "총 환원율 약 " + Mathf.RoundToInt(rate * 100f) + "%");
+            // 배너 전용 아트(bannerImage)가 있으면 그것을, 없으면 머신 배너, 그것도 없으면 색 바탕.
+            var art = banner.BannerSprite != null ? banner.BannerSprite : banner.Machine != null ? banner.Machine.Banner : null;
+            var bannerImage = GachaUi.Panel(root, "Banner", new Vector2(0.03f, 0.6f), new Vector2(0.97f, 0.96f),
+                art != null ? Color.white : new Color(tint.r * 0.2f, tint.g * 0.2f, tint.b * 0.2f, 1f), tint);
+            bannerImage.sprite = art;
+            var name = GachaUi.Label(bannerImage.transform, "Name", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.35f), new Vector2(0.7f, 0.95f), Palette.Text, banner.NameKo);
+            name.resizeTextForBestFit = true;
+            name.resizeTextMinSize = 16;
+            name.resizeTextMaxSize = 28;
+            card.Subtitle = GachaUi.Label(bannerImage.transform, "Slot", 16, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.05f), new Vector2(0.7f, 0.38f), tint);
+            card.Subtitle.resizeTextForBestFit = true;
+            card.Subtitle.resizeTextMinSize = 12;
+            card.Subtitle.resizeTextMaxSize = 16;
 
-            BuildGauge(card, machine, counter, boosting);
+            if (banner.Type == BannerType.Pickup)
+            {
+                Tag(bannerImage.rectTransform, "PickupTag", "PICK UP", tint, new Vector2(0.72f, 0.7f), new Vector2(0.97f, 0.95f));
+                var icon = GachaUi.GearIcon(bannerImage.transform, "Featured", banner.Featured, new Vector2(0.75f, 0.04f), new Vector2(0.95f, 0.66f));
+                var fit = icon.gameObject.AddComponent<AspectRatioFitter>();
+                fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+                fit.aspectRatio = 1f;
+            }
+            else
+            {
+                card.Showcase = GachaUi.Rect(bannerImage.transform, "Showcase", new Vector2(0.62f, 0.04f), new Vector2(0.98f, 0.54f));
+            }
 
-            var counts = new[] { 1, GachaService.TenPull, GachaService.HundredPull };
+            switch (banner.Type)
+            {
+                case BannerType.Festival:
+                    card.StateTag = Tag(bannerImage.rectTransform, "FestivalTag", "FESTIVAL", tint, new Vector2(0.72f, 0.58f), new Vector2(0.97f, 0.92f));
+                    break;
+                case BannerType.Daily:
+                    card.StateTag = Tag(bannerImage.rectTransform, "FreeTag", "FREE", tint, new Vector2(0.72f, 0.58f), new Vector2(0.97f, 0.92f));
+                    break;
+                case BannerType.Standard:
+                    card.BoostTag = Tag(bannerImage.rectTransform, "BoostTag", "확률 상승 중", GachaUi.LegendColor, new Vector2(0.66f, 0.56f), new Vector2(0.97f, 0.92f))
+                        .transform.parent.gameObject;
+                    card.NewTag = Tag(bannerImage.rectTransform, "NewTag", "신규", Palette.NeonGreen, new Vector2(0.78f, 0.56f), new Vector2(0.97f, 0.92f))
+                        .transform.parent.gameObject;
+                    break;
+            }
+
+            GachaUi.Label(root, "Price", 22, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.46f), new Vector2(0.55f, 0.58f), Palette.Gold,
+                banner.Price > 0 ? "1회 " + GachaUi.Money(banner.Price) : "무료 · 하루 1회");
+            if (banner.Price > 0)
+            {
+                var rate = _refundRates.TryGetValue(banner.Id, out var cached) ? cached : RefundRate(banner);
+                GachaUi.Label(root, "RefundRate", 16, TextAnchor.MiddleRight, new Vector2(0.45f, 0.46f), new Vector2(0.96f, 0.58f), Palette.Cyan,
+                    "총 환원율 약 " + Mathf.RoundToInt(rate * 100f) + "%");
+            }
+
+            if (banner.Machine != null)
+            {
+                BuildGauge(card);
+            }
+            else
+            {
+                BuildStatus(card);
+            }
+
+            BuildPullButtons(card);
+            return card;
+        }
+
+        void UpdateCard(BannerCard card)
+        {
+            var banner = card.Banner;
+            card.Subtitle.text = Subtitle(banner);
+            if (card.Showcase != null)
+            {
+                // 데일리는 요일마다 머신이 바뀌므로 오늘 머신이 달라졌을 때만 다시 그린다.
+                var today = banner.Type == BannerType.Daily ? _shop.DailyMachine(banner) : null;
+                var key = today != null ? today.Id : "all";
+                if (card.ShowcaseKey != key)
+                {
+                    card.ShowcaseKey = key;
+                    GachaUi.Showcase(card.Showcase, GachaUi.ShowcaseGears(_shop, banner));
+                }
+            }
+
+            switch (banner.Type)
+            {
+                case BannerType.Festival:
+                    card.StateTag.text = _shop.FestivalRemaining(banner) > 0 ? "FESTIVAL" : "완료";
+                    break;
+                case BannerType.Daily:
+                    card.StateTag.text = _shop.DailyAvailable(banner) ? "FREE" : "완료";
+                    break;
+            }
+
+            var counter = _shop.Counter(banner);
+            var boosting = banner.Machine != null && counter + 1 >= banner.Machine.BoostStart;
+            if (card.BoostTag != null)
+            {
+                card.BoostTag.SetActive(boosting);
+                card.NewTag.SetActive(!boosting && _shop.Inventory.History.Count == 0);
+            }
+
+            if (banner.Machine != null)
+            {
+                UpdateGauge(card, counter, boosting);
+            }
+            else
+            {
+                UpdateStatus(card);
+            }
+
+            UpdatePullButtons(card);
+        }
+
+        string Subtitle(GachaBanner banner)
+        {
+            switch (banner.Type)
+            {
+                case BannerType.Daily:
+                    return "오늘의 머신: " + GachaConfirmPopup.DailyMachineName(_shop, banner);
+                case BannerType.Festival:
+                    return "6종 머신 전체 · " + _shop.Catalog.AllGears.Count + "종";
+                case BannerType.Pickup:
+                    return banner.DescKo;
+                default:
+                    var machine = banner.Machine;
+                    return (string.IsNullOrEmpty(machine.BannerCopy) ? GachaUi.SlotLabel(machine.Slot) : machine.BannerCopy) + " · " + machine.Gears.Count + "종";
+            }
+        }
+
+        float RefundRate(GachaBanner banner)
+        {
+            return banner.Type == BannerType.Standard ? GachaService.ExpectedRefundRate(banner.Machine) : GachaService.ExpectedRefundRate(banner, _shop.Catalog);
+        }
+
+        // 축제·데일리: 게이지 자리에 설명과 남은 횟수(또는 갱신 안내).
+        void BuildStatus(BannerCard card)
+        {
+            var desc = GachaUi.Label(card.Root, "Desc", 16, TextAnchor.UpperLeft, new Vector2(0.04f, 0.27f), new Vector2(0.68f, 0.45f), GachaUi.Muted, card.Banner.DescKo);
+            desc.horizontalOverflow = HorizontalWrapMode.Wrap;
+            desc.resizeTextForBestFit = true;
+            desc.resizeTextMinSize = 11;
+            desc.resizeTextMaxSize = 16;
+            card.Status = GachaUi.Label(card.Root, "Status", 16, TextAnchor.MiddleRight, new Vector2(0.68f, 0.27f), new Vector2(0.96f, 0.45f), Palette.Gold);
+            card.Status.lineSpacing = 0.9f;
+        }
+
+        void UpdateStatus(BannerCard card)
+        {
+            var banner = card.Banner;
+            if (banner.Type == BannerType.Festival)
+            {
+                var remaining = _shop.FestivalRemaining(banner);
+                card.Status.text = remaining > 0 ? "남은 횟수\n" + remaining + "/" + banner.MaxPulls : "완료\n0/" + banner.MaxPulls;
+                card.Status.color = remaining > 0 ? Palette.Gold : GachaUi.Muted;
+            }
+            else
+            {
+                var available = _shop.DailyAvailable(banner);
+                card.Status.text = available ? "오늘 1회\n받을 수 있어요" : "내일 05:00\n갱신";
+                card.Status.color = available ? Palette.NeonGreen : GachaUi.Muted;
+            }
+        }
+
+        // 배너가 받는 횟수(1연·10연)만큼 버튼.
+        void BuildPullButtons(BannerCard card)
+        {
+            var banner = card.Banner;
+            var counts = banner.PullCounts;
+            card.Buttons = new Button[counts.Length];
+            const float gap = 0.02f;
+            var width = (0.94f - gap * (counts.Length - 1)) / counts.Length;
             for (var i = 0; i < counts.Length; i++)
             {
                 var count = counts[i];
-                var min = new Vector2(0.03f + i * 0.32f, 0.04f);
-                var max = new Vector2(0.03f + i * 0.32f + 0.3f, 0.24f);
-                var label = GachaConfirmPopup.CountLabel(count) + "\n<size=16>" + GachaUi.Money(GachaShop.CostOf(machine, count)) + "</size>";
-                var accent = _shop.CanAfford(machine, count) ? Palette.NeonGreen : GachaUi.Muted;
-                var button = GachaUi.MakeButton(card, "Pull" + count, label, min, max, accent, 22, () => ShowConfirm(machine, count));
+                var min = new Vector2(0.03f + i * (width + gap), 0.04f);
+                var max = new Vector2(min.x + width, 0.24f);
+                var button = GachaUi.MakeButton(card.Root, "Pull" + count, string.Empty, min, max, Palette.NeonGreen, 22, () => ShowConfirm(banner, count));
                 var text = GachaUi.LabelOf(button);
                 if (text != null)
                 {
                     text.lineSpacing = 0.85f;
                 }
-            }
 
-            return card;
+                card.Buttons[i] = button;
+            }
         }
 
-        void BuildGauge(RectTransform card, GachaMachineData machine, int counter, bool boosting)
+        // 횟수 제한·데일리 완료는 비활성화, 달러 부족은 눌러서 확인 팝업의 안내를 본다.
+        void UpdatePullButtons(BannerCard card)
         {
-            var legend = GachaService.LegendRate(machine, counter);
-            var caption = boosting
-                ? "다음 Legend " + GachaUi.Percent(legend) + " (상승 중)"
-                : "다음 Legend " + GachaUi.Percent(legend) + " · " + machine.BoostStart + "회째부터 상승";
-            GachaUi.Label(card, "GaugeLabel", 16, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.36f), new Vector2(0.75f, 0.45f),
-                boosting ? GachaUi.LegendColor : GachaUi.Muted, caption);
-            GachaUi.Label(card, "GaugeCount", 16, TextAnchor.MiddleRight, new Vector2(0.7f, 0.36f), new Vector2(0.96f, 0.45f), GachaUi.Muted,
-                counter + "/" + machine.BoostCycle);
+            var banner = card.Banner;
+            for (var i = 0; i < card.Buttons.Length; i++)
+            {
+                var count = banner.PullCounts[i];
+                var cost = GachaShop.CostOf(banner, count);
+                var block = _shop.Block(banner, count);
+                var title = banner.Type == BannerType.Daily ? (block == BannerBlock.DailyDone ? "받기 완료" : "무료 1회") : GachaConfirmPopup.CountLabel(count);
+                var text = GachaUi.LabelOf(card.Buttons[i]);
+                if (text != null)
+                {
+                    text.text = cost > 0 ? title + "\n<size=16>" + GachaUi.Money(cost) + "</size>" : title;
+                }
 
-            var track = GachaUi.Panel(card, "GaugeTrack", new Vector2(0.04f, 0.285f), new Vector2(0.96f, 0.335f), new Color(0.1f, 0.12f, 0.2f, 1f), GachaUi.Muted);
+                var locked = block == BannerBlock.DailyDone || block == BannerBlock.LimitReached || block == BannerBlock.NotOffered;
+                GachaUi.SetEnabled(card.Buttons[i], !locked, block == BannerBlock.None ? Palette.NeonGreen : GachaUi.Muted);
+            }
+        }
+
+        // 싱크로 픽업 카드 테두리: 하양·핑크·연두를 번갈아.
+        static void CycleSynchro(Outline outline)
+        {
+            if (outline == null)
+            {
+                return;
+            }
+
+            var colors = GachaVideoConfig.SynchroFlashColors;
+            outline.effectColor = colors[0];
+            var cycle = DOTween.Sequence().SetLoops(-1).SetUpdate(true).SetLink(outline.gameObject);
+            for (var i = 0; i < colors.Length; i++)
+            {
+                var next = colors[(i + 1) % colors.Length];
+                cycle.Append(DOTween.To(() => outline.effectColor, c => outline.effectColor = c, next, 0.4f).SetEase(Ease.InOutSine));
+            }
+        }
+
+        // 상시·픽업이 같이 쓰는 머신 천장 게이지.
+        void BuildGauge(BannerCard card)
+        {
+            var machine = card.Banner.Machine;
+            card.GaugeLabel = GachaUi.Label(card.Root, "GaugeLabel", 16, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.36f), new Vector2(0.75f, 0.45f), GachaUi.Muted);
+            card.GaugeCount = GachaUi.Label(card.Root, "GaugeCount", 16, TextAnchor.MiddleRight, new Vector2(0.7f, 0.36f), new Vector2(0.96f, 0.45f), GachaUi.Muted);
+            var track = GachaUi.Panel(card.Root, "GaugeTrack", new Vector2(0.04f, 0.285f), new Vector2(0.96f, 0.335f), new Color(0.1f, 0.12f, 0.2f, 1f), GachaUi.Muted);
             var cycle = Mathf.Max(1, machine.BoostCycle);
             var startMark = Mathf.Clamp01((machine.BoostStart - 1) / (float)cycle);
             var marker = GachaUi.Panel(track.transform, "StartMark", new Vector2(startMark, 0f), new Vector2(startMark, 1f), GachaUi.LegendColor).rectTransform;
             marker.sizeDelta = new Vector2(3f, 0f);
-            var fill = Mathf.Clamp01(counter / (float)cycle);
-            GachaUi.Panel(track.transform, "Fill", Vector2.zero, new Vector2(fill, 1f), boosting ? GachaUi.LegendColor : GachaUi.RareColor);
+            card.GaugeFill = GachaUi.Panel(track.transform, "Fill", Vector2.zero, Vector2.one, GachaUi.RareColor);
         }
 
-        static void Tag(RectTransform parent, string name, string text, Color color, Vector2 min, Vector2 max)
+        // 다음 Legend 확률은 배너 기준(싱크로 픽업은 기본 1.2%에서 오른다).
+        static void UpdateGauge(BannerCard card, int counter, bool boosting)
+        {
+            var machine = card.Banner.Machine;
+            var rates = new float[GachaService.RarityCount];
+            GachaService.Rates(card.Banner, counter, true, rates);
+            var legend = rates[(int)ItemRarity.Legend];
+            card.GaugeLabel.text = boosting
+                ? "다음 Legend " + GachaUi.Percent(legend) + " (상승 중)"
+                : "다음 Legend " + GachaUi.Percent(legend) + " · " + machine.BoostStart + "회째부터 상승";
+            card.GaugeLabel.color = boosting ? GachaUi.LegendColor : GachaUi.Muted;
+            card.GaugeCount.text = counter + "/" + machine.BoostCycle;
+            var fill = Mathf.Clamp01(counter / (float)Mathf.Max(1, machine.BoostCycle));
+            card.GaugeFill.rectTransform.anchorMax = new Vector2(fill, 1f);
+            card.GaugeFill.color = boosting ? GachaUi.LegendColor : GachaUi.RareColor;
+        }
+
+        static Text Tag(RectTransform parent, string name, string text, Color color, Vector2 min, Vector2 max)
         {
             var tag = GachaUi.Panel(parent, name, min, max, new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f), color);
-            GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, color, text);
+            return GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, color, text);
         }
 
         void OpenInventory()
@@ -360,12 +614,12 @@ namespace ScrapFishing.Gacha
             RefreshCards();
         }
 
-        void ConfirmPull(GachaMachineData machine, int count)
+        void ConfirmPull(GachaBanner banner, int count)
         {
-            if (!_shop.TryPull(machine, count, out var result))
+            if (!_shop.TryPull(banner, count, out var result))
             {
                 AudioManager.Ensure().PlayUpgradeDenied();
-                if (_dollarPanel != null)
+                if (_dollarPanel != null && _shop.Block(banner, count) == BannerBlock.NoDollars)
                 {
                     Fx.Shake(_dollarPanel, 8f, 0.22f);
                 }
@@ -425,7 +679,7 @@ namespace ScrapFishing.Gacha
                 return;
             }
 
-            var machine = _result.Machine;
+            var banner = _result.Banner;
             var before = _shop.Balance;
             var total = 0;
             foreach (var pick in _pendingRefund)
@@ -446,7 +700,7 @@ namespace ScrapFishing.Gacha
             _flying = true;
             _flyBlocker.raycastTarget = true;
             _flyLayer.SetAsLastSibling();
-            _flyFinish = () => _refund.ShowDone(machine, before, after);
+            _flyFinish = () => _refund.ShowDone(banner, before, after);
             var duration = DollarFlyFx.Play(_flyLayer, from, _dollarPanel, total, _settings,
                 null,
                 FinishFly);
@@ -485,17 +739,17 @@ namespace ScrapFishing.Gacha
             ShowToast(stored > 0 ? "보관함에 " + stored + "개를 보관했어요" : "보관할 장비가 없어요");
         }
 
-        // 결과창의 연속 뽑기: 결과를 닫고(고르지 않은 장비는 미처리로 남음) 같은 머신·횟수의 뽑기 확인을 띄운다.
-        void PullAgain(GachaMachineData machine, int count)
+        // 결과창의 연속 뽑기: 결과를 닫고(고르지 않은 장비는 미처리로 남음) 같은 배너·횟수의 뽑기 확인을 띄운다.
+        void PullAgain(GachaBanner banner, int count)
         {
-            if (machine == null || count <= 0)
+            if (banner == null || count <= 0)
             {
                 return;
             }
 
             _result.Hide();
             RefreshCards();
-            ShowConfirm(machine, count);
+            ShowConfirm(banner, count);
         }
 
         void CloseResult()

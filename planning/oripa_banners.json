@@ -1,0 +1,587 @@
+{
+  "schemaVersion": 1,
+  "timezone": "Asia/Seoul",
+  "dailyResetHour": 5,
+  "rotation": {
+    "enabled": false,
+    "note": "발표용으로 26개 모두 상시 노출. 나중에 켜면 3개씩 2일 교체.",
+    "activeCount": 3,
+    "periodDays": 2
+  },
+  "pullCounts": [
+    1,
+    10
+  ],
+  "tenPullGuarantee": "Rare",
+  "banners": [
+    {
+      "id": "banner_festival",
+      "type": "festival",
+      "order": 1,
+      "nameKo": "네오도쿄 대축제",
+      "nameEn": "Neo-Tokyo Grand Festival",
+      "descKo": "6종 머신의 모든 장비가 한 풀에! 레전드·싱크로 확률 2배. 1인 30회 한정, 30회째 레전드 이상 확정.",
+      "pool": "all",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "gradeRates": {
+        "Normal": 0.6857,
+        "Rare": 0.2057,
+        "Epic": 0.0686,
+        "Legend": 0.032,
+        "Synchro": 0.008
+      },
+      "limit": {
+        "scope": "lifetime",
+        "maxPulls": 30
+      },
+      "pity": {
+        "atPull": 30,
+        "minGrade": "Legend",
+        "counter": "festival"
+      },
+      "videoRule": "highestGradeCategory"
+    },
+    {
+      "id": "banner_daily",
+      "type": "daily",
+      "order": 2,
+      "nameKo": "오늘의 암시장",
+      "nameEn": "Today's Black Market",
+      "descKo": "하루 한 번 무료! 레어 이상 확정. 요일마다 머신이 바뀐다.",
+      "price": 0,
+      "pullCounts": [
+        1
+      ],
+      "guaranteeMinGrade": "Rare",
+      "limit": {
+        "scope": "daily",
+        "maxPulls": 1
+      },
+      "countsTowardPity": false,
+      "weekdayPool": {
+        "Mon": "lure",
+        "Tue": "rod",
+        "Wed": "boat",
+        "Thu": "drone",
+        "Fri": "fisher",
+        "Sat": "helmet",
+        "Sun": "all"
+      },
+      "videoRule": "highestGradeCategory"
+    },
+    {
+      "id": "banner_lure_standard",
+      "type": "standard",
+      "order": 3,
+      "machineId": "lure",
+      "nameKo": "루어 머신",
+      "nameEn": "LURE VENDOR",
+      "descKo": "가부키초 뒷골목 미끼 자판기",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "lure",
+      "videoRule": "machine"
+    },
+    {
+      "id": "banner_lure_pickup_legend_01",
+      "type": "pickup",
+      "order": 4,
+      "machineId": "lure",
+      "nameKo": "여덟 갈래의 유혹",
+      "nameEn": "Eightfold Temptation",
+      "descKo": "야마타 8연 멀티훅 확률 UP!",
+      "featuredRewardId": "lure_legend_01",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "lure",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_lure_pickup_legend_02",
+      "type": "pickup",
+      "order": 5,
+      "machineId": "lure",
+      "nameKo": "월하의 신호",
+      "nameEn": "Signal Under the Moon",
+      "descKo": "츠쿠요미 월광 루어 확률 UP!",
+      "featuredRewardId": "lure_legend_02",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "lure",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_lure_pickup_synchro_01",
+      "type": "pickup",
+      "order": 6,
+      "machineId": "lure",
+      "nameKo": "태양을 삼킨 미끼",
+      "nameEn": "The Bait That Swallowed the Sun",
+      "descKo": "아마테라스 싱크로 코어 확률 UP!",
+      "featuredRewardId": "lure_synchro_01",
+      "price": 10000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "lure",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "synchro",
+        "gradeRates": {
+          "Legend": 0.012,
+          "Synchro": 0.008
+        },
+        "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
+      }
+    },
+    {
+      "id": "banner_rod_standard",
+      "type": "standard",
+      "order": 7,
+      "machineId": "rod",
+      "nameKo": "낚싯대 머신",
+      "nameEn": "ROD FORGE",
+      "descKo": "아메요코 시장 뒷골목 낚싯대 대장간",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "rod",
+      "videoRule": "machine"
+    },
+    {
+      "id": "banner_rod_pickup_legend_01",
+      "type": "pickup",
+      "order": 8,
+      "machineId": "rod",
+      "nameKo": "뇌명의 대장간",
+      "nameEn": "Thunderclap Forge",
+      "descKo": "뇌신 번개 로드 확률 UP!",
+      "featuredRewardId": "rod_legend_01",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "rod",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_rod_pickup_legend_02",
+      "type": "pickup",
+      "order": 9,
+      "machineId": "rod",
+      "nameKo": "폭풍신의 작살",
+      "nameEn": "Harpoon of the Storm God",
+      "descKo": "스사노오 해신 작살 확률 UP!",
+      "featuredRewardId": "rod_legend_02",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "rod",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_rod_pickup_synchro_01",
+      "type": "pickup",
+      "order": 10,
+      "machineId": "rod",
+      "nameKo": "천지창조의 창",
+      "nameEn": "Spear of Creation",
+      "descKo": "아메노누보코 싱크로 로드 확률 UP!",
+      "featuredRewardId": "rod_synchro_01",
+      "price": 10000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "rod",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "synchro",
+        "gradeRates": {
+          "Legend": 0.012,
+          "Synchro": 0.008
+        },
+        "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
+      }
+    },
+    {
+      "id": "banner_boat_standard",
+      "type": "standard",
+      "order": 11,
+      "machineId": "boat",
+      "nameKo": "보트 머신",
+      "nameEn": "DOCK BROKER",
+      "descKo": "오다이바 폐부두 중고선 브로커",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "boat",
+      "videoRule": "machine"
+    },
+    {
+      "id": "banner_boat_pickup_legend_01",
+      "type": "pickup",
+      "order": 12,
+      "machineId": "boat",
+      "nameKo": "떠다니는 도리이",
+      "nameEn": "The Drifting Torii",
+      "descKo": "부유 신사선 '토리이' 확률 UP!",
+      "featuredRewardId": "boat_legend_01",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "boat",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_boat_pickup_legend_02",
+      "type": "pickup",
+      "order": 13,
+      "machineId": "boat",
+      "nameKo": "기함 탈취 작전",
+      "nameEn": "Operation: Steal the Flagship",
+      "descKo": "자이바츠 기함 '쇼군' 확률 UP!",
+      "featuredRewardId": "boat_legend_02",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "boat",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_boat_pickup_synchro_01",
+      "type": "pickup",
+      "order": 14,
+      "machineId": "boat",
+      "nameKo": "천상의 방주",
+      "nameEn": "Ark of the High Heavens",
+      "descKo": "네오도쿄 아크 '타카마가하라' 확률 UP!",
+      "featuredRewardId": "boat_synchro_01",
+      "price": 10000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "boat",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "synchro",
+        "gradeRates": {
+          "Legend": 0.012,
+          "Synchro": 0.008
+        },
+        "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
+      }
+    },
+    {
+      "id": "banner_drone_standard",
+      "type": "standard",
+      "order": 15,
+      "machineId": "drone",
+      "nameKo": "드론 머신",
+      "nameEn": "DRONE CRANE",
+      "descKo": "아키하바라 정크 드론 크레인",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "drone",
+      "videoRule": "machine"
+    },
+    {
+      "id": "banner_drone_pickup_legend_01",
+      "type": "pickup",
+      "order": 16,
+      "machineId": "drone",
+      "nameKo": "풍신뇌신의 북소리",
+      "nameEn": "Drums of Wind and Thunder",
+      "descKo": "후진 뇌신 드론 확률 UP!",
+      "featuredRewardId": "drone_legend_01",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "drone",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_drone_pickup_legend_02",
+      "type": "pickup",
+      "order": 17,
+      "machineId": "drone",
+      "nameKo": "아홉 꼬리의 사냥",
+      "nameEn": "The Ninefold Hunt",
+      "descKo": "키츠네 9미 군집기 확률 UP!",
+      "featuredRewardId": "drone_legend_02",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "drone",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_drone_pickup_synchro_01",
+      "type": "pickup",
+      "order": 18,
+      "machineId": "drone",
+      "nameKo": "궤도의 달",
+      "nameEn": "Orbital Moon",
+      "descKo": "츠쿠요미 싱크로 오비탈 확률 UP!",
+      "featuredRewardId": "drone_synchro_01",
+      "price": 10000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "drone",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "synchro",
+        "gradeRates": {
+          "Legend": 0.012,
+          "Synchro": 0.008
+        },
+        "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
+      }
+    },
+    {
+      "id": "banner_fisher_standard",
+      "type": "standard",
+      "order": 19,
+      "machineId": "fisher",
+      "nameKo": "피셔 머신",
+      "nameEn": "FISHER LOUNGE",
+      "descKo": "골든가이 뒷골목 낚시꾼 인력소",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "fisher",
+      "videoRule": "machine"
+    },
+    {
+      "id": "banner_fisher_pickup_legend_01",
+      "type": "pickup",
+      "order": 20,
+      "machineId": "fisher",
+      "nameKo": "바다 요괴 사냥",
+      "nameEn": "The Umibozu Hunt",
+      "descKo": "바다 요괴 사냥꾼 '우미보즈' 확률 UP!",
+      "featuredRewardId": "fisher_legend_01",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "fisher",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_fisher_pickup_legend_02",
+      "type": "pickup",
+      "order": 21,
+      "machineId": "fisher",
+      "nameKo": "용궁의 비밀",
+      "nameEn": "Secret of the Dragon Palace",
+      "descKo": "용궁 무녀 '오토히메' 확률 UP!",
+      "featuredRewardId": "fisher_legend_02",
+      "price": 7500,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "fisher",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_fisher_pickup_synchro_01",
+      "type": "pickup",
+      "order": 22,
+      "machineId": "fisher",
+      "nameKo": "화이트 사이코키네시스",
+      "nameEn": "White Psychokinesis",
+      "descKo": "사이킥 엣지러너 '히카리' 확률 UP!",
+      "featuredRewardId": "fisher_synchro_01",
+      "price": 10000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "fisher",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "synchro",
+        "gradeRates": {
+          "Legend": 0.012,
+          "Synchro": 0.008
+        },
+        "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
+      }
+    },
+    {
+      "id": "banner_helmet_standard",
+      "type": "standard",
+      "order": 23,
+      "machineId": "helmet",
+      "nameKo": "헬멧 머신",
+      "nameEn": "HELMET WORKSHOP",
+      "descKo": "츠키지 수산시장 뒤편 잠수 헬멧 공방",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "helmet",
+      "videoRule": "machine"
+    },
+    {
+      "id": "banner_helmet_pickup_legend_01",
+      "type": "pickup",
+      "order": 24,
+      "machineId": "helmet",
+      "nameKo": "용신의 비늘",
+      "nameEn": "Scale of the Dragon God",
+      "descKo": "류진 비늘 투구 확률 UP!",
+      "featuredRewardId": "helmet_legend_01",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "helmet",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_helmet_pickup_legend_02",
+      "type": "pickup",
+      "order": 25,
+      "machineId": "helmet",
+      "nameKo": "심연의 오니",
+      "nameEn": "Oni of the Abyss",
+      "descKo": "오니 강화 헬멧 확률 UP!",
+      "featuredRewardId": "helmet_legend_02",
+      "price": 5000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "helmet",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "legend",
+        "featuredShareOfGrade": 0.75,
+        "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
+      }
+    },
+    {
+      "id": "banner_helmet_pickup_synchro_01",
+      "type": "pickup",
+      "order": 26,
+      "machineId": "helmet",
+      "nameKo": "후지의 심장",
+      "nameEn": "Heart of Fuji",
+      "descKo": "후지 코어 싱크로 헬멧 확률 UP!",
+      "featuredRewardId": "helmet_synchro_01",
+      "price": 10000,
+      "pullCounts": [
+        1,
+        10
+      ],
+      "pityCounter": "helmet",
+      "videoRule": "machine",
+      "pickupRule": {
+        "kind": "synchro",
+        "gradeRates": {
+          "Legend": 0.012,
+          "Synchro": 0.008
+        },
+        "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace ScrapFishing.Gacha
 {
-    // 환원 확인(선택 개수, 달러 전→후, 확정/취소)과 환원 완료(체크, 전→후, 같은 머신 다시 뽑기).
+    // 환원 확인(선택 개수, 달러 전→후, 확정/취소)과 환원 완료(체크, 전→후, 같은 배너 다시 뽑기).
     public sealed class GachaRefundPopup
     {
         readonly RectTransform _root;
@@ -22,13 +22,14 @@ namespace ScrapFishing.Gacha
         readonly Text _retryName;
         readonly Text _retryPrice;
         readonly Action<RectTransform> _onConfirm;
-        readonly Action<GachaMachineData, int> _onRetry;
+        readonly Action<GachaBanner, int> _onRetry;
         readonly Action _onClose;
-        GachaMachineData _machine;
+        readonly Button _retryTen;
+        GachaBanner _banner;
 
         public bool IsOpen => _root.gameObject.activeSelf;
 
-        public GachaRefundPopup(RectTransform parent, Action<RectTransform> onConfirm, Action<GachaMachineData, int> onRetry, Action onClose)
+        public GachaRefundPopup(RectTransform parent, Action<RectTransform> onConfirm, Action<GachaBanner, int> onRetry, Action onClose)
         {
             _onConfirm = onConfirm;
             _onRetry = onRetry;
@@ -56,7 +57,7 @@ namespace ScrapFishing.Gacha
             _retryName = GachaUi.Label(retry, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.48f), new Vector2(0.6f, 0.76f), Palette.Text);
             _retryPrice = GachaUi.Label(retry, "Price", 16, TextAnchor.MiddleRight, new Vector2(0.55f, 0.48f), new Vector2(0.95f, 0.76f), Palette.Gold);
             GachaUi.MakeButton(retry, "Retry1", "1회", new Vector2(0.05f, 0.08f), new Vector2(0.48f, 0.42f), Palette.NeonGreen, 22, () => Retry(1));
-            GachaUi.MakeButton(retry, "Retry10", "10연", new Vector2(0.52f, 0.08f), new Vector2(0.95f, 0.42f), Palette.NeonGreen, 22, () => Retry(GachaService.TenPull));
+            _retryTen = GachaUi.MakeButton(retry, "Retry10", "10연", new Vector2(0.52f, 0.08f), new Vector2(0.95f, 0.42f), Palette.NeonGreen, 22, () => Retry(GachaService.TenPull));
             GachaUi.MakeButton(_donePanel, "Close", "닫기", new Vector2(0.25f, 0.04f), new Vector2(0.75f, 0.15f), GachaUi.Muted, 22, Close);
             _root.gameObject.SetActive(false);
         }
@@ -85,12 +86,13 @@ namespace ScrapFishing.Gacha
                 .OnComplete(() => _confirmPanel.gameObject.SetActive(false));
         }
 
-        public void ShowDone(GachaMachineData machine, int before, int after)
+        public void ShowDone(GachaBanner banner, int before, int after)
         {
-            _machine = machine;
+            _banner = banner;
             _doneBalance.text = GachaUi.Money(before) + "  →  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + GachaUi.Money(after) + "</color>";
-            _retryName.text = machine != null ? machine.DisplayName : string.Empty;
-            _retryPrice.text = machine != null ? "1회 " + GachaUi.Money(machine.Price) : string.Empty;
+            _retryName.text = banner != null ? banner.NameKo : string.Empty;
+            _retryPrice.text = banner != null ? (banner.Price > 0 ? "1회 " + GachaUi.Money(banner.Price) : "무료") : string.Empty;
+            _retryTen.gameObject.SetActive(banner == null || banner.Offers(GachaService.TenPull));
             _confirmPanel.gameObject.SetActive(false);
             _donePanel.gameObject.SetActive(true);
             Open(_donePanel);
@@ -125,11 +127,11 @@ namespace ScrapFishing.Gacha
 
         void Retry(int count)
         {
-            var machine = _machine;
+            var banner = _banner;
             Hide();
-            if (machine != null)
+            if (banner != null)
             {
-                _onRetry?.Invoke(machine, count);
+                _onRetry?.Invoke(banner, count);
             }
         }
 
