@@ -164,7 +164,7 @@ namespace ScrapFishing.UI
             _playing = playing;
             var diving = flow.Phase == GamePhase.Diving;
             SetTime(playing ? Mathf.CeilToInt(session.Remaining) : -1);
-            // 수심·TIME·스크랩 패널은 보트·잠수 모두 보인다. 잠수 중 수심은 잠수부 위치(해저 평원 4000m~), 잠수 칸은 보트에서만.
+            // 수심·TIME·스크랩 패널은 보트·잠수 모두 보인다. 잠수 중 수심은 잠수부 위치(해저 평원 1500m~), 잠수 칸은 보트에서만.
             _panels.SetDepthVisible(playing);
             _panels.SetDiveCellsVisible(playing && !diving);
             _panels.SetTimeVisible(playing);

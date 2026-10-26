@@ -207,7 +207,7 @@ namespace ScrapFishing.UI
             ShowDepth(DepthZone.Meters(normalized), DepthZone.Name(normalized));
         }
 
-        // 잠수 중: 잠수부 위치로 4000~4100m, 구역은 "해저 평원".
+        // 잠수 중: 잠수부 위치로 1500~1600m, 구역은 "해저 평원".
         public void SetDiveDepth(float normalized)
         {
             ShowDepth(DepthZone.DiveMeters(normalized), DepthZone.DiveZoneName);

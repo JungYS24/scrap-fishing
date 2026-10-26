@@ -91,21 +91,37 @@ namespace ScrapFishing.Tests
 
                 // 수심: 숫자만(m는 그림), 구역 태그.
                 panels.SetDepth(0f);
-                Assert.AreEqual("8", panels.DepthText.text);
+                Assert.AreEqual("0", panels.DepthText.text);
                 Assert.AreEqual(DepthZone.Name(0f), panels.ZoneText.text);
                 Assert.AreEqual(TextAnchor.MiddleRight, panels.DepthText.alignment);
                 panels.SetDepth(0.93f);
                 Assert.AreEqual(Mathf.RoundToInt(DepthZone.Meters(0.93f)).ToString(), panels.DepthText.text);
                 Assert.AreEqual(DepthZone.Name(0.93f), panels.ZoneText.text);
 
-                // 잠수: 해저 평원, 수면 4000m ~ 바닥 4100m.
+                // 보트 수심 0~1000m, 구역 경계 250·500·750m.
+                panels.SetDepth(1f);
+                Assert.AreEqual("1000", panels.DepthText.text);
+                Assert.AreEqual("심연", panels.ZoneText.text);
+                panels.SetDepth(0.25f);
+                Assert.AreEqual("250", panels.DepthText.text);
+                Assert.AreEqual("드론 묘지", panels.ZoneText.text);
+                panels.SetDepth(0.2499f);
+                Assert.AreEqual("표층", panels.ZoneText.text);
+                panels.SetDepth(0.5f);
+                Assert.AreEqual("500", panels.DepthText.text);
+                Assert.AreEqual("슬러지", panels.ZoneText.text);
+                panels.SetDepth(0.75f);
+                Assert.AreEqual("750", panels.DepthText.text);
+                Assert.AreEqual("심연", panels.ZoneText.text);
+
+                // 잠수: 해저 평원, 수면 1500m ~ 바닥 1600m(보트 최대 1000m보다 깊다).
                 panels.SetDiveDepth(0f);
-                Assert.AreEqual("4000", panels.DepthText.text);
+                Assert.AreEqual("1500", panels.DepthText.text);
                 Assert.AreEqual("해저 평원", panels.ZoneText.text);
                 panels.SetDiveDepth(0.5f);
-                Assert.AreEqual("4050", panels.DepthText.text);
+                Assert.AreEqual("1550", panels.DepthText.text);
                 panels.SetDiveDepth(1f);
-                Assert.AreEqual("4100", panels.DepthText.text);
+                Assert.AreEqual("1600", panels.DepthText.text);
                 Canvas.ForceUpdateCanvases();
                 Assert.LessOrEqual(panels.DepthText.preferredWidth, panels.DepthText.rectTransform.rect.width + 0.5f, "4자리 수심이 칸 안");
                 Assert.LessOrEqual(panels.ZoneText.preferredWidth, panels.ZoneText.rectTransform.rect.width + 0.5f, "해저 평원이 태그 안");

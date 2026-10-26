@@ -213,7 +213,7 @@ namespace ScrapFishing.Tests
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.IsTrue(dollar.gameObject.activeInHierarchy, "잠수 중에도 달러 패널이 보인다");
 
-            // HUD 패널(잠수): TIME·스크랩·수심은 같은 모양·크기, 수심은 해저 평원 4000m 이상, 잠수 칸만 숨김.
+            // HUD 패널(잠수): TIME·스크랩·수심은 같은 모양·크기, 수심은 해저 평원 1500m 이상, 잠수 칸만 숨김.
             Assert.IsTrue(hud.Find("TimePanel").gameObject.activeInHierarchy, "잠수: TIME");
             Assert.IsTrue(hud.Find("ScrapPanel").gameObject.activeInHierarchy, "잠수: 스크랩");
             Assert.AreEqual(boatScrapSize, ((RectTransform)hud.Find("ScrapPanel")).rect.size);
@@ -221,8 +221,8 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(hud.Find("DepthPanel").gameObject.activeInHierarchy, "잠수: 수심 패널 유지");
             Assert.IsTrue(hud.Find("ZoneTag").gameObject.activeInHierarchy, "잠수: 구역 태그 유지");
             Assert.AreEqual("해저 평원", boatPanels.ZoneText.text);
-            Assert.GreaterOrEqual(int.Parse(boatPanels.DepthText.text), 4000, "잠수 수심은 4000m 이상");
-            Assert.LessOrEqual(int.Parse(boatPanels.DepthText.text), 4100);
+            Assert.GreaterOrEqual(int.Parse(boatPanels.DepthText.text), 1500, "잠수 수심은 1500m 이상");
+            Assert.LessOrEqual(int.Parse(boatPanels.DepthText.text), 1600);
             Assert.IsFalse(hud.Find("DiveCells").gameObject.activeInHierarchy, "잠수: 잠수 칸 숨김");
             StringAssert.Contains("/", boatPanels.ScrapText.text, "잠수 중에도 스크랩 숫자");
             Assert.IsFalse(GameObject.Find("Canvas").transform.Find("GameArea/ReadyPanel").gameObject.activeSelf, "강화 버튼은 출항 중 숨김");

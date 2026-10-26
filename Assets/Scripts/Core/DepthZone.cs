@@ -23,14 +23,17 @@ namespace ScrapFishing.Core
             }
         }
 
+        // 보트(낚시) 수심: 0 ~ 1000m. 구역 4단계가 250m씩 나뉜다(표층 ~250, 드론 묘지 ~500, 슬러지 ~750, 심연 ~1000).
+        public const float MaxMeters = 1000f;
+
         public static float Meters(float normalized)
         {
-            return 8f + Mathf.Clamp01(normalized) * 42f;
+            return Mathf.Clamp01(normalized) * MaxMeters;
         }
 
-        // 잠수 구역: 낚시 4단계(심연)보다 아래인 해저. 수면 4000m ~ 바닥 4100m.
+        // 잠수 구역: 낚시 4단계(심연, ~1000m)보다 아래인 해저. 수면 1500m ~ 바닥 1600m.
         public const string DiveZoneName = "해저 평원";
-        public const float DiveTopMeters = 4000f;
+        public const float DiveTopMeters = 1500f;
         public const float DiveSpanMeters = 100f;
 
         public static float DiveMeters(float normalized)
