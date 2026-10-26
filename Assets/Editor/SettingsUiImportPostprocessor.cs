@@ -38,7 +38,13 @@ public class SettingsUiImportPostprocessor : AssetPostprocessor
             return;
         }
 
-        var importer = (TextureImporter)assetImporter;
+        var border = BordersLTRB.TryGetValue(Path.GetFileNameWithoutExtension(path), out var ltrb) ? UnityBorder(ltrb) : Vector4.zero;
+        ApplyUiSprite((TextureImporter)assetImporter, border);
+    }
+
+    // UI 스킨 PNG 공통 가져오기 설정. HUD 스킨(HudUiImportPostprocessor)도 같은 설정을 쓴다.
+    public static void ApplyUiSprite(TextureImporter importer, Vector4 border)
+    {
         importer.textureType = TextureImporterType.Sprite;
         importer.spriteImportMode = SpriteImportMode.Single;
         importer.spritePixelsPerUnit = 100f;
@@ -56,7 +62,7 @@ public class SettingsUiImportPostprocessor : AssetPostprocessor
         settings.spritePivot = new Vector2(0.5f, 0.5f);
         importer.SetTextureSettings(settings);
 
-        importer.spriteBorder = BordersLTRB.TryGetValue(Path.GetFileNameWithoutExtension(path), out var ltrb) ? UnityBorder(ltrb) : Vector4.zero;
+        importer.spriteBorder = border;
 
         importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
         {

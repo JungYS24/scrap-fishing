@@ -1,0 +1,107 @@
+{
+ "note": "각 스프라이트 안에서 글자/채움이 들어갈 영역. Unity RectTransform 앵커(0~1, 왼쪽 아래 원점)로 바로 쓰면 된다.",
+ "depth_panel": {
+  "size": [
+   203,
+   70
+  ],
+  "numberArea": {
+   "xMin": 0.305,
+   "yMin": 0.171,
+   "xMax": 0.837,
+   "yMax": 0.8
+  },
+  "note": "오른쪽 끝 'm'은 그림에 포함. 숫자는 오른쪽 정렬로 m 앞에"
+ },
+ "time_panel": {
+  "size": [
+   144,
+   51
+  ],
+  "numberArea": {
+   "xMin": 0.354,
+   "yMin": 0.157,
+   "xMax": 0.951,
+   "yMax": 0.824
+  }
+ },
+ "time_panel_warning": {
+  "size": [
+   144,
+   51
+  ],
+  "numberArea": {
+   "xMin": 0.354,
+   "yMin": 0.157,
+   "xMax": 0.951,
+   "yMax": 0.824
+  }
+ },
+ "scrap_panel": {
+  "size": [
+   182,
+   89
+  ],
+  "numberArea": {
+   "xMin": 0.341,
+   "yMin": 0.315,
+   "xMax": 0.951,
+   "yMax": 0.899
+  },
+  "barArea": {
+   "xMin": 0.077,
+   "yMin": 0.135,
+   "xMax": 0.923,
+   "yMax": 0.236
+  }
+ },
+ "scrap_panel_full": {
+  "size": [
+   182,
+   89
+  ],
+  "numberArea": {
+   "xMin": 0.341,
+   "yMin": 0.315,
+   "xMax": 0.951,
+   "yMax": 0.899
+  },
+  "barArea": {
+   "xMin": 0.077,
+   "yMin": 0.135,
+   "xMax": 0.923,
+   "yMax": 0.236
+  }
+ },
+ "zone_tag": {
+  "size": [
+   144,
+   33
+  ],
+  "textArea": {
+   "xMin": 0.069,
+   "yMin": 0.152,
+   "xMax": 0.931,
+   "yMax": 0.818
+  }
+ },
+ "dive_full": {
+  "size": [
+   75,
+   73
+  ]
+ },
+ "dive_empty": {
+  "size": [
+   75,
+   73
+  ]
+ },
+ "scrap_bar_fill": {
+  "size": [
+   40,
+   6
+  ],
+  "slice": "Sliced, border L1 R1 T1 B1"
+ }
+}

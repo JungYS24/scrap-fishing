@@ -28,6 +28,16 @@ namespace ScrapFishing.Core
             return 8f + Mathf.Clamp01(normalized) * 42f;
         }
 
+        // 잠수 구역: 낚시 4단계(심연)보다 아래인 해저. 수면 4000m ~ 바닥 4100m.
+        public const string DiveZoneName = "해저 평원";
+        public const float DiveTopMeters = 4000f;
+        public const float DiveSpanMeters = 100f;
+
+        public static float DiveMeters(float normalized)
+        {
+            return DiveTopMeters + Mathf.Clamp01(normalized) * DiveSpanMeters;
+        }
+
         public static Color MarkerColor(float normalized)
         {
             switch (Index(normalized))

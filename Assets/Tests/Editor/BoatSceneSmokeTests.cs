@@ -144,6 +144,10 @@ namespace ScrapFishing.Tests
             Assert.GreaterOrEqual(hitHeight, 43f, "터치 영역은 예전(약 43px) 이상");
             var panelRect = ((RectTransform)panel).rect;
             Assert.LessOrEqual(((RectTransform)slider.transform).rect.width, panelRect.width);
+            panel.Find("Close").GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.IsFalse(panel.gameObject.activeInHierarchy, "타이틀 설정창 닫힘");
+            Assert.AreEqual(0f, Time.timeScale, "타이틀에서 닫아도 타이틀의 정지 상태는 그대로");
 
             // 보트: 피셔 머리 왼쪽 위 드론.
             var nomad = GameObject.Find("Nomad").transform;
@@ -175,11 +179,52 @@ namespace ScrapFishing.Tests
             var hud = GameObject.Find("Hud").transform;
             Assert.IsNull(hud.Find("SoundToggle"), "HUD 음소거 버튼은 톱니 버튼으로 바꿨다");
             yield return OpenSettingsFromHud(hud, "보트");
+
+            // HUD 패널(보트): 예전 글자 HUD 대신 TIME·수심·구역·스크랩·잠수 칸 패널. 잠수 칸은 CastsPerDive만큼.
+            foreach (var old in new[] { "Time", "Depth", "ScrapLoad", "DiveProgress" })
+            {
+                Assert.IsNull(hud.Find(old), "예전 글자 HUD 삭제: " + old);
+            }
+
+            foreach (var hudPanel in new[] { "TimePanel", "DepthPanel", "ZoneTag", "ScrapPanel", "DiveCells" })
+            {
+                Assert.IsTrue(hud.Find(hudPanel).gameObject.activeInHierarchy, "보트: " + hudPanel);
+            }
+
+            var boatPanels = Object.FindFirstObjectByType<HudView>().Panels;
+            Assert.AreEqual(session.CastsPerDive, boatPanels.DiveCells.Count);
+            StringAssert.IsMatch("^[0-9]+$", boatPanels.TimeText.text, "TIME은 숫자만");
+            StringAssert.IsMatch("^[0-9]+$", boatPanels.DepthText.text, "수심은 숫자만");
+            StringAssert.Contains("/", boatPanels.ScrapText.text);
+            var boatScrapSize = ((RectTransform)hud.Find("ScrapPanel")).rect.size;
+            // 힌트는 아래 가운데, 수심 패널·구역 태그보다 아래.
+            var hint = (RectTransform)hud.Find("Hint");
+            Assert.AreEqual(TextAnchor.MiddleCenter, hint.GetComponent<Text>().alignment);
+            Assert.AreEqual(0.5f, (hint.anchorMin.x + hint.anchorMax.x) * 0.5f, 1e-4f, "가운데");
+            var hintCorners = new Vector3[4];
+            var tagCorners = new Vector3[4];
+            hint.GetWorldCorners(hintCorners);
+            ((RectTransform)hud.Find("ZoneTag")).GetWorldCorners(tagCorners);
+            Assert.Less(hintCorners[1].y, tagCorners[0].y, "힌트가 구역 태그 아래");
+            var boatTimeSize = ((RectTransform)hud.Find("TimePanel")).rect.size;
+
             typeof(RunSession).GetProperty("DiveProgress").SetValue(session, 3);
             typeof(BoatBootstrap).GetMethod("HandleDiveSwipe", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.IsTrue(dollar.gameObject.activeInHierarchy, "잠수 중에도 달러 패널이 보인다");
-            yield return OpenSettingsFromHud(hud, "잠수");
+
+            // HUD 패널(잠수): TIME·스크랩·수심은 같은 모양·크기, 수심은 해저 평원 4000m 이상, 잠수 칸만 숨김.
+            Assert.IsTrue(hud.Find("TimePanel").gameObject.activeInHierarchy, "잠수: TIME");
+            Assert.IsTrue(hud.Find("ScrapPanel").gameObject.activeInHierarchy, "잠수: 스크랩");
+            Assert.AreEqual(boatScrapSize, ((RectTransform)hud.Find("ScrapPanel")).rect.size);
+            Assert.AreEqual(boatTimeSize, ((RectTransform)hud.Find("TimePanel")).rect.size);
+            Assert.IsTrue(hud.Find("DepthPanel").gameObject.activeInHierarchy, "잠수: 수심 패널 유지");
+            Assert.IsTrue(hud.Find("ZoneTag").gameObject.activeInHierarchy, "잠수: 구역 태그 유지");
+            Assert.AreEqual("해저 평원", boatPanels.ZoneText.text);
+            Assert.GreaterOrEqual(int.Parse(boatPanels.DepthText.text), 4000, "잠수 수심은 4000m 이상");
+            Assert.LessOrEqual(int.Parse(boatPanels.DepthText.text), 4100);
+            Assert.IsFalse(hud.Find("DiveCells").gameObject.activeInHierarchy, "잠수: 잠수 칸 숨김");
+            StringAssert.Contains("/", boatPanels.ScrapText.text, "잠수 중에도 스크랩 숫자");
             Assert.IsFalse(GameObject.Find("Canvas").transform.Find("GameArea/ReadyPanel").gameObject.activeSelf, "강화 버튼은 출항 중 숨김");
             Assert.IsFalse(boatDrone.gameObject.activeInHierarchy, "잠수 중에는 보트 드론이 보트와 같이 숨는다");
             var dive = Object.FindFirstObjectByType<DiveDirector>();
@@ -201,6 +246,9 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(helmet.flipX);
             Assert.Less(helmet.sortingOrder, droneRenderer.sortingOrder);
 
+            // 잠수 중에도 HUD 톱니로 설정창을 열면 멈추고, 닫으면 다시 움직인다.
+            yield return OpenSettingsFromHud(hud, "잠수");
+
             yield return new ExitPlayMode();
             PlayerPrefs.SetInt("SoundOn", soundOn);
             PlayerPrefs.Save();
@@ -216,7 +264,12 @@ namespace ScrapFishing.Tests
             yield return new WaitForSecondsRealtime(0.3f);
             var settings = GameObject.Find("Settings");
             Assert.IsNotNull(settings, where + " 설정창이 열린다");
-            Assert.AreEqual(settings.transform.parent.childCount - 1, settings.transform.GetSiblingIndex(), where + " 설정창이 맨 앞");
+            // 맨 앞 유지 요소(달러 패널, UiStayOnTop)만 설정창 위에 있을 수 있다.
+            var parent = settings.transform.parent;
+            for (var i = settings.transform.GetSiblingIndex() + 1; i < parent.childCount; i++)
+            {
+                Assert.IsNotNull(parent.GetChild(i).GetComponent<UiStayOnTop>(), where + " 설정창 위에는 달러 패널만: " + parent.GetChild(i).name);
+            }
             Assert.IsNotNull(settings.transform.Find("Panel/SoundToggle").GetComponent<SettingsSoundButton>(), where + " 새 스킨 패널");
             Assert.AreEqual(0f, Time.timeScale, where + " 설정창이 열려 있는 동안 멈춤");
             settings.transform.Find("Panel/Close").GetComponent<Button>().onClick.Invoke();

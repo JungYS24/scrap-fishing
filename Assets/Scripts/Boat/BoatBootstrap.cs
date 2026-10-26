@@ -577,14 +577,16 @@ namespace ScrapFishing.Boat
                 _session,
                 _gauge != null ? _gauge.Normalized : 0f,
                 _dive != null ? _dive.DiveFill : 0f,
-                _dive != null && _dive.IsForcedAscent);
+                _dive != null && _dive.IsForcedAscent,
+                _dive != null ? _dive.DiverDepth : 0f);
             if (_gauge != null)
             {
                 _gauge.gameObject.SetActive(_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results && _flow.Phase != GamePhase.Diving);
             }
 
             _hud.SetSteerGuide(_casting != null && _casting.ShowSteerGuide);
-            if (_collector != null && _flow.Phase != GamePhase.Diving && _flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results)
+            // 스크랩 패널은 잠수 중에도 보트와 똑같이 보인다.
+            if (_collector != null && _flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results)
             {
                 _hud.SetLoad(_collector.Count, _collector.MaxAttach);
             }

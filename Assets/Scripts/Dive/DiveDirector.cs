@@ -17,6 +17,7 @@ namespace ScrapFishing.Dive
         public event Action Finished;
 
         const float SurfaceY = 3.2f;
+        const float BottomY = -4f;
         const int SchoolSize = 5;
 
         static readonly float[] MineRadius = { 0.26f, 0.4f, 0.56f };
@@ -55,6 +56,8 @@ namespace ScrapFishing.Dive
 
         public float DiveFill => _oxygen != null ? _oxygen.Normalized : 0f;
         public bool IsActive => _active;
+        // 잠수부 수심(수면 0 ~ 바닥 1). HUD 수심 패널이 DepthZone.DiveMeters로 m를 정한다.
+        public float DiverDepth => _diver != null ? Mathf.InverseLerp(SurfaceY, BottomY, _diver.Position.y) : 0f;
         public bool IsForcedAscent => _diver != null && _diver.IsForcedAscent;
 
         public void Bind(ScrapSpawner spawner, RunSession session, DepthGauge gauge, GameObject hook, VirtualJoystick stick)
@@ -82,7 +85,7 @@ namespace ScrapFishing.Dive
                     _diver = _player.AddComponent<DiverController>();
                 }
 
-                _diver.Bind(_stick, new Vector2(-2.15f, -4f), new Vector2(2.15f, SurfaceY));
+                _diver.Bind(_stick, new Vector2(-2.15f, BottomY), new Vector2(2.15f, SurfaceY));
                 if (_art != null)
                 {
                     _diver.SetAnimations(_art.Idle, _art.Swim, _art.Hurt);

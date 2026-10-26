@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b265a5f297bee44a82424aabe0c9f0e, type: 3}
+  m_Name: HudSkin
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.UI.HudSkin
+  hudScale: 1
+  depthPanel: {fileID: 21300000, guid: 843cdf535532b594d98fb9983145bbcb, type: 3}
+  zoneTag: {fileID: 21300000, guid: c4bfec34a9be42a4fa200ae8c88b7cde, type: 3}
+  scrapPanel: {fileID: 21300000, guid: 5eda1e996d76601489626ca333158e59, type: 3}
+  scrapPanelFull: {fileID: 21300000, guid: ff36f55626ea1ce448c6125ef2eb9b99, type: 3}
+  scrapBarFill: {fileID: 21300000, guid: df2d3f0c57d7d894c8cefdb1620c94a2, type: 3}
+  timePanel: {fileID: 21300000, guid: eeace4e61eb6bac4782502c9cadcaca2, type: 3}
+  timePanelWarning: {fileID: 21300000, guid: e174dbcf1238ebf4a81b65b131e9d750, type: 3}
+  diveFull: {fileID: 21300000, guid: 5a38c80a4186a274b95687860896e0a3, type: 3}
+  diveEmpty: {fileID: 21300000, guid: 05b6ca594d4a63c44b8fe9ab77acc671, type: 3}
+  depthNumber:
+    serializedVersion: 2
+    x: 0.305
+    y: 0.171
+    width: 0.532
+    height: 0.629
+  timeNumber:
+    serializedVersion: 2
+    x: 0.354
+    y: 0.157
+    width: 0.597
+    height: 0.667
+  scrapNumber:
+    serializedVersion: 2
+    x: 0.341
+    y: 0.315
+    width: 0.61
+    height: 0.584
+  scrapBar:
+    serializedVersion: 2
+    x: 0.077
+    y: 0.135
+    width: 0.84599996
+    height: 0.100999996
+  zoneText:
+    serializedVersion: 2
+    x: 0.069
+    y: 0.152
+    width: 0.862
+    height: 0.666

@@ -12,12 +12,10 @@ namespace ScrapFishing.UI
     {
         [SerializeField] UiFxSettings settings;
 
-        Text _time;
-        Text _depth;
-        Text _load;
+        // TIME·수심(+구역)·스크랩·잠수 칸 패널. 보트·잠수 모두 이 패널 하나를 쓴다.
+        HudPanels _panels;
         Text _cy;
         GameObject _cyPanel;
-        Text _dive;
         Text _hint;
         Text _steerGuide;
         GameObject _oxygenBar;
@@ -37,7 +35,6 @@ namespace ScrapFishing.UI
         Sequence _hudIntro;
         RunSession _session;
         int _lastTime = int.MinValue;
-        string _lastDepth = string.Empty;
         string _lastHint = string.Empty;
         int _lastCY;
         bool _playing;
@@ -67,20 +64,17 @@ namespace ScrapFishing.UI
             _cyPanel = chipPanel;
             FitChipTextInPanel(chipText, chipPanel);
 
-            _depth = UiFonts.CreateText(rect, "Depth", 18, TextAnchor.UpperLeft);
-            Stretch(_depth.rectTransform, new Vector2(0.06f, 0.80f), new Vector2(0.5f, 0.88f));
+            var skin = HudSkin.Load();
+            if (skin == null || !skin.Complete)
+            {
+                Debug.LogWarning("HUD 스킨이 없거나 빠진 스프라이트가 있습니다: Resources/" + HudSkin.Resource);
+            }
 
-            _load = UiFonts.CreateText(rect, "ScrapLoad", 18, TextAnchor.UpperLeft);
-            Stretch(_load.rectTransform, new Vector2(0.06f, 0.74f), new Vector2(0.55f, 0.80f));
+            _panels = new HudPanels(rect, skin);
 
-            _time = UiFonts.CreateText(rect, "Time", 18, TextAnchor.UpperRight);
-            Stretch(_time.rectTransform, new Vector2(0.5f, 0.88f), new Vector2(0.94f, 0.96f));
-
-            _dive = UiFonts.CreateText(rect, "DiveProgress", 18, TextAnchor.UpperRight);
-            Stretch(_dive.rectTransform, new Vector2(0.5f, 0.83f), new Vector2(0.94f, 0.88f));
-
-            _hint = UiFonts.CreateText(rect, "Hint", 16, TextAnchor.MiddleRight);
-            Stretch(_hint.rectTransform, new Vector2(0.36f, 0.06f), new Vector2(0.88f, 0.16f));
+            // 힌트는 화면 아래 가운데(보트·잠수 공통). 오른쪽 아래 수심 패널(위 끝 y=145)보다 아래에 둔다.
+            _hint = UiFonts.CreateText(rect, "Hint", 16, TextAnchor.MiddleCenter);
+            Stretch(_hint.rectTransform, new Vector2(0.04f, 0.012f), new Vector2(0.96f, 0.09f));
             _hint.color = new Color(0.75f, 0.9f, 1f, 0.9f);
 
             _steerGuide = UiFonts.CreateText(rect, "SteerGuide", 22, TextAnchor.MiddleCenter);
@@ -102,6 +96,8 @@ namespace ScrapFishing.UI
             _hudGroup = root.AddComponent<CanvasGroup>();
             _hudGroup.alpha = 0f;
         }
+
+        public HudPanels Panels => _panels;
 
         public void BindSettings(System.Action onSettings)
         {
@@ -146,9 +142,9 @@ namespace ScrapFishing.UI
             }
         }
 
-        public void Refresh(GameFlow flow, RunSession session, float gauge, float diveFill, bool forcedAscent)
+        public void Refresh(GameFlow flow, RunSession session, float gauge, float diveFill, bool forcedAscent, float diverDepth = 0f)
         {
-            if (_depth == null)
+            if (_panels == null)
             {
                 return;
             }
@@ -168,7 +164,20 @@ namespace ScrapFishing.UI
             _playing = playing;
             var diving = flow.Phase == GamePhase.Diving;
             SetTime(playing ? Mathf.CeilToInt(session.Remaining) : -1);
-            SetDepth(playing && !diving ? $"DEPTH {DepthZone.Meters(gauge):0}m {DepthZone.Name(gauge)}" : string.Empty);
+            // 수심·TIME·스크랩 패널은 보트·잠수 모두 보인다. 잠수 중 수심은 잠수부 위치(해저 평원 4000m~), 잠수 칸은 보트에서만.
+            _panels.SetDepthVisible(playing);
+            _panels.SetDiveCellsVisible(playing && !diving);
+            _panels.SetTimeVisible(playing);
+            _panels.SetScrapVisible(playing);
+            if (playing && diving)
+            {
+                _panels.SetDiveDepth(diverDepth);
+            }
+            else if (playing)
+            {
+                _panels.SetDepth(gauge);
+            }
+
             SetHint(HintFor(flow, session, forcedAscent));
             RefreshChipPanel(session, playing);
             RefreshDive(session, playing && !diving);
@@ -178,13 +187,9 @@ namespace ScrapFishing.UI
             }
 
             RefreshOxygen(diving);
-            if (!playing || diving)
+            if (!playing)
             {
                 SetLoad(0, 0);
-                if (_load != null)
-                {
-                    _load.text = string.Empty;
-                }
             }
 
             if (_oxygenFill != null)
@@ -201,27 +206,19 @@ namespace ScrapFishing.UI
 
         public void SetLoad(int count, int max)
         {
-            if (_load == null)
+            if (_panels == null)
             {
                 return;
             }
 
-            if (!_playing)
-            {
-                _load.text = string.Empty;
-                return;
-            }
-
-            var full = max > 0 && count >= max;
-            _load.text = full ? $"SCRAP {count}/{max} FULL" : $"SCRAP {count}/{max}";
-            _load.color = full ? Palette.Magenta : Palette.Text;
+            _panels.SetScrap(_playing ? count : 0, _playing ? max : 0);
         }
 
         public void NudgeLoad()
         {
-            if (_load != null)
+            if (_panels != null)
             {
-                Fx.Shake(_load.transform, 10f, 0.18f);
+                Fx.Shake(_panels.Scrap, 6f, 0.18f);
             }
         }
 
@@ -473,23 +470,12 @@ namespace ScrapFishing.UI
             }
 
             _lastTime = remaining;
-            _time.text = remaining >= 0 ? $"TIME {remaining}" : string.Empty;
+            _panels.SetTime(remaining);
             if (remaining >= 1 && remaining <= 10)
             {
                 var pitch = remaining <= 3 ? 1f + (4 - remaining) * 0.1f : 1f;
                 AudioManager.Ensure().PlayTimerTick(pitch);
             }
-        }
-
-        void SetDepth(string depth)
-        {
-            if (depth == _lastDepth)
-            {
-                return;
-            }
-
-            _lastDepth = depth;
-            _depth.text = depth;
         }
 
         void SetHint(string hint)
@@ -630,15 +616,10 @@ namespace ScrapFishing.UI
 
         void RefreshDive(RunSession session, bool visible)
         {
-            if (!visible)
+            if (visible)
             {
-                _dive.text = string.Empty;
-                return;
+                _panels.SetDive(session.DiveProgress, session.CastsPerDive, session.CanDive);
             }
-
-            var filled = Mathf.Min(session.DiveProgress, session.CastsPerDive);
-            _dive.text = "잠수 " + new string('●', filled) + new string('○', session.CastsPerDive - filled);
-            _dive.color = session.CanDive ? Palette.Cyan : new Color(0.75f, 0.9f, 1f, 0.6f);
         }
 
         static string HintFor(GameFlow flow, RunSession session, bool forcedAscent)
