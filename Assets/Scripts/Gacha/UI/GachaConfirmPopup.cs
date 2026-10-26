@@ -8,7 +8,8 @@ using UnityEngine.UI;
 
 namespace ScrapFishing.Gacha
 {
-    // 뽑기 확인 팝업: 배너, 안내(환원가·환원율·확률 보간·확률), 달러 전→후, 뽑기/취소.
+    // 뽑기 확인 팝업: 배너 그림(2:1로 위아래를 잘라 폭 전체), 카드에서 잘린 설명 전체, 안내(환원가·환원율·확률 보간·확률), 달러 전→후, 뽑기/취소.
+    // 화면 틀은 씬에 있을 수 있어(Reuse) 배치는 여기서 다시 맞춘다.
     public sealed class GachaConfirmPopup
     {
         public const string Disclaimer = "표시된 확률은 이 배너 기준이며, 천장 보정이 적용되면 레전드 확률이 올라갑니다";
@@ -19,6 +20,8 @@ namespace ScrapFishing.Gacha
         readonly Image _bannerPanel;
         readonly Text _bannerText;
         readonly RectTransform _showcase;
+        readonly Image _art;
+        readonly Text _desc;
         readonly Text _title;
         readonly Text _info;
         readonly Text _disclaimer;
@@ -30,6 +33,8 @@ namespace ScrapFishing.Gacha
         int _count;
 
         public bool IsOpen => _root.gameObject.activeSelf;
+        public Image Art => _art;
+        public Text Description => _desc;
 
         public GachaConfirmPopup(RectTransform parent, Action<GachaBanner, int> onConfirm)
         {
@@ -37,31 +42,69 @@ namespace ScrapFishing.Gacha
             _root = GachaUi.Panel(parent, "GachaConfirm", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Dim, null, true).rectTransform;
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
-            _panel = GachaUi.Panel(_root, "Panel", new Vector2(0.05f, 0.12f), new Vector2(0.95f, 0.9f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
-            _title = GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.89f), new Vector2(0.96f, 0.98f), Palette.Text);
+            _panel = Place(GachaUi.Panel(_root, "Panel", PanelMin, PanelMax, GachaUi.Card, Palette.NeonGreen, true).rectTransform, PanelMin, PanelMax);
+            _title = Place(GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.905f), new Vector2(0.96f, 0.985f), Palette.Text),
+                new Vector2(0.04f, 0.905f), new Vector2(0.96f, 0.985f));
 
-            _bannerPanel = GachaUi.Panel(_panel, "Banner", new Vector2(0.05f, 0.76f), new Vector2(0.95f, 0.88f), GachaUi.Inset, Palette.Magenta);
+            // 배너 그림: 폭 전체, 2:1로 위아래를 잘라 보여 준다(4:3 그림을 칸에 꽉 채우고 넘치는 위아래는 RectMask2D로 자름).
+            var bannerMin = new Vector2(0.04f, 0.62f);
+            var bannerMax = new Vector2(0.96f, 0.895f);
+            _bannerPanel = Place(GachaUi.Panel(_panel, "Banner", bannerMin, bannerMax, GachaUi.Inset, Palette.Magenta), bannerMin, bannerMax);
+            GachaUi.GetOrAdd<RectMask2D>(_bannerPanel);
+            _art = GachaUi.Panel(_bannerPanel.transform, "Art", Vector2.zero, Vector2.one, Color.white);
+            _art.preserveAspect = true;
+            var envelope = GachaUi.GetOrAdd<AspectRatioFitter>(_art);
+            envelope.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            envelope.aspectRatio = 4f / 3f;
+            _art.transform.SetAsFirstSibling();
+            var captionFade = GachaUi.Panel(_bannerPanel.transform, "CaptionFade", Vector2.zero, new Vector2(1f, 0.35f), new Color(0f, 0f, 0f, 0.8f));
+            captionFade.sprite = BannerArt.FadeUp;
+            captionFade.transform.SetSiblingIndex(1);
             _bannerText = GachaUi.Label(_bannerPanel.transform, "BannerText", 22, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.Text);
             _showcase = GachaUi.Rect(_bannerPanel.transform, "Showcase", new Vector2(0.7f, 0.08f), new Vector2(0.98f, 0.92f));
 
-            _info = GachaUi.Label(_panel, "Info", 16, TextAnchor.UpperLeft, new Vector2(0.06f, 0.37f), new Vector2(0.94f, 0.74f), Palette.Text);
+            // 카드에서 2줄로 잘린 설명 전체.
+            _desc = GachaUi.Label(_panel, "Desc", 14, TextAnchor.UpperLeft, new Vector2(0.06f, 0.535f), new Vector2(0.94f, 0.612f), new Color(0.88f, 0.92f, 1f, 1f));
+            _desc.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _desc.resizeTextForBestFit = true;
+            _desc.resizeTextMinSize = 11;
+            _desc.resizeTextMaxSize = 14;
+
+            _info = Place(GachaUi.Label(_panel, "Info", 16, TextAnchor.UpperLeft, new Vector2(0.06f, 0.27f), new Vector2(0.94f, 0.525f), Palette.Text),
+                new Vector2(0.06f, 0.27f), new Vector2(0.94f, 0.525f));
             _info.horizontalOverflow = HorizontalWrapMode.Wrap;
             _info.lineSpacing = 1.15f;
+            _info.resizeTextForBestFit = true;
+            _info.resizeTextMinSize = 12;
+            _info.resizeTextMaxSize = 16;
 
             // 씬에 있던 문구는 Show에서 배너별 문구로 덮어쓴다.
-            _disclaimer = GachaUi.Label(_panel, "Disclaimer", 16, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.3f), new Vector2(0.97f, 0.36f), GachaUi.Muted, Disclaimer);
+            _disclaimer = Place(GachaUi.Label(_panel, "Disclaimer", 16, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.215f), new Vector2(0.97f, 0.265f), GachaUi.Muted, Disclaimer),
+                new Vector2(0.03f, 0.215f), new Vector2(0.97f, 0.265f));
             _disclaimer.horizontalOverflow = HorizontalWrapMode.Wrap;
             _disclaimer.resizeTextForBestFit = true;
             _disclaimer.resizeTextMinSize = 11;
             _disclaimer.resizeTextMaxSize = 16;
 
-            _balance = GachaUi.Label(_panel, "Balance", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.2f), new Vector2(0.96f, 0.29f), Palette.Text);
-            _warning = GachaUi.Label(_panel, "Warning", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.14f), new Vector2(0.96f, 0.2f), Palette.Magenta,
-                "달러가 부족합니다. 출항해서 벌어 오세요!");
+            _balance = Place(GachaUi.Label(_panel, "Balance", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.155f), new Vector2(0.96f, 0.212f), Palette.Text),
+                new Vector2(0.04f, 0.155f), new Vector2(0.96f, 0.212f));
+            _warning = Place(GachaUi.Label(_panel, "Warning", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.152f), Palette.Magenta,
+                "달러가 부족합니다. 출항해서 벌어 오세요!"), new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.152f));
 
-            GachaUi.MakeButton(_panel, "Cancel", "취소", new Vector2(0.05f, 0.03f), new Vector2(0.4f, 0.12f), GachaUi.Muted, 22, Hide);
-            _confirm = GachaUi.MakeButton(_panel, "Confirm", "뽑기", new Vector2(0.44f, 0.03f), new Vector2(0.95f, 0.12f), Palette.NeonGreen, 22, Confirm);
+            Place((RectTransform)GachaUi.MakeButton(_panel, "Cancel", "취소", new Vector2(0.05f, 0.02f), new Vector2(0.4f, 0.1f), GachaUi.Muted, 22, Hide).transform,
+                new Vector2(0.05f, 0.02f), new Vector2(0.4f, 0.1f));
+            _confirm = GachaUi.MakeButton(_panel, "Confirm", "뽑기", new Vector2(0.44f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, Confirm);
+            Place((RectTransform)_confirm.transform, new Vector2(0.44f, 0.02f), new Vector2(0.95f, 0.1f));
             _root.gameObject.SetActive(false);
+        }
+
+        static readonly Vector2 PanelMin = new Vector2(0.04f, 0.03f);
+        static readonly Vector2 PanelMax = new Vector2(0.96f, 0.97f);
+
+        static T Place<T>(T target, Vector2 min, Vector2 max) where T : Component
+        {
+            GachaUi.Stretch((RectTransform)target.transform, min, max);
+            return target;
         }
 
         public void Show(GachaShop shop, GachaBanner banner, int count)
@@ -74,10 +117,22 @@ namespace ScrapFishing.Gacha
             var block = shop.Block(banner, count);
             var tint = GachaUi.BannerTint(banner);
 
-            _title.text = banner.NameKo + " · " + CountLabel(count);
+            _title.text = BannerArt.Title(banner) + " · " + CountLabel(count);
             _bannerText.text = BannerCaption(shop, banner);
             _bannerText.color = tint;
-            GachaUi.Showcase(_showcase, GachaUi.ShowcaseGears(shop, banner));
+            // 배너 그림이 있으면 그림 위 아래쪽에 짧은 안내만, 없으면 예전처럼 가운데 안내 + 장비 쇼케이스.
+            var art = banner.BannerSprite;
+            _art.sprite = art;
+            _art.gameObject.SetActive(art != null);
+            _bannerPanel.transform.Find("CaptionFade").gameObject.SetActive(art != null);
+            GachaUi.Stretch(_bannerText.rectTransform, Vector2.zero, art != null ? new Vector2(1f, 0.22f) : Vector2.one);
+            _showcase.gameObject.SetActive(art == null);
+            if (art == null)
+            {
+                GachaUi.Showcase(_showcase, GachaUi.ShowcaseGears(shop, banner));
+            }
+
+            _desc.text = GachaShopView.DescriptionOf(banner);
             var outline = _bannerPanel.GetComponent<Outline>();
             if (outline != null)
             {

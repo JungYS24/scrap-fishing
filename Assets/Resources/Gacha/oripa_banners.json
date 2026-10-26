@@ -43,7 +43,8 @@
         "minGrade": "Legend",
         "counter": "festival"
       },
-      "videoRule": "highestGradeCategory"
+      "videoRule": "highestGradeCategory",
+      "bannerImage": "Gacha/Banners/banner_festival"
     },
     {
       "id": "banner_daily",
@@ -71,7 +72,8 @@
         "Sat": "helmet",
         "Sun": "all"
       },
-      "videoRule": "highestGradeCategory"
+      "videoRule": "highestGradeCategory",
+      "bannerImage": "Gacha/Banners/banner_daily"
     },
     {
       "id": "banner_lure_standard",
@@ -87,7 +89,8 @@
         10
       ],
       "pityCounter": "lure",
-      "videoRule": "machine"
+      "videoRule": "machine",
+      "bannerImage": "Gacha/Banners/banner_lure_standard"
     },
     {
       "id": "banner_lure_pickup_legend_01",
@@ -109,7 +112,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_lure_pickup_legend_01"
     },
     {
       "id": "banner_lure_pickup_legend_02",
@@ -131,7 +135,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_lure_pickup_legend_02"
     },
     {
       "id": "banner_lure_pickup_synchro_01",
@@ -156,7 +161,8 @@
           "Synchro": 0.008
         },
         "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_lure_pickup_synchro_01"
     },
     {
       "id": "banner_rod_standard",
@@ -172,7 +178,8 @@
         10
       ],
       "pityCounter": "rod",
-      "videoRule": "machine"
+      "videoRule": "machine",
+      "bannerImage": "Gacha/Banners/banner_rod_standard"
     },
     {
       "id": "banner_rod_pickup_legend_01",
@@ -194,7 +201,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_rod_pickup_legend_01"
     },
     {
       "id": "banner_rod_pickup_legend_02",
@@ -216,7 +224,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_rod_pickup_legend_02"
     },
     {
       "id": "banner_rod_pickup_synchro_01",
@@ -241,7 +250,8 @@
           "Synchro": 0.008
         },
         "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_rod_pickup_synchro_01"
     },
     {
       "id": "banner_boat_standard",
@@ -257,7 +267,8 @@
         10
       ],
       "pityCounter": "boat",
-      "videoRule": "machine"
+      "videoRule": "machine",
+      "bannerImage": "Gacha/Banners/banner_boat_standard"
     },
     {
       "id": "banner_boat_pickup_legend_01",
@@ -279,7 +290,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_boat_pickup_legend_01"
     },
     {
       "id": "banner_boat_pickup_legend_02",
@@ -301,7 +313,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_boat_pickup_legend_02"
     },
     {
       "id": "banner_boat_pickup_synchro_01",
@@ -326,7 +339,8 @@
           "Synchro": 0.008
         },
         "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_boat_pickup_synchro_01"
     },
     {
       "id": "banner_drone_standard",
@@ -342,7 +356,8 @@
         10
       ],
       "pityCounter": "drone",
-      "videoRule": "machine"
+      "videoRule": "machine",
+      "bannerImage": "Gacha/Banners/banner_drone_standard"
     },
     {
       "id": "banner_drone_pickup_legend_01",
@@ -364,7 +379,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_drone_pickup_legend_01"
     },
     {
       "id": "banner_drone_pickup_legend_02",
@@ -386,7 +402,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_drone_pickup_legend_02"
     },
     {
       "id": "banner_drone_pickup_synchro_01",
@@ -411,7 +428,8 @@
           "Synchro": 0.008
         },
         "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_drone_pickup_synchro_01"
     },
     {
       "id": "banner_fisher_standard",
@@ -427,7 +445,8 @@
         10
       ],
       "pityCounter": "fisher",
-      "videoRule": "machine"
+      "videoRule": "machine",
+      "bannerImage": "Gacha/Banners/banner_fisher_standard"
     },
     {
       "id": "banner_fisher_pickup_legend_01",
@@ -449,7 +468,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_fisher_pickup_legend_01"
     },
     {
       "id": "banner_fisher_pickup_legend_02",
@@ -471,7 +491,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_fisher_pickup_legend_02"
     },
     {
       "id": "banner_fisher_pickup_synchro_01",
@@ -496,7 +517,8 @@
           "Synchro": 0.008
         },
         "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_fisher_pickup_synchro_01"
     },
     {
       "id": "banner_helmet_standard",
@@ -512,7 +534,8 @@
         10
       ],
       "pityCounter": "helmet",
-      "videoRule": "machine"
+      "videoRule": "machine",
+      "bannerImage": "Gacha/Banners/banner_helmet_standard"
     },
     {
       "id": "banner_helmet_pickup_legend_01",
@@ -534,7 +557,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_helmet_pickup_legend_01"
     },
     {
       "id": "banner_helmet_pickup_legend_02",
@@ -556,7 +580,8 @@
         "kind": "legend",
         "featuredShareOfGrade": 0.75,
         "note": "레전드 1.6% 중 픽업 1.2%, 다른 레전드 0.4%. 등급 확률은 상시와 같다."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_helmet_pickup_legend_02"
     },
     {
       "id": "banner_helmet_pickup_synchro_01",
@@ -581,7 +606,8 @@
           "Synchro": 0.008
         },
         "note": "싱크로 0.4%→0.8%, 늘어난 0.4%는 레전드 1.6%→1.2%에서 뺀다. 레전드 2종은 반반."
-      }
+      },
+      "bannerImage": "Gacha/Banners/banner_helmet_pickup_synchro_01"
     }
   ]
 }

@@ -17,6 +17,9 @@ namespace ScrapFishing.Gacha
     {
         const string Notice = "게임 안에서 번 달러로만 뽑습니다 · 실제 결제 없음";
         const float FlySafety = 0.6f;
+        // 아트 카드: 화면에 보이는 카드만 그림을 불러오고 애니메이션을 돌린다(이 간격으로 확인).
+        const float VisibilityInterval = 0.1f;
+        const float LegacyCardHeight = 236f;
 
         static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Rod, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Helmet };
 
@@ -45,10 +48,12 @@ namespace ScrapFishing.Gacha
         List<RefundPick> _pendingRefund;
         bool _flying;
         float _flyDeadline;
+        float _nextVisibilityCheck;
         System.Action _flyFinish;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
         public GachaShop Shop => _shop;
+        public ScrollRect Scroll => _scroll;
         public GachaVideoView Video => _video;
 
         public void Build(RectTransform area)
@@ -134,7 +139,14 @@ namespace ScrapFishing.Gacha
             _group.blocksRaycasts = false;
             _group.DOKill(false);
             _group.DOFade(0f, _settings != null ? _settings.titleHideDuration : 0.18f).SetUpdate(true).SetLink(_root.gameObject)
-                .OnComplete(() => _root.gameObject.SetActive(false));
+                .OnComplete(() =>
+                {
+                    _root.gameObject.SetActive(false);
+                    foreach (var card in _cards)
+                    {
+                        SetPlaying(card, false);
+                    }
+                });
         }
 
         void Update()
@@ -153,6 +165,12 @@ namespace ScrapFishing.Gacha
             if (_flying && Time.unscaledTime > _flyDeadline)
             {
                 FinishFly();
+            }
+
+            if (Time.unscaledTime >= _nextVisibilityCheck)
+            {
+                _nextVisibilityCheck = Time.unscaledTime + VisibilityInterval;
+                UpdateVisibleCards();
             }
         }
 
@@ -265,6 +283,23 @@ namespace ScrapFishing.Gacha
             public Image GaugeFill;
             public Text Status;
             public Button[] Buttons;
+
+            // 아트 카드(bannerImage가 있는 배너): 그림은 처음 보일 때 불러오고, 효과는 보일 때만 돈다.
+            public bool Art;
+            public Image ArtImage;
+            public bool ArtLoaded;
+            public EllipsisText Desc;
+            public Text Info;
+            public readonly List<Tween> Effects = new List<Tween>();
+            public bool Playing;
+        }
+
+        public IEnumerable<(GachaBanner Banner, RectTransform Root, Image Art, bool Loaded, bool Playing, EllipsisText Desc, Button[] Buttons)> CardStates()
+        {
+            foreach (var card in _cards)
+            {
+                yield return (card.Banner, card.Root, card.ArtImage, card.ArtLoaded, card.Playing, card.Desc, card.Buttons);
+            }
         }
 
         // 탭 전환·오리파 화면 복귀·결과 닫힘 때 부른다. 카드는 처음 한 번만 만들고, 이후에는 켜고 끄며 값만 갱신한다.
@@ -285,13 +320,20 @@ namespace ScrapFishing.Gacha
             }
 
             var index = 0;
+            var artHeight = ArtCardHeight();
             foreach (var card in _cards)
             {
                 var visible = !_filter.HasValue || (card.Banner.Machine != null && card.Banner.Machine.Slot == _filter.Value);
                 card.Root.gameObject.SetActive(visible);
                 if (!visible)
                 {
+                    SetPlaying(card, false);
                     continue;
+                }
+
+                if (card.Art)
+                {
+                    GachaUi.Height(card.Root, artHeight);
                 }
 
                 UpdateCard(card);
@@ -299,6 +341,90 @@ namespace ScrapFishing.Gacha
                 group.DOKill(false);
                 group.alpha = 0f;
                 group.DOFade(1f, 0.2f).SetDelay(Mathf.Min(index++, 8) * 0.06f).SetUpdate(true).SetLink(card.Root.gameObject);
+            }
+
+            _nextVisibilityCheck = 0f;
+        }
+
+        // 아트 카드 높이 = 카드 폭 × 0.6(4:3 그림의 아래 어두운 띠를 자른 높이). 카드 폭은 목록 폭에서 좌우 여백을 뺀 값.
+        float ArtCardHeight()
+        {
+            var layout = _list.GetComponent<VerticalLayoutGroup>();
+            var padding = layout != null ? layout.padding.horizontal : 0;
+            var width = _list.rect.width - padding;
+            if (width <= 1f)
+            {
+                width = 480f * 0.94f - padding;
+            }
+
+            return width * BannerArt.CardAspect;
+        }
+
+        // 스크롤 영역에 걸친 카드만 그림을 불러오고(처음 한 번) 애니메이션을 돌린다. 나머지는 멈춘다.
+        void UpdateVisibleCards()
+        {
+            if (_scroll == null || _cards.Count == 0)
+            {
+                return;
+            }
+
+            var viewport = WorldRect(_scroll.viewport != null ? _scroll.viewport : (RectTransform)_scroll.transform);
+            foreach (var card in _cards)
+            {
+                var visible = card.Root.gameObject.activeInHierarchy && WorldRect(card.Root).Overlaps(viewport);
+                if (visible && card.Art && !card.ArtLoaded)
+                {
+                    LoadArt(card);
+                }
+
+                SetPlaying(card, visible);
+            }
+        }
+
+        static Rect WorldRect(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
+        static void LoadArt(BannerCard card)
+        {
+            card.ArtLoaded = true;
+            var sprite = card.Banner.BannerSprite;
+            if (sprite == null)
+            {
+                Debug.LogWarning("배너 그림을 불러오지 못했습니다: Resources/" + card.Banner.BannerImage + " (" + card.Banner.Id + ")");
+                return;
+            }
+
+            card.ArtImage.sprite = sprite;
+            card.ArtImage.color = Color.white;
+        }
+
+        static void SetPlaying(BannerCard card, bool playing)
+        {
+            if (card.Playing == playing)
+            {
+                return;
+            }
+
+            card.Playing = playing;
+            foreach (var tween in card.Effects)
+            {
+                if (tween == null || !tween.IsActive())
+                {
+                    continue;
+                }
+
+                if (playing)
+                {
+                    tween.Play();
+                }
+                else
+                {
+                    tween.Pause();
+                }
             }
         }
 
@@ -327,12 +453,18 @@ namespace ScrapFishing.Gacha
 
         BannerCard BuildCard(GachaBanner banner)
         {
+            // 배너 그림 경로가 있으면 그림 카드, 없으면 예전 카드 디자인.
+            if (!string.IsNullOrEmpty(banner.BannerImage))
+            {
+                return BuildArtCard(banner);
+            }
+
             var card = new BannerCard { Banner = banner };
             var tint = GachaUi.BannerTint(banner);
             var cardImage = GachaUi.Panel(_list, "Banner_" + banner.Id, Vector2.zero, Vector2.one, GachaUi.Card, tint, true);
             var root = cardImage.rectTransform;
             card.Root = root;
-            GachaUi.Height(root, 236f);
+            GachaUi.Height(root, LegacyCardHeight);
             if (banner.Type == BannerType.Pickup && banner.Pickup == PickupKind.Synchro)
             {
                 CycleSynchro(cardImage.GetComponent<Outline>());
@@ -403,10 +535,164 @@ namespace ScrapFishing.Gacha
             return card;
         }
 
+        // 그림 카드(폭 × 0.6): 4:3 그림을 카드 위에 맞춰 붙이고, 카드 밖으로 나가는 아래 어두운 띠만 RectMask2D로 자른다(그림 파일은 그대로).
+        // 왼쪽에 태그·제목·설명(2줄)·가격/상태·천장 게이지, 오른쪽 아래에 1연·10연 버튼. 글자·버튼은 예전(폭 × 0.75) 카드와 같은 픽셀 크기다.
+        // 픽업 장비 아이콘·대축제 쇼케이스는 그림에 주인공이 있어 쓰지 않는다.
+        const float ArtButtonWidth = 0.23f;
+        const float ArtButtonGap = 0.02f;
+        const float ArtButtonRight = 0.97f;
+        // 예전 카드에서 버튼은 y 0.03~0.2. 같은 픽셀 크기·아래 여백으로 새 카드에 옮긴다.
+        const float ArtButtonBottom = 0.03f * BannerArt.Rescale;
+        const float ArtButtonTop = ArtButtonBottom + 0.17f * BannerArt.Rescale;
+        // 왼쪽 글자 영역: 예전과 같은 픽셀 높이(예전 카드의 0.67)를 카드 위쪽에 붙인다.
+        const float ArtTextTop = 0.95f;
+        const float ArtTextBottom = ArtTextTop - 0.67f * BannerArt.Rescale;
+        // 가격 줄·천장 게이지 오른쪽 끝은 버튼 왼쪽 끝보다 이만큼(px) 앞.
+        const float ArtButtonClearance = 8f;
+
+        static float ArtButtonsLeft(int count)
+        {
+            return ArtButtonRight - count * ArtButtonWidth - (count - 1) * ArtButtonGap;
+        }
+
+        // 글자 영역(예전 0~1 비율)의 y를 카드 기준으로.
+        static float ArtTextY(float local)
+        {
+            return ArtTextBottom + local * (ArtTextTop - ArtTextBottom);
+        }
+
+        // "Text" 칸은 글자 영역의 0.21~1(태그·제목·설명)만 덮는다. 그 안의 비율로 바꾼다.
+        static float Local(float local)
+        {
+            return (local - 0.21f) / (1f - 0.21f);
+        }
+
+        BannerCard BuildArtCard(GachaBanner banner)
+        {
+            var card = new BannerCard { Banner = banner, Art = true };
+            var tint = GachaUi.BannerTint(banner);
+            var frame = GachaUi.Panel(_list, "Banner_" + banner.Id, Vector2.zero, Vector2.one, new Color(tint.r * 0.15f, tint.g * 0.15f, tint.b * 0.15f, 1f), null, true);
+            card.Root = frame.rectTransform;
+            GachaUi.GetOrAdd<RectMask2D>(card.Root);
+            GachaUi.Height(card.Root, ArtCardHeight());
+            // 그림: 폭 전체, 높이 = 폭 × 0.75(카드 높이의 1.25배), 위 끝을 카드 위 끝에 맞춘다.
+            var image = GachaUi.Panel(card.Root, "Art", new Vector2(0f, BannerArt.ArtBottom), Vector2.one, new Color(1f, 1f, 1f, 0f));
+            image.preserveAspect = true;
+            card.ArtImage = image;
+            BannerArt.AddFades(card.Root, banner);
+            // 테두리는 카드 틀(마스크 바깥에 그려지므로 잘리지 않는다).
+            BannerArt.Border(frame, banner, card.Effects);
+
+            var text = GachaUi.Rect(card.Root, "Text", new Vector2(0.05f, ArtTextY(0.21f)), new Vector2(0.55f, ArtTextTop));
+            var tagMin = new Vector2(0f, Local(0.86f));
+            var tagMax = new Vector2(0.46f, 1f);
+            switch (banner.Type)
+            {
+                case BannerType.Pickup:
+                    Tag(text, "PickupTag", "PICK UP", tint, tagMin, tagMax);
+                    break;
+                case BannerType.Festival:
+                    card.StateTag = Tag(text, "FestivalTag", "FESTIVAL", tint, tagMin, tagMax);
+                    break;
+                case BannerType.Daily:
+                    card.StateTag = Tag(text, "FreeTag", "FREE", tint, tagMin, tagMax);
+                    break;
+                case BannerType.Standard:
+                    card.BoostTag = Tag(text, "BoostTag", "확률 상승 중", GachaUi.LegendColor, tagMin, new Vector2(0.6f, 1f)).transform.parent.gameObject;
+                    card.NewTag = Tag(text, "NewTag", "신규", Palette.NeonGreen, tagMin, new Vector2(0.3f, 1f)).transform.parent.gameObject;
+                    break;
+            }
+
+            var title = GachaUi.Label(text, "Name", 28, TextAnchor.MiddleLeft, new Vector2(0f, Local(0.5f)), new Vector2(1f, Local(0.84f)), Palette.Text, BannerArt.Title(banner));
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.verticalOverflow = VerticalWrapMode.Truncate;
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = 18;
+            title.resizeTextMaxSize = 28;
+            title.lineSpacing = 0.9f;
+            BannerArt.StyleTitle(title, banner, card.Effects);
+
+            var desc = GachaUi.Label(text, "Desc", 14, TextAnchor.UpperLeft, new Vector2(0f, 0f), new Vector2(1f, Local(0.48f)), new Color(0.88f, 0.92f, 1f, 0.95f));
+            desc.horizontalOverflow = HorizontalWrapMode.Wrap;
+            desc.verticalOverflow = VerticalWrapMode.Overflow;
+            desc.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.8f);
+            card.Desc = desc.gameObject.AddComponent<EllipsisText>();
+            card.Desc.Set(DescriptionOf(banner), 2);
+
+            // 가격·상태 줄과 천장 게이지는 오른쪽 아래 버튼과 같은 높이라, 오른쪽 끝을 버튼 왼쪽 끝 8px 앞에서 끊는다.
+            var clearRight = ArtButtonsLeft(banner.PullCounts.Length);
+            card.Info = GachaUi.Label(card.Root, "Info", 14, TextAnchor.MiddleLeft, new Vector2(0.05f, ArtTextY(0.07f)), new Vector2(clearRight, ArtTextY(0.2f)), Palette.Gold);
+            card.Info.rectTransform.offsetMax = new Vector2(-ArtButtonClearance, 0f);
+            card.Info.horizontalOverflow = HorizontalWrapMode.Wrap;
+            card.Info.resizeTextForBestFit = true;
+            card.Info.resizeTextMinSize = 11;
+            card.Info.resizeTextMaxSize = 14;
+            card.Info.gameObject.AddComponent<Shadow>().effectColor = new Color(0f, 0f, 0f, 0.8f);
+            if (banner.Machine != null)
+            {
+                // 천장 게이지(얇은 선). 상태 글자 바로 아래. 두께는 예전 카드와 같은 픽셀.
+                var track = GachaUi.Panel(card.Root, "GaugeTrack", new Vector2(0.05f, ArtTextY(0f)), new Vector2(clearRight, ArtTextY(0.035f)), new Color(0.1f, 0.12f, 0.2f, 0.9f));
+                track.rectTransform.offsetMax = new Vector2(-ArtButtonClearance, 0f);
+                card.GaugeFill = GachaUi.Panel(track.transform, "Fill", Vector2.zero, Vector2.one, GachaUi.RareColor);
+            }
+
+            BuildPullButtons(card);
+            foreach (var tween in card.Effects)
+            {
+                tween.Pause();
+            }
+
+            return card;
+        }
+
+        // 카드 설명(2줄까지, 넘치면 …). 잘린 전체 문구는 확인 팝업에서 보여 준다.
+        public static string DescriptionOf(GachaBanner banner)
+        {
+            if (!string.IsNullOrEmpty(banner.DescKo))
+            {
+                return banner.DescKo;
+            }
+
+            return banner.Machine != null ? banner.Machine.BannerCopy : string.Empty;
+        }
+
+        // 아트 카드의 가격·상태 한 줄과 천장 게이지.
+        void UpdateArtInfo(BannerCard card, int counter, bool boosting)
+        {
+            var banner = card.Banner;
+            var price = banner.Price > 0 ? "1회 " + GachaUi.Money(banner.Price) : "무료";
+            switch (banner.Type)
+            {
+                case BannerType.Festival:
+                    var remaining = _shop.FestivalRemaining(banner);
+                    card.Info.text = remaining > 0 ? price + " · 남은 횟수 " + remaining + "/" + banner.MaxPulls : "완료 · 0/" + banner.MaxPulls;
+                    card.Info.color = remaining > 0 ? Palette.Gold : GachaUi.Muted;
+                    break;
+                case BannerType.Daily:
+                    var available = _shop.DailyAvailable(banner);
+                    card.Info.text = available
+                        ? price + " · 오늘 " + GachaConfirmPopup.DailyMachineName(_shop, banner)
+                        : "오늘 완료 · 내일 05:00 갱신";
+                    card.Info.color = available ? Palette.NeonGreen : GachaUi.Muted;
+                    break;
+                default:
+                    var machine = banner.Machine;
+                    card.Info.text = price + " · 천장 " + counter + "/" + machine.BoostCycle + (boosting ? " 상승 중" : string.Empty);
+                    card.Info.color = boosting ? GachaUi.LegendColor : Palette.Gold;
+                    var fill = Mathf.Clamp01(counter / (float)Mathf.Max(1, machine.BoostCycle));
+                    card.GaugeFill.rectTransform.anchorMax = new Vector2(fill, 1f);
+                    card.GaugeFill.color = boosting ? GachaUi.LegendColor : GachaUi.RareColor;
+                    break;
+            }
+        }
+
         void UpdateCard(BannerCard card)
         {
             var banner = card.Banner;
-            card.Subtitle.text = Subtitle(banner);
+            if (card.Subtitle != null)
+            {
+                card.Subtitle.text = Subtitle(banner);
+            }
             if (card.Showcase != null)
             {
                 // 데일리는 요일마다 머신이 바뀌므로 오늘 머신이 달라졌을 때만 다시 그린다.
@@ -437,7 +723,11 @@ namespace ScrapFishing.Gacha
                 card.NewTag.SetActive(!boosting && _shop.Inventory.History.Count == 0);
             }
 
-            if (banner.Machine != null)
+            if (card.Art)
+            {
+                UpdateArtInfo(card, counter, boosting);
+            }
+            else if (banner.Machine != null)
             {
                 UpdateGauge(card, counter, boosting);
             }
@@ -506,13 +796,15 @@ namespace ScrapFishing.Gacha
             var counts = banner.PullCounts;
             card.Buttons = new Button[counts.Length];
             const float gap = 0.02f;
-            var width = (0.94f - gap * (counts.Length - 1)) / counts.Length;
+            // 아트 카드는 아래 띠에 오른쪽 정렬로 나란히(주인공 그림을 가리지 않게 작게), 예전 카드는 폭 전체.
+            var width = card.Art ? ArtButtonWidth : (0.94f - gap * (counts.Length - 1)) / counts.Length;
+            var left = card.Art ? ArtButtonsLeft(counts.Length) : 0.03f;
             for (var i = 0; i < counts.Length; i++)
             {
                 var count = counts[i];
-                var min = new Vector2(0.03f + i * (width + gap), 0.04f);
-                var max = new Vector2(min.x + width, 0.24f);
-                var button = GachaUi.MakeButton(card.Root, "Pull" + count, string.Empty, min, max, Palette.NeonGreen, 22, () => ShowConfirm(banner, count));
+                var min = new Vector2(left + i * (width + (card.Art ? ArtButtonGap : gap)), card.Art ? ArtButtonBottom : 0.04f);
+                var max = new Vector2(min.x + width, card.Art ? ArtButtonTop : 0.24f);
+                var button = GachaUi.MakeButton(card.Root, "Pull" + count, string.Empty, min, max, Palette.NeonGreen, card.Art ? 16 : 22, () => ShowConfirm(banner, count));
                 var text = GachaUi.LabelOf(button);
                 if (text != null)
                 {
@@ -536,7 +828,8 @@ namespace ScrapFishing.Gacha
                 var text = GachaUi.LabelOf(card.Buttons[i]);
                 if (text != null)
                 {
-                    text.text = cost > 0 ? title + "\n<size=16>" + GachaUi.Money(cost) + "</size>" : title;
+                    var small = card.Art ? 12 : 16;
+                    text.text = cost > 0 ? title + "\n<size=" + small + ">" + GachaUi.Money(cost) + "</size>" : title;
                 }
 
                 var locked = block == BannerBlock.DailyDone || block == BannerBlock.LimitReached || block == BannerBlock.NotOffered;
