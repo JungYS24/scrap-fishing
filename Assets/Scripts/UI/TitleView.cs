@@ -25,6 +25,10 @@ namespace ScrapFishing.UI
 
         Action _onStart;
         Action _onMarket;
+
+        // 결과 화면 버튼이 같은 모양(패널 이미지·테두리·글자)을 따라 쓴다.
+        public Button StartButton => startButton;
+        public Button MarketButton => oripaButton;
         Action _onSettings;
         RectTransform _marketRect;
         Vector3 _marketScale = Vector3.one;

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 648a0d64322b3f044ad840757b0b3e89, type: 3}
+  m_Name: SettingsSkin
+  m_EditorClassIdentifier: Assembly-CSharp::ScrapFishing.UI.SettingsSkin
+  panel: {fileID: 21300000, guid: 8051d1009ba14744eb91d83429b16018, type: 3}
+  headerBar: {fileID: 21300000, guid: 4b29a2f955cdd1749bd3fddfe67092aa, type: 3}
+  close: {fileID: 21300000, guid: 6bebabf43d21f3d428bc6f7979e8c2e4, type: 3}
+  soundOn: {fileID: 21300000, guid: ee8891c19a0b6b94ca0878ee4440e396, type: 3}
+  soundOff: {fileID: 21300000, guid: f2d6734c2e7db65409adc1bdfd6b10ad, type: 3}
+  labelBox: {fileID: 21300000, guid: 0e478e7d3204233439832fd78895272b, type: 3}
+  sliderTrack: {fileID: 21300000, guid: 256c1dd9f9a92324f9c255a3261e1d31, type: 3}
+  sliderFill: {fileID: 21300000, guid: 3e199994c9d30bb4ea8b551a102d0f25, type: 3}
+  sliderKnob: {fileID: 21300000, guid: 95a979cc60d9981419c917b8ed0a1550, type: 3}
+  wideCyan: {fileID: 21300000, guid: 7bb21fa8dfef7424ab40eab47eac0f67, type: 3}
+  wideGray: {fileID: 21300000, guid: 5682423b8efb962419e173368fbd522f, type: 3}
+  wideYellow: {fileID: 21300000, guid: abc52985d7f68234e92abafbf5fcfcd9, type: 3}
+  wideGreen: {fileID: 21300000, guid: 3197f700e52200c4b9ef1efa7278b0e5, type: 3}
+  footerBox: {fileID: 21300000, guid: e5f25df45a1185f4686ec656fc8d7c04, type: 3}

@@ -10,15 +10,26 @@ using UnityEngine.UI;
 namespace ScrapFishing.UI
 {
     // 설정창: 음량 3종(전체·배경음·효과음), 기본값, 언어(준비 중), 크레딧, 버전.
-    // 타이틀·결과 화면의 톱니 버튼으로 연다. 색·폰트·버튼은 오리파 화면(GachaUi)과 같은 톤을 쓴다.
+    // 타이틀·결과 화면과 플레이 중 HUD(보트·잠수)의 톱니 버튼으로 연다. 겉모습은 Resources/UI/SettingsSkin 스프라이트(9-slice)로 그리고,
+    // 스킨이 없으면 오리파 화면(GachaUi)과 같은 단색 톤으로 그린다.
+    // 배치 값은 스킨 시안(560×820)의 픽셀 위치를 패널 비율로 옮긴 것이다(패널 크기·위치는 그대로).
     public class SettingsView : MonoBehaviour
     {
-        // 핸들 기본 크기 40px에 스케일 0.6을 걸어 24px로 보인다. 크기는 여기서 한 번만 정하고 다른 코드가 덮어쓰지 않는다.
-        // 터치는 슬라이더 줄 전체(투명 히트 영역)로 받으므로 핸들이 작아도 잡기 쉽다.
-        const float HandleSize = 40f;
-        public const float HandleScale = 0.6f;
-        const float TrackMin = 0.36f;
-        const float TrackMax = 0.64f;
+        const float ArtWidth = 560f;
+        const float ArtHeight = 820f;
+        // 음량 한 줄: 위쪽 이름+수치 칸, 아래쪽 슬라이더. 슬라이더 칸은 줄 아래로 조금 넘쳐 터치 영역을 넓힌다(약 44px).
+        const float LabelBottom = 0.564f;
+        // 이름+수치 칸 폭(줄 폭 비율). "전체 음량  100"이 20px 글자로 들어가는 폭이다.
+        const float LabelRight = 0.48f;
+        const float SliderBottom = -0.2f;
+        // 슬라이더 칸 안의 트랙 위치. 손잡이는 트랙 높이의 1.6배로 보인다(손잡이 크기는 여기서만 정한다).
+        const float TrackMin = 0.396f;
+        const float TrackMax = 0.732f;
+        public const float KnobTrackRatio = 1.6f;
+        const float KnobAspect = 46f / 44f;
+        // 손잡이 반폭(px). 트랙·채움이 손잡이 중심까지 오도록 양옆을 이만큼 비운다.
+        const float KnobPad = 13f;
+        const float PressedTint = 0.8f;
         const float MutedRowAlpha = 0.4f;
         const float OpenDuration = 0.2f;
         const float CloseDuration = 0.15f;
@@ -65,35 +76,50 @@ namespace ScrapFishing.UI
         readonly Text[] _values = new Text[3];
         readonly CanvasGroup[] _rows = new CanvasGroup[3];
         Text _volumeHeader;
+        SettingsSkin _skin;
         bool _syncing;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
+        // 닫기를 누른 순간(사라지는 연출 전) 알린다. 플레이 중 열었다면 여기서 게임을 다시 움직인다.
+        public event Action Closed;
+        bool Skinned => _skin != null;
 
         public void Build(RectTransform area)
         {
+            _skin = SettingsSkin.Load();
+            if (_skin != null && !_skin.Complete)
+            {
+                Debug.LogWarning("설정 패널 스킨에 빠진 스프라이트가 있어 단색으로 그립니다: Resources/" + SettingsSkin.Resource);
+                _skin = null;
+            }
+
             _root = GachaUi.Rect(area, "Settings", Vector2.zero, Vector2.one);
             _group = _root.gameObject.AddComponent<CanvasGroup>();
             Clickable(GachaUi.Panel(_root, "Dim", Vector2.zero, Vector2.one, GachaUi.Dim, null, true), Close);
 
-            _panel = GachaUi.Panel(_root, "Panel", new Vector2(0.06f, 0.14f), new Vector2(0.94f, 0.86f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
-            GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.06f, 0.905f), new Vector2(0.8f, 0.98f), Palette.Text, "설정");
-            GachaUi.MakeButton(_panel, "Close", "X", new Vector2(0.84f, 0.91f), new Vector2(0.96f, 0.975f), Palette.Magenta, 28, Close);
-
-            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, new Vector2(0.06f, 0.845f), new Vector2(0.8f, 0.895f), GachaUi.Muted, "음량");
-            SoundToggle.Create(_panel, new Vector2(0.84f, 0.848f), new Vector2(0.94f, 0.895f));
-            for (var i = 0; i < Channels.Length; i++)
+            var panel = Skinned
+                ? GachaUi.Panel(_root, "Panel", new Vector2(0.06f, 0.14f), new Vector2(0.94f, 0.86f), Color.white, null, true)
+                : GachaUi.Panel(_root, "Panel", new Vector2(0.06f, 0.14f), new Vector2(0.94f, 0.86f), GachaUi.Card, Palette.NeonGreen, true);
+            _panel = panel.rectTransform;
+            if (Skinned)
             {
-                var top = 0.835f - i * 0.135f;
-                BuildRow(i, new Vector2(0.06f, top - 0.125f), new Vector2(0.94f, top));
+                SlicedFit.Apply(panel, _skin.panel);
             }
 
-            GachaUi.MakeButton(_panel, "Defaults", "기본값으로", new Vector2(0.06f, 0.355f), new Vector2(0.94f, 0.425f), Palette.Cyan, 22, ResetDefaults);
-            GachaUi.MakeButton(_panel, "Language", LanguageLabel, new Vector2(0.06f, 0.265f), new Vector2(0.94f, 0.335f), GachaUi.Muted, 22,
-                () => ShowToast("준비 중입니다"));
-            GachaUi.MakeButton(_panel, "Credits", "크레딧", new Vector2(0.06f, 0.175f), new Vector2(0.94f, 0.245f), Palette.Gold, 22, OpenCredits);
-            GachaUi.MakeButton(_panel, "Coupon", "쿠폰", new Vector2(0.06f, 0.09f), new Vector2(0.94f, 0.16f), Palette.NeonGreen, 22, OpenCoupon);
-            GachaUi.Label(_panel, "Version", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.02f), new Vector2(0.95f, 0.075f), GachaUi.Muted,
-                TitleView.VersionLabel);
+            BuildHeader();
+            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, Art(58f, 165f), Art(436f, 125f), GachaUi.Muted, "음량");
+            BuildSoundButton(Art(452f, 177f), Art(516f, 117f));
+            for (var i = 0; i < Channels.Length; i++)
+            {
+                var top = 172f + i * 102f;
+                BuildRow(i, Art(56f, top + 78f), Art(504f, top));
+            }
+
+            WideButton("Defaults", "기본값으로", 478f, 534f, Palette.Cyan, Skinned ? _skin.wideCyan : null, ResetDefaults);
+            WideButton("Language", LanguageLabel, 543f, 600f, GachaUi.Muted, Skinned ? _skin.wideGray : null, () => ShowToast("준비 중입니다"));
+            WideButton("Credits", "크레딧", 610f, 667f, Palette.Gold, Skinned ? _skin.wideYellow : null, OpenCredits);
+            WideButton("Coupon", "쿠폰", 676f, 733f, Palette.NeonGreen, Skinned ? _skin.wideGreen : null, OpenCoupon);
+            BuildFooter();
 
             var toast = GachaUi.Panel(_panel, "Toast", new Vector2(0.12f, 0.085f), new Vector2(0.88f, 0.16f), GachaUi.Inset, Palette.NeonGreen);
             _toast = GachaUi.Label(toast.transform, "Text", 22, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.NeonGreen);
@@ -137,6 +163,7 @@ namespace ScrapFishing.UI
 
             VolumeSettings.Save();
             HideOverlay(_group, _panel, () => _root.gameObject.SetActive(false));
+            Closed?.Invoke();
         }
 
         // 톱니 아이콘(Resources/UI/icon_settings) 자체가 버튼이다. 테두리 없이 이미지만 그린다.
@@ -158,21 +185,133 @@ namespace ScrapFishing.UI
             return button;
         }
 
-        // 이름과 숫자를 윗줄에, 손가락으로 끌기 쉬운 넓은 슬라이더를 아랫줄에 둔다.
+        // 스킨 시안(560×820)의 픽셀 위치(위 기준) → 패널 앵커(아래 기준).
+        static Vector2 Art(float x, float y)
+        {
+            return new Vector2(x / ArtWidth, 1f - y / ArtHeight);
+        }
+
+        // 제목 바("설정" 왼쪽 정렬)와 닫기 버튼. 닫기·음소거는 오른쪽 위에 같은 크기로 세로로 놓는다.
+        void BuildHeader()
+        {
+            var min = Art(58f, 104f);
+            var max = Art(442f, 52f);
+            var closeMin = Art(452f, 110f);
+            var closeMax = Art(516f, 50f);
+            if (Skinned)
+            {
+                var bar = GachaUi.Panel(_panel, "Header", min, max, Color.white);
+                SlicedFit.Apply(bar, _skin.headerBar);
+                GachaUi.Label(bar.transform, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.06f, 0f), new Vector2(0.96f, 1f), Palette.Text, "설정");
+                IconButton("Close", closeMin, closeMax, _skin.close, Close, true);
+                return;
+            }
+
+            GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleLeft, min, max, Palette.Text, "설정");
+            GachaUi.MakeButton(_panel, "Close", "X", closeMin, closeMax, Palette.Magenta, 28, Close);
+        }
+
+        void BuildSoundButton(Vector2 min, Vector2 max)
+        {
+            if (!Skinned)
+            {
+                SoundToggle.Create(_panel, min, max);
+                return;
+            }
+
+            // HUD 음소거 버튼과 같은 이름(SoundToggle)으로 두고, 글자 대신 스피커 그림만 바꾼다.
+            var button = IconButton("SoundToggle", min, max, _skin.soundOn, () => AudioManager.Ensure().ToggleSound(), false);
+            button.gameObject.AddComponent<SettingsSoundButton>().Bind((Image)button.targetGraphic, _skin.soundOn, _skin.soundOff);
+        }
+
+        Button IconButton(string name, Vector2 min, Vector2 max, Sprite sprite, Action onClick, bool tapSound)
+        {
+            var rect = GachaUi.Rect(_panel, name, min, max);
+            var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = sprite;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = true;
+            var button = rect.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            PressTint(button);
+            button.onClick.AddListener(() =>
+            {
+                if (tapSound)
+                {
+                    AudioManager.Ensure().PlayUiTap();
+                }
+
+                onClick?.Invoke();
+            });
+            return button;
+        }
+
+        // 넓은 버튼 4개: 스킨이면 9-slice 그림을 깔고 기존 테두리 선은 끈다. 글자 색은 버튼 테두리 색(accent).
+        void WideButton(string name, string label, float top, float bottom, Color accent, Sprite sprite, Action onClick)
+        {
+            var button = GachaUi.MakeButton(_panel, name, label, Art(55f, bottom), Art(505f, top), accent, 22, onClick);
+            if (sprite == null)
+            {
+                return;
+            }
+
+            SlicedFit.Apply((Image)button.targetGraphic, sprite);
+            var outline = button.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
+
+            PressTint(button);
+            var text = GachaUi.LabelOf(button);
+            if (text != null)
+            {
+                // 다른 언어로 글자가 길어져도 칸 안에 들어가게 줄인다.
+                text.resizeTextForBestFit = true;
+                text.resizeTextMinSize = 14;
+                text.resizeTextMaxSize = 22;
+                text.rectTransform.offsetMin = new Vector2(16f, 0f);
+                text.rectTransform.offsetMax = new Vector2(-16f, 0f);
+            }
+        }
+
+        void BuildFooter()
+        {
+            var min = Art(202f, 781f);
+            var max = Art(357f, 746f);
+            if (Skinned)
+            {
+                var box = GachaUi.Panel(_panel, "Footer", min, max, Color.white);
+                SlicedFit.Apply(box, _skin.footerBox);
+                GachaUi.Label(box.transform, "Version", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, GachaUi.Muted, TitleView.VersionLabel);
+                return;
+            }
+
+            GachaUi.Label(_panel, "Version", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, min.y), new Vector2(0.95f, max.y), GachaUi.Muted,
+                TitleView.VersionLabel);
+        }
+
+        // 윗줄은 이름과 수치를 한 칸에("전체 음량  40", 수치는 초록), 아랫줄은 손가락으로 끌기 쉬운 넓은 슬라이더.
         void BuildRow(int index, Vector2 min, Vector2 max)
         {
             var channel = Channels[index];
             var row = GachaUi.Rect(_panel, "Row_" + channel, min, max);
             _rows[index] = row.gameObject.AddComponent<CanvasGroup>();
-            GachaUi.Label(row, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0f, 0.56f), new Vector2(0.7f, 1f), Palette.Text, ChannelNames[index]);
-            _values[index] = GachaUi.Label(row, "Value", 22, TextAnchor.MiddleRight, new Vector2(0.7f, 0.56f), new Vector2(1f, 1f), Palette.NeonGreen);
+            // 이름+수치 칸은 배경 그림 없이 글자만 둔다(label_box는 쓰지 않는다).
+            var box = GachaUi.Rect(row, "LabelBox", new Vector2(0f, LabelBottom), new Vector2(LabelRight, 1f));
+            var value = GachaUi.Label(box.transform, "Value", 20, TextAnchor.MiddleLeft, new Vector2(0.07f, 0f), new Vector2(0.97f, 1f), Palette.Text);
+            value.supportRichText = true;
+            value.resizeTextForBestFit = true;
+            value.resizeTextMinSize = 14;
+            value.resizeTextMaxSize = 20;
+            _values[index] = value;
 
-            var slider = CreateSlider(row, new Vector2(0f, 0f), new Vector2(1f, 0.56f));
-            slider.onValueChanged.AddListener(value =>
+            var slider = CreateSlider(row, new Vector2(0f, SliderBottom), new Vector2(1f, LabelBottom), _skin);
+            slider.onValueChanged.AddListener(v =>
             {
                 if (!_syncing)
                 {
-                    VolumeSettings.Set(channel, Mathf.RoundToInt(value), false);
+                    VolumeSettings.Set(channel, Mathf.RoundToInt(v), false);
                 }
             });
 
@@ -188,29 +327,54 @@ namespace ScrapFishing.UI
             _sliders[index] = slider;
         }
 
-        static Slider CreateSlider(RectTransform parent, Vector2 min, Vector2 max)
+        // 트랙·채움은 9-slice, 손잡이는 육각 너트(Simple). 손잡이 높이는 트랙 높이 × KnobTrackRatio로 앵커가 정하고
+        // 폭은 원본 비율을 따른다. 터치는 슬라이더 칸 전체(투명 히트 영역)로 받는다.
+        static Slider CreateSlider(RectTransform parent, Vector2 min, Vector2 max, SettingsSkin skin)
         {
             var root = GachaUi.Rect(parent, "Slider", min, max);
-            // 줄 전체를 잡을 수 있게 투명한 히트 영역을 깐다.
             var hit = root.gameObject.AddComponent<Image>();
             hit.color = new Color(0f, 0f, 0f, 0f);
 
-            var pad = HandleSize * HandleScale * 0.5f;
-            var track = GachaUi.Panel(root, "Track", new Vector2(0f, TrackMin), new Vector2(1f, TrackMax), GachaUi.Inset, GachaUi.Muted);
-            track.rectTransform.offsetMin = new Vector2(pad, 0f);
-            track.rectTransform.offsetMax = new Vector2(-pad, 0f);
+            var track = skin != null
+                ? GachaUi.Panel(root, "Track", new Vector2(0f, TrackMin), new Vector2(1f, TrackMax), Color.white)
+                : GachaUi.Panel(root, "Track", new Vector2(0f, TrackMin), new Vector2(1f, TrackMax), GachaUi.Inset, GachaUi.Muted);
+            track.rectTransform.offsetMin = new Vector2(KnobPad, 0f);
+            track.rectTransform.offsetMax = new Vector2(-KnobPad, 0f);
+            if (skin != null)
+            {
+                SlicedFit.Apply(track, skin.sliderTrack);
+            }
 
-            var fillArea = GachaUi.Rect(root, "FillArea", new Vector2(0f, TrackMin), new Vector2(1f, TrackMax));
-            fillArea.offsetMin = new Vector2(pad, 0f);
-            fillArea.offsetMax = new Vector2(-pad, 0f);
+            // 채움은 트랙 홈 안쪽에서 늘어난다(원본 22px 트랙 안 12px 채움).
+            var fillArea = GachaUi.Rect(track.rectTransform, "FillArea", new Vector2(0f, 0.23f), new Vector2(1f, 0.77f));
+            fillArea.offsetMin = new Vector2(3f, 0f);
+            fillArea.offsetMax = new Vector2(-3f, 0f);
             var fill = GachaUi.Panel(fillArea, "Fill", Vector2.zero, Vector2.one, Palette.NeonGreen);
+            if (skin != null)
+            {
+                SlicedFit.Apply(fill, skin.sliderFill);
+            }
 
-            var handleArea = GachaUi.Rect(root, "HandleArea", Vector2.zero, Vector2.one);
-            handleArea.offsetMin = new Vector2(pad, 0f);
-            handleArea.offsetMax = new Vector2(-pad, 0f);
-            var handle = GachaUi.Panel(handleArea, "Handle", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Palette.Text, Palette.NeonGreen, true);
-            handle.rectTransform.sizeDelta = new Vector2(HandleSize, HandleSize);
-            handle.rectTransform.localScale = new Vector3(HandleScale, HandleScale, 1f);
+            // Slider가 손잡이의 세로 앵커를 0~1로 덮어쓰므로, 손잡이 높이는 손잡이 영역(HandleArea)의 세로 범위로 정한다.
+            var half = (TrackMax - TrackMin) * KnobTrackRatio * 0.5f;
+            var center = (TrackMin + TrackMax) * 0.5f;
+            var handleArea = GachaUi.Rect(root, "HandleArea", new Vector2(0f, center - half), new Vector2(1f, center + half));
+            handleArea.offsetMin = new Vector2(KnobPad, 0f);
+            handleArea.offsetMax = new Vector2(-KnobPad, 0f);
+            var handleMin = Vector2.zero;
+            var handleMax = new Vector2(0f, 1f);
+            var handle = skin != null
+                ? GachaUi.Panel(handleArea, "Handle", handleMin, handleMax, Color.white, null, true)
+                : GachaUi.Panel(handleArea, "Handle", handleMin, handleMax, Palette.Text, Palette.NeonGreen, true);
+            if (skin != null)
+            {
+                handle.sprite = skin.sliderKnob;
+                handle.preserveAspect = true;
+            }
+
+            var fitter = handle.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
+            fitter.aspectRatio = skin != null ? KnobAspect : 1f;
 
             var slider = root.gameObject.AddComponent<Slider>();
             slider.fillRect = fill.rectTransform;
@@ -220,7 +384,30 @@ namespace ScrapFishing.UI
             slider.minValue = 0f;
             slider.maxValue = VolumeSettings.MaxValue;
             slider.wholeNumbers = true;
+            PressTint(slider);
+            // 0이면 채움을 숨긴다(폭 0인 9-slice의 왼쪽 모서리가 깨지지 않게).
+            slider.onValueChanged.AddListener(v => fill.enabled = v > 0f);
             return slider;
+        }
+
+        // Color Tint로 두고 눌렀을 때만 약간 어둡게(약 0.8).
+        static void PressTint(Selectable selectable)
+        {
+            selectable.transition = Selectable.Transition.ColorTint;
+            var colors = selectable.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = Color.white;
+            colors.selectedColor = Color.white;
+            colors.pressedColor = new Color(PressedTint, PressedTint, PressedTint, 1f);
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0.06f;
+            selectable.colors = colors;
+        }
+
+        // "전체 음량  40": 이름 바로 옆에 수치를 초록으로 붙인다.
+        public static string VolumeLabel(int index, int value)
+        {
+            return ChannelNames[index] + "  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + value + "</color>";
         }
 
         // 음소거는 슬라이더 값과 별개로 동작한다. 음소거 중이면 값은 그대로 두고 줄을 흐리게, 머리글에 표시한다.
@@ -248,11 +435,16 @@ namespace ScrapFishing.UI
                 if (_sliders[i] != null)
                 {
                     _sliders[i].SetValueWithoutNotify(value);
+                    var fill = _sliders[i].fillRect != null ? _sliders[i].fillRect.GetComponent<Image>() : null;
+                    if (fill != null)
+                    {
+                        fill.enabled = value > 0;
+                    }
                 }
 
                 if (_values[i] != null)
                 {
-                    _values[i].text = value.ToString();
+                    _values[i].text = VolumeLabel(i, value);
                 }
             }
 

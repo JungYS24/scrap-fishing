@@ -59,6 +59,38 @@ namespace ScrapFishing.Tests
             Assert.AreEqual(new Vector2(0.98f, 0.98f), gear.anchorMax);
             Assert.IsNull(title.Find("SoundToggle"), "타이틀에서 음소거 버튼은 설정창으로 옮겼다");
 
+            // 결과 화면: 재도전·오리파 버튼이 타이틀의 출항·오리파 버튼과 같은 패널 이미지·틴트를 쓴다.
+            var results = Object.FindFirstObjectByType<ResultsView>(FindObjectsInactive.Include);
+            var resultsRoot = GameObject.Find("Canvas").GetComponentsInChildren<Transform>(true);
+            Transform restart = null;
+            Transform resultsMarket = null;
+            foreach (var t in resultsRoot)
+            {
+                if (t.name == "RestartButton" && t.parent.name == "Results")
+                {
+                    restart = t;
+                }
+                else if (t.name == "MarketButton" && t.parent.name == "Results")
+                {
+                    resultsMarket = t;
+                }
+            }
+
+            Assert.IsNotNull(results);
+            Assert.IsNotNull(restart, "Results/RestartButton");
+            Assert.IsNotNull(resultsMarket, "Results/MarketButton");
+            var titleStart = title.GetComponent<TitleView>().StartButton.GetComponent<Image>();
+            var titleOripa = title.GetComponent<TitleView>().MarketButton.GetComponent<Image>();
+            Assert.IsNotNull(titleStart.sprite, "타이틀 출항 패널");
+            Assert.AreEqual(titleStart.sprite, restart.GetComponent<Image>().sprite, "재도전 = 출항 패널");
+            Assert.AreEqual(titleStart.color, restart.GetComponent<Image>().color);
+            Assert.AreEqual(titleOripa.sprite, resultsMarket.GetComponent<Image>().sprite, "결과 오리파 = 타이틀 오리파 패널");
+            Assert.AreEqual(titleOripa.color, resultsMarket.GetComponent<Image>().color);
+            var restartRect = (RectTransform)restart;
+            var marketRect = (RectTransform)resultsMarket;
+            Assert.AreEqual(restartRect.anchorMax.y - restartRect.anchorMin.y, marketRect.anchorMax.y - marketRect.anchorMin.y, 1e-4f, "두 버튼 같은 높이");
+            Assert.AreEqual(TitleView.MarketGap, restartRect.anchorMin.y - marketRect.anchorMax.y, 1e-4f, "타이틀과 같은 간격");
+
             // 설정창: 음량 머리글 옆 음소거, 음소거 상태가 머리글·버튼 아이콘에 반영된다.
             typeof(BoatBootstrap).GetMethod("OpenSettings", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
             yield return new WaitForSecondsRealtime(0.4f);
@@ -80,28 +112,36 @@ namespace ScrapFishing.Tests
             var toggle = panel.Find("SoundToggle");
             Assert.IsNotNull(toggle, "Settings/Panel/SoundToggle");
             var header = panel.Find("VolumeHeader").GetComponent<Text>();
-            var icon = toggle.GetComponentInChildren<Text>();
+            // 스킨 음소거 버튼은 글자 없이 스피커 그림(켜짐/꺼짐)만 바뀐다.
+            var sound = toggle.GetComponent<SettingsSoundButton>();
+            Assert.IsNotNull(sound, "스킨 음소거 버튼");
+            Assert.IsNull(toggle.GetComponentInChildren<Text>(), "♪ 글자 삭제");
             AudioManager.Ensure().SetSoundOn(true);
             Assert.AreEqual("음량", header.text);
-            Assert.AreEqual(SoundToggle.OnGlyph, icon.text);
+            Assert.IsTrue(sound.ShowsOn);
             toggle.GetComponent<Button>().onClick.Invoke();
             Assert.IsFalse(AudioManager.Ensure().SoundOn);
             Assert.AreEqual("음량 · 음소거 중", header.text);
-            Assert.AreEqual(SoundToggle.OffGlyph, icon.text);
+            Assert.IsFalse(sound.ShowsOn);
             Assert.AreEqual(0.4f, panel.Find("Row_Master").GetComponent<CanvasGroup>().alpha, 1e-4f);
             toggle.GetComponent<Button>().onClick.Invoke();
             Assert.AreEqual("음량", header.text);
+            Assert.IsTrue(sound.ShowsOn);
 
-            // 슬라이더 핸들: 세 줄 모두 스케일 0.6, 터치는 슬라이더 줄 전체.
+            // 슬라이더 손잡이: 세 줄 모두 트랙 높이의 1.6배로 보이고, 터치는 슬라이더 칸 전체.
+            Canvas.ForceUpdateCanvases();
             foreach (var row in new[] { "Row_Master", "Row_Bgm", "Row_Sfx" })
             {
-                var handle = panel.Find(row + "/Slider").GetComponent<Slider>().handleRect;
-                Assert.AreEqual(new Vector3(0.6f, 0.6f, 1f), handle.localScale, row);
+                var rowSlider = panel.Find(row + "/Slider").GetComponent<Slider>();
+                var trackHeight = ((RectTransform)rowSlider.transform.Find("Track")).rect.height;
+                Assert.AreEqual(trackHeight * SettingsView.KnobTrackRatio, rowSlider.handleRect.rect.height, 0.5f, row);
+                Assert.AreEqual(Vector3.one, rowSlider.handleRect.localScale, row + " 스케일로 줄이지 않는다");
             }
 
             var slider = panel.Find("Row_Master/Slider").GetComponent<Slider>();
             var hitHeight = ((RectTransform)slider.transform).rect.height;
-            Assert.Greater(hitHeight, slider.handleRect.sizeDelta.y * 0.6f, "터치 영역이 보이는 핸들보다 크다");
+            Assert.Greater(hitHeight, slider.handleRect.rect.height, "터치 영역이 보이는 손잡이보다 크다");
+            Assert.GreaterOrEqual(hitHeight, 43f, "터치 영역은 예전(약 43px) 이상");
             var panelRect = ((RectTransform)panel).rect;
             Assert.LessOrEqual(((RectTransform)slider.transform).rect.width, panelRect.width);
 
@@ -128,12 +168,18 @@ namespace ScrapFishing.Tests
 
             // 잠수: 같은 드론이 잠수부를 따라오고, 잠수부가 왼쪽을 보면 뒤집힌다.
             typeof(BoatBootstrap).GetMethod("BeginRun", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
-            yield return null;
+            yield return new WaitForSecondsRealtime(0.3f);
             var session = boot.GetComponent<RunSession>();
+
+            // 출항 후 보트: HUD 오른쪽 위는 음소거 대신 톱니 버튼, 누르면 설정창이 열리고 게임이 멈춘다.
+            var hud = GameObject.Find("Hud").transform;
+            Assert.IsNull(hud.Find("SoundToggle"), "HUD 음소거 버튼은 톱니 버튼으로 바꿨다");
+            yield return OpenSettingsFromHud(hud, "보트");
             typeof(RunSession).GetProperty("DiveProgress").SetValue(session, 3);
             typeof(BoatBootstrap).GetMethod("HandleDiveSwipe", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(boot, null);
             yield return new WaitForSecondsRealtime(0.6f);
             Assert.IsTrue(dollar.gameObject.activeInHierarchy, "잠수 중에도 달러 패널이 보인다");
+            yield return OpenSettingsFromHud(hud, "잠수");
             Assert.IsFalse(GameObject.Find("Canvas").transform.Find("GameArea/ReadyPanel").gameObject.activeSelf, "강화 버튼은 출항 중 숨김");
             Assert.IsFalse(boatDrone.gameObject.activeInHierarchy, "잠수 중에는 보트 드론이 보트와 같이 숨는다");
             var dive = Object.FindFirstObjectByType<DiveDirector>();
@@ -158,6 +204,25 @@ namespace ScrapFishing.Tests
             yield return new ExitPlayMode();
             PlayerPrefs.SetInt("SoundOn", soundOn);
             PlayerPrefs.Save();
+        }
+
+        static IEnumerator OpenSettingsFromHud(Transform hud, string where)
+        {
+            var gear = hud.Find("SettingsButton");
+            Assert.IsNotNull(gear, where + " Hud/SettingsButton");
+            Assert.IsTrue(gear.gameObject.activeInHierarchy, where + " 톱니 버튼이 보인다");
+            Assert.AreEqual(1f, Time.timeScale, where + " 플레이 중");
+            gear.GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            var settings = GameObject.Find("Settings");
+            Assert.IsNotNull(settings, where + " 설정창이 열린다");
+            Assert.AreEqual(settings.transform.parent.childCount - 1, settings.transform.GetSiblingIndex(), where + " 설정창이 맨 앞");
+            Assert.IsNotNull(settings.transform.Find("Panel/SoundToggle").GetComponent<SettingsSoundButton>(), where + " 새 스킨 패널");
+            Assert.AreEqual(0f, Time.timeScale, where + " 설정창이 열려 있는 동안 멈춤");
+            settings.transform.Find("Panel/Close").GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.IsFalse(settings.activeSelf, where + " 닫힘");
+            Assert.AreEqual(1f, Time.timeScale, where + " 닫으면 다시 움직인다");
         }
     }
 }

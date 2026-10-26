@@ -43,7 +43,9 @@ namespace ScrapFishing.UI
         bool _playing;
         bool _oxygenShown;
         int _oxygenBand;
-        GameObject _soundToggle;
+        // 플레이 중(보트·잠수) 오른쪽 위 톱니 버튼. 누르면 설정창을 연다(음소거는 설정창 안에 있다).
+        GameObject _settingsButton;
+        System.Action _onSettings;
 
         public void Build(Transform canvas, Text chipText, GameObject chipPanel)
         {
@@ -95,10 +97,15 @@ namespace ScrapFishing.UI
 
             BindChip(rect, banner);
             BuildOxygenBar(rect);
-            _soundToggle = SoundToggle.Create(rect, new Vector2(0.90f, 0.955f), new Vector2(0.99f, 0.995f));
-            _soundToggle.SetActive(false);
+            _settingsButton = SettingsView.CreateGearButton(rect, new Vector2(0.90f, 0.955f), new Vector2(0.99f, 0.995f), () => _onSettings?.Invoke()).gameObject;
+            _settingsButton.SetActive(false);
             _hudGroup = root.AddComponent<CanvasGroup>();
             _hudGroup.alpha = 0f;
+        }
+
+        public void BindSettings(System.Action onSettings)
+        {
+            _onSettings = onSettings;
         }
 
         public void Bind(RunSession session)
@@ -279,9 +286,9 @@ namespace ScrapFishing.UI
             var fade = settings != null ? settings.hudFadeDuration : 0.22f;
             var slide = settings != null ? settings.hudSlide : 24f;
             _hudIntro = DOTween.Sequence().SetUpdate(true).SetLink(gameObject);
-            if (_soundToggle != null)
+            if (_settingsButton != null)
             {
-                _soundToggle.SetActive(true);
+                _settingsButton.SetActive(true);
             }
 
             if (_hudGroup != null)
@@ -305,9 +312,9 @@ namespace ScrapFishing.UI
         {
             StopOxygenWarn();
             KillHudIntro();
-            if (_soundToggle != null)
+            if (_settingsButton != null)
             {
-                _soundToggle.SetActive(false);
+                _settingsButton.SetActive(false);
             }
 
             if (_hudGroup != null)

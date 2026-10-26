@@ -34,6 +34,7 @@ namespace ScrapFishing.UI
         RectTransform _bestRect;
         Vector3 _bestScale = Vector3.one;
         Button _restart;
+        Button _market;
         RectTransform _restartRect;
         Action _onRestart;
         bool _restartArmed;
@@ -47,6 +48,56 @@ namespace ScrapFishing.UI
         bool _countAudioDone;
         bool _pendingNewBest;
         RunSession _session;
+
+        // 재도전·오리파 버튼을 타이틀의 출항·오리파 버튼과 같은 모양(패널 이미지·틴트·테두리·글자)으로 맞춘다.
+        // 타이틀 버튼은 씬에 있어서, 실행 중에 그 모양을 그대로 옮겨 온다(씬에서 바꾸면 결과 화면도 따라간다).
+        public void MatchTitleButtons(Button start, Button market)
+        {
+            CopyLook(start, _restart);
+            CopyLook(market, _market);
+        }
+
+        static void CopyLook(Button from, Button to)
+        {
+            if (from == null || to == null)
+            {
+                return;
+            }
+
+            if (from.targetGraphic is Image source && to.targetGraphic is Image target)
+            {
+                target.sprite = source.sprite;
+                target.type = source.type;
+                target.preserveAspect = source.preserveAspect;
+                target.fillCenter = source.fillCenter;
+                target.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+                target.color = source.color;
+            }
+
+            var sourceOutline = from.GetComponent<Outline>();
+            var targetOutline = to.GetComponent<Outline>();
+            if (targetOutline != null)
+            {
+                targetOutline.enabled = sourceOutline != null && sourceOutline.enabled;
+                if (sourceOutline != null)
+                {
+                    targetOutline.effectColor = sourceOutline.effectColor;
+                    targetOutline.effectDistance = sourceOutline.effectDistance;
+                }
+            }
+
+            to.transition = from.transition;
+            to.colors = from.colors;
+            var sourceLabel = from.GetComponentInChildren<Text>(true);
+            var targetLabel = to.GetComponentInChildren<Text>(true);
+            if (sourceLabel != null && targetLabel != null)
+            {
+                targetLabel.font = sourceLabel.font;
+                targetLabel.fontSize = sourceLabel.fontSize;
+                targetLabel.fontStyle = sourceLabel.fontStyle;
+                targetLabel.color = sourceLabel.color;
+            }
+        }
 
         public void Build(Transform canvas, Action onRestart, Action onMarket = null, Action onSettings = null)
         {
@@ -143,7 +194,9 @@ namespace ScrapFishing.UI
 
             if (onMarket != null)
             {
-                var market = UiButton.Create(rect, "MarketButton", TitleView.MarketLabel, new Vector2(0.25f, 0.055f), new Vector2(0.75f, 0.13f), () =>
+                // 타이틀처럼 재도전 버튼과 같은 높이, 같은 간격(TitleView.MarketGap)으로 아래에 둔다.
+                var market = UiButton.Create(rect, "MarketButton", TitleView.MarketLabel,
+                    new Vector2(0.25f, 0.15f - TitleView.MarketGap - 0.095f), new Vector2(0.75f, 0.15f - TitleView.MarketGap), () =>
                 {
                     if (!_restartArmed)
                     {
@@ -162,6 +215,8 @@ namespace ScrapFishing.UI
                     label.fontSize = 22;
                     label.color = Palette.Magenta;
                 }
+
+                _market = market;
             }
 
             if (onSettings != null)

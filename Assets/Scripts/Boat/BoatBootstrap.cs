@@ -33,6 +33,9 @@ namespace ScrapFishing.Boat
         BoatCanvas _canvasUi;
         GachaShopView _market;
         SettingsView _settingsView;
+        // 플레이 중 설정창을 열면 게임을 멈추고, 닫을 때 원래 시간 배율로 돌린다.
+        bool _pausedForSettings;
+        float _scaleBeforeSettings = 1f;
         AnglerRig _rig;
         CompanionDrone _drone;
 
@@ -316,6 +319,7 @@ namespace ScrapFishing.Boat
             _hud = canvas.gameObject.AddComponent<HudView>();
             _hud.Build(area.Area, _canvasUi.ChipText, _canvasUi.ChipPanel);
             _hud.Bind(_session);
+            _hud.BindSettings(OpenSettings);
             if (_casting != null)
             {
                 _casting.SetHud(_hud);
@@ -335,10 +339,12 @@ namespace ScrapFishing.Boat
             _canvasUi.BringReadyToFront();
             _results = canvas.gameObject.AddComponent<ResultsView>();
             _results.Build(area.Area, _session.Restart, OpenMarket, OpenSettings);
+            _results.MatchTitleButtons(_title.StartButton, _title.MarketButton);
             _market = canvas.gameObject.AddComponent<GachaShopView>();
             _market.Build(area.Area);
             _settingsView = canvas.gameObject.AddComponent<SettingsView>();
             _settingsView.Build(area.Area);
+            _settingsView.Closed += ResumeAfterSettings;
             area.Adopt();
             _canvasUi.PinDollarPanel();
             _market.SetDollarTarget(_canvasUi.DollarPanel);
@@ -354,16 +360,35 @@ namespace ScrapFishing.Boat
             _market.Open();
         }
 
-        // 설정창은 타이틀·결과 화면에서만 연다. 플레이 중에는 소리 토글만 쓴다.
+        // 설정창은 타이틀·결과 화면과 플레이 중(보트·잠수) HUD 톱니 버튼으로 연다.
+        // 플레이 중이면 열려 있는 동안 게임을 멈춘다(제한 시간·산소·움직임). 화면 탭은 설정창이 가려 게임으로 가지 않는다.
         void OpenSettings()
         {
-            if (_settingsView == null || (_market != null && _market.IsOpen)
-                || (_flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results))
+            if (_settingsView == null || _settingsView.IsOpen || (_market != null && _market.IsOpen))
             {
                 return;
             }
 
+            var playing = _flow.Phase != GamePhase.Title && _flow.Phase != GamePhase.Results;
+            if (playing && !_pausedForSettings)
+            {
+                _scaleBeforeSettings = Time.timeScale;
+                Time.timeScale = 0f;
+                _pausedForSettings = true;
+            }
+
             _settingsView.Open();
+        }
+
+        void ResumeAfterSettings()
+        {
+            if (!_pausedForSettings)
+            {
+                return;
+            }
+
+            _pausedForSettings = false;
+            Time.timeScale = _scaleBeforeSettings;
         }
 
         void BindDive()
