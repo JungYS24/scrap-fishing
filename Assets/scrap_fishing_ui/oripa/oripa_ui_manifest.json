@@ -1,0 +1,914 @@
+{
+ "topbar_dollar": {
+  "size": [
+   268,
+   57
+  ],
+  "border_LTRB": [
+   40,
+   20,
+   20,
+   20
+  ],
+  "note": "달러 패널(노랑), 왼쪽 $ 아이콘 포함"
+ },
+ "btn_storage": {
+  "size": [
+   149,
+   82
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "보관함 버튼(초록)"
+ },
+ "btn_close_x": {
+  "size": [
+   90,
+   82
+  ],
+  "border_LTRB": null,
+  "note": "닫기 X(분홍)"
+ },
+ "strip_info": {
+  "size": [
+   760,
+   44
+  ],
+  "border_LTRB": [
+   16,
+   8,
+   16,
+   8
+  ],
+  "note": "상단 안내 띠"
+ },
+ "tab_on": {
+  "size": [
+   102,
+   74
+  ],
+  "border_LTRB": [
+   16,
+   16,
+   16,
+   16
+  ],
+  "note": "탭 선택"
+ },
+ "tab_off": {
+  "size": [
+   101,
+   73
+  ],
+  "border_LTRB": [
+   16,
+   16,
+   16,
+   16
+  ],
+  "note": "탭 비선택"
+ },
+ "banner_frame_festival": {
+  "size": [
+   733,
+   442
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "대축제 카드 테두리(속 비움)"
+ },
+ "banner_frame_legend": {
+  "size": [
+   732,
+   439
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "레전드 픽업 카드 테두리"
+ },
+ "banner_frame_synchro": {
+  "size": [
+   733,
+   442
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "싱크로 픽업 카드 테두리(크리스탈)"
+ },
+ "banner_frame_daily": {
+  "size": [
+   733,
+   442
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "데일리 카드 테두리(초록)"
+ },
+ "banner_frame_standard": {
+  "size": [
+   733,
+   442
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "상시 카드 테두리(청록)"
+ },
+ "tag_plate_pink": {
+  "size": [
+   174,
+   58
+  ],
+  "border_LTRB": [
+   18,
+   12,
+   18,
+   12
+  ],
+  "note": "태그 FESTIVAL"
+ },
+ "tag_plate_white": {
+  "size": [
+   174,
+   57
+  ],
+  "border_LTRB": [
+   18,
+   12,
+   18,
+   12
+  ],
+  "note": "태그 PICK UP / FREE (코드로 색 입힘)"
+ },
+ "btn_pull": {
+  "size": [
+   174,
+   100
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "1연 버튼(초록)"
+ },
+ "btn_pull_ten": {
+  "size": [
+   176,
+   98
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "10연 버튼(청록, 강조)"
+ },
+ "btn_pull_disabled": {
+  "size": [
+   174,
+   100
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "비활성 버튼"
+ },
+ "popup_cyan": {
+  "size": [
+   722,
+   1182
+  ],
+  "border_LTRB": [
+   70,
+   70,
+   70,
+   70
+  ],
+  "note": "뽑기 확인 팝업 패널"
+ },
+ "popup_header_cyan": {
+  "size": [
+   500,
+   68
+  ],
+  "border_LTRB": [
+   30,
+   20,
+   30,
+   20
+  ],
+  "note": "팝업 제목 바(청록)"
+ },
+ "info_box": {
+  "size": [
+   634,
+   318
+  ],
+  "border_LTRB": [
+   20,
+   20,
+   20,
+   20
+  ],
+  "note": "확률·안내 박스(움푹)"
+ },
+ "chip_normal": {
+  "size": [
+   67,
+   60
+  ],
+  "border_LTRB": null,
+  "note": "등급 칩 normal"
+ },
+ "chip_rare": {
+  "size": [
+   68,
+   60
+  ],
+  "border_LTRB": null,
+  "note": "등급 칩 rare"
+ },
+ "chip_epic": {
+  "size": [
+   66,
+   60
+  ],
+  "border_LTRB": null,
+  "note": "등급 칩 epic"
+ },
+ "chip_legend": {
+  "size": [
+   66,
+   60
+  ],
+  "border_LTRB": null,
+  "note": "등급 칩 legend"
+ },
+ "chip_synchro": {
+  "size": [
+   68,
+   60
+  ],
+  "border_LTRB": null,
+  "note": "등급 칩 synchro"
+ },
+ "value_box": {
+  "size": [
+   241,
+   62
+  ],
+  "border_LTRB": [
+   20,
+   14,
+   20,
+   14
+  ],
+  "note": "잔액 칸"
+ },
+ "arrow_right": {
+  "size": [
+   88,
+   55
+  ],
+  "border_LTRB": null,
+  "note": "화살표"
+ },
+ "btn_gray": {
+  "size": [
+   246,
+   98
+  ],
+  "border_LTRB": [
+   30,
+   30,
+   30,
+   30
+  ],
+  "note": "취소 버튼(회색, 채움)"
+ },
+ "btn_green": {
+  "size": [
+   356,
+   98
+  ],
+  "border_LTRB": [
+   30,
+   30,
+   30,
+   30
+  ],
+  "note": "확인 버튼(초록, 채움)"
+ },
+ "popup_gold": {
+  "size": [
+   706,
+   703
+  ],
+  "border_LTRB": [
+   70,
+   110,
+   70,
+   70
+  ],
+  "note": "환원 팝업 패널(노랑, 제목 바 포함)"
+ },
+ "warning_strip": {
+  "size": [
+   622,
+   60
+  ],
+  "border_LTRB": [
+   60,
+   10,
+   14,
+   10
+  ],
+  "note": "경고 띠(왼쪽 ! 아이콘)"
+ },
+ "value_box_gain": {
+  "size": [
+   241,
+   62
+  ],
+  "border_LTRB": [
+   20,
+   14,
+   20,
+   14
+  ],
+  "note": "늘어나는 금액 칸(초록)"
+ },
+ "popup_gold_tall": {
+  "size": [
+   641,
+   1134
+  ],
+  "border_LTRB": [
+   80,
+   120,
+   80,
+   80
+  ],
+  "note": "크레딧 패널(노랑)"
+ },
+ "section_label": {
+  "size": [
+   185,
+   43
+  ],
+  "border_LTRB": [
+   20,
+   12,
+   20,
+   12
+  ],
+  "note": "크레딧 섹션 이름표(초록)"
+ },
+ "scroll_track": {
+  "size": [
+   22,
+   852
+  ],
+  "border_LTRB": [
+   10,
+   12,
+   10,
+   12
+  ],
+  "note": "스크롤 트랙"
+ },
+ "scroll_thumb": {
+  "size": [
+   10,
+   424
+  ],
+  "border_LTRB": [
+   6,
+   8,
+   6,
+   8
+  ],
+  "note": "스크롤 손잡이"
+ },
+ "btn_gray_flat": {
+  "size": [
+   272,
+   81
+  ],
+  "border_LTRB": [
+   30,
+   30,
+   30,
+   30
+  ],
+  "note": "닫기 버튼(밝은 회색)"
+ },
+ "popup_green": {
+  "size": [
+   746,
+   598
+  ],
+  "border_LTRB": [
+   80,
+   110,
+   80,
+   70
+  ],
+  "note": "쿠폰 팝업 패널(초록, 제목 바 포함)"
+ },
+ "input_field": {
+  "size": [
+   584,
+   102
+  ],
+  "border_LTRB": [
+   16,
+   16,
+   16,
+   16
+  ],
+  "note": "입력칸"
+ },
+ "input_field_error": {
+  "size": [
+   441,
+   104
+  ],
+  "border_LTRB": [
+   16,
+   16,
+   16,
+   16
+  ],
+  "note": "입력칸 오류"
+ },
+ "btn_outline_gray": {
+  "size": [
+   268,
+   102
+  ],
+  "border_LTRB": [
+   30,
+   30,
+   30,
+   30
+  ],
+  "note": "취소(외곽선형)"
+ },
+ "btn_outline_green": {
+  "size": [
+   268,
+   102
+  ],
+  "border_LTRB": [
+   30,
+   30,
+   30,
+   30
+  ],
+  "note": "확인(외곽선형)"
+ },
+ "title_bar": {
+  "size": [
+   550,
+   88
+  ],
+  "border_LTRB": [
+   34,
+   30,
+   34,
+   30
+  ],
+  "note": "화면 제목 바(청록)"
+ },
+ "strip_caption": {
+  "size": [
+   740,
+   39
+  ],
+  "border_LTRB": [
+   16,
+   8,
+   16,
+   8
+  ],
+  "note": "안내 띠"
+ },
+ "equip_slot_rare": {
+  "size": [
+   118,
+   170
+  ],
+  "border_LTRB": [
+   20,
+   40,
+   20,
+   20
+  ],
+  "note": "장착 칸(위 탭 포함)"
+ },
+ "equip_slot_normal": {
+  "size": [
+   118,
+   170
+  ],
+  "border_LTRB": [
+   20,
+   40,
+   20,
+   20
+  ],
+  "note": "장착 칸 normal"
+ },
+ "equip_slot_epic": {
+  "size": [
+   118,
+   170
+  ],
+  "border_LTRB": [
+   20,
+   40,
+   20,
+   20
+  ],
+  "note": "장착 칸 epic"
+ },
+ "equip_slot_legend": {
+  "size": [
+   118,
+   170
+  ],
+  "border_LTRB": [
+   20,
+   40,
+   20,
+   20
+  ],
+  "note": "장착 칸 legend"
+ },
+ "equip_slot_synchro": {
+  "size": [
+   118,
+   170
+  ],
+  "border_LTRB": [
+   20,
+   40,
+   20,
+   20
+  ],
+  "note": "장착 칸 synchro"
+ },
+ "btn_wide_cyan": {
+  "size": [
+   356,
+   120
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "총 효과 보기"
+ },
+ "btn_wide_gold": {
+  "size": [
+   356,
+   120
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "일괄 정산"
+ },
+ "row_legend": {
+  "size": [
+   736,
+   216
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   44
+  ],
+  "note": "장비 줄 legend"
+ },
+ "row_epic": {
+  "size": [
+   736,
+   214
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   44
+  ],
+  "note": "장비 줄 epic"
+ },
+ "row_rare": {
+  "size": [
+   736,
+   222
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   44
+  ],
+  "note": "장비 줄 rare"
+ },
+ "row_normal": {
+  "size": [
+   736,
+   222
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   44
+  ],
+  "note": "장비 줄 normal"
+ },
+ "row_synchro": {
+  "size": [
+   736,
+   222
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   44
+  ],
+  "note": "장비 줄 synchro"
+ },
+ "icon_slot_epic": {
+  "size": [
+   195,
+   220
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "아이콘 칸(보라)"
+ },
+ "icon_slot_normal": {
+  "size": [
+   195,
+   220
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "아이콘 칸 normal"
+ },
+ "icon_slot_rare": {
+  "size": [
+   195,
+   220
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "아이콘 칸 rare"
+ },
+ "icon_slot_legend": {
+  "size": [
+   195,
+   220
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "아이콘 칸 legend"
+ },
+ "icon_slot_synchro": {
+  "size": [
+   195,
+   220
+  ],
+  "border_LTRB": [
+   24,
+   24,
+   24,
+   24
+  ],
+  "note": "아이콘 칸 synchro"
+ },
+ "checkbox_on": {
+  "size": [
+   38,
+   38
+  ],
+  "border_LTRB": null,
+  "note": "체크 켬"
+ },
+ "checkbox_off": {
+  "size": [
+   38,
+   38
+  ],
+  "border_LTRB": null,
+  "note": "체크 끔"
+ },
+ "btn_apply": {
+  "size": [
+   229,
+   95
+  ],
+  "border_LTRB": [
+   26,
+   26,
+   26,
+   26
+  ],
+  "note": "적용(초록)"
+ },
+ "btn_refund": {
+  "size": [
+   230,
+   88
+  ],
+  "border_LTRB": [
+   60,
+   26,
+   26,
+   26
+  ],
+  "note": "환원(노랑, 왼쪽 코인)"
+ },
+ "btn_unequip": {
+  "size": [
+   228,
+   94
+  ],
+  "border_LTRB": [
+   26,
+   26,
+   26,
+   26
+  ],
+  "note": "해제(회색)"
+ },
+ "badge_equipped": {
+  "size": [
+   184,
+   70
+  ],
+  "border_LTRB": [
+   20,
+   14,
+   20,
+   14
+  ],
+  "note": "장착 중 배지"
+ },
+ "pill": {
+  "size": [
+   87,
+   43
+  ],
+  "border_LTRB": [
+   14,
+   14,
+   14,
+   14
+  ],
+  "note": "작은 정보 칩(등급색으로 틴트)"
+ },
+ "result_card_normal": {
+  "size": [
+   318,
+   218
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   70
+  ],
+  "note": "결과 카드 normal(속 비움, 아래 이름판)"
+ },
+ "result_card_rare": {
+  "size": [
+   318,
+   218
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   70
+  ],
+  "note": "결과 카드 rare"
+ },
+ "result_card_epic": {
+  "size": [
+   318,
+   218
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   70
+  ],
+  "note": "결과 카드 epic"
+ },
+ "result_card_legend": {
+  "size": [
+   318,
+   218
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   70
+  ],
+  "note": "결과 카드 legend"
+ },
+ "result_card_synchro": {
+  "size": [
+   318,
+   218
+  ],
+  "border_LTRB": [
+   44,
+   44,
+   44,
+   70
+  ],
+  "note": "결과 카드 synchro"
+ },
+ "tap_continue": {
+  "size": [
+   312,
+   44
+  ],
+  "border_LTRB": [
+   30,
+   10,
+   50,
+   10
+  ],
+  "note": "탭하여 계속 판(오른쪽 화살표)"
+ },
+ "glow_radial": {
+  "size": [
+   256,
+   256
+  ],
+  "border_LTRB": null,
+  "note": "흰 원형 빛(코드로 등급색 틴트)"
+ }
+}

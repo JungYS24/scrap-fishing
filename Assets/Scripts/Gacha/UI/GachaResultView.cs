@@ -5,6 +5,7 @@ using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.FX;
+using ScrapFishing.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -71,14 +72,28 @@ namespace ScrapFishing.Gacha
             _title.resizeTextForBestFit = true;
             _title.resizeTextMinSize = 16;
             _title.resizeTextMaxSize = 28;
+            // 스킨: 제목은 title_bar 안, 닫기(btn_unequip)는 제목 바 오른쪽 바깥(제목과 겹치지 않게).
+            if (OripaLook.On)
+            {
+                GachaUi.Stretch(titleRect, new Vector2(0.06f, 0.925f), new Vector2(0.69f, 0.99f));
+                OripaLook.Behind(_title, "title_bar", new Vector2(0.025f, 0.923f), new Vector2(0.725f, 0.992f));
+                var close = (RectTransform)_root.Find("Close");
+                GachaUi.Stretch(close, new Vector2(0.745f, 0.928f), new Vector2(0.975f, 0.988f));
+                OripaLook.Button(close.GetComponent<Button>(), "btn_unequip", Palette.Text);
+            }
 
             _list = GachaUi.Scroll(_root, "List", new Vector2(0.03f, 0.235f), new Vector2(0.97f, 0.915f), 6f, out _scroll);
 
-            GachaUi.MakeButton(_root, "SelectAll", "전체 선택", new Vector2(0.05f, 0.17f), new Vector2(0.48f, 0.225f), Palette.Cyan, 22, SelectAll);
-            GachaUi.MakeButton(_root, "Reset", "초기화", new Vector2(0.52f, 0.17f), new Vector2(0.95f, 0.225f), GachaUi.Muted, 22, ResetSelection);
+            var selectAll = GachaUi.MakeButton(_root, "SelectAll", "전체 선택", new Vector2(0.05f, 0.17f), new Vector2(0.48f, 0.225f), Palette.Cyan, 22, SelectAll);
+            var reset = GachaUi.MakeButton(_root, "Reset", "초기화", new Vector2(0.52f, 0.17f), new Vector2(0.95f, 0.225f), GachaUi.Muted, 22, ResetSelection);
             _selection = GachaUi.Label(_root, "Selection", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.165f), Palette.Gold);
             _refund = GachaUi.MakeButton(_root, "Refund", "달러 환원", new Vector2(0.05f, 0.02f), new Vector2(0.48f, 0.1f), Palette.Gold, 22, RequestRefund);
-            GachaUi.MakeButton(_root, "Store", "보관함으로", new Vector2(0.52f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, RequestStore);
+            var store = GachaUi.MakeButton(_root, "Store", "보관함으로", new Vector2(0.52f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, RequestStore);
+            // 스킨: 전체 선택 btn_wide_cyan, 초기화 btn_unequip, 달러 환원 btn_wide_gold(선택 없으면 비활성), 보관함으로 btn_green.
+            OripaLook.Button(selectAll, "btn_wide_cyan", Palette.Cyan);
+            OripaLook.Button(reset, "btn_unequip", Palette.Text);
+            OripaLook.Button(_refund, "btn_wide_gold", Palette.Gold);
+            OripaLook.Button(store, "btn_green", Palette.Text);
             _root.gameObject.SetActive(false);
         }
 
@@ -89,6 +104,8 @@ namespace ScrapFishing.Gacha
             _count = result.Count;
             var name = result.Banner != null ? result.Banner.NameKo : result.Machine.DisplayName;
             _title.text = name + " " + GachaConfirmPopup.CountLabel(result.Count) + " 결과";
+            // 제목 바 안에서 한 줄로 줄여 넣는다(닫기 버튼에 가리지 않게).
+            TextOneLine.Fit(_title, 28, 14);
             BuildStacks(result);
             Rebuild();
             _root.SetAsLastSibling();
@@ -167,9 +184,18 @@ namespace ScrapFishing.Gacha
                 var header = GachaUi.Rect(_list, "Group" + rarity, Vector2.zero, Vector2.one);
                 GachaUi.Height(header, 40f);
                 var color = GachaUi.RarityColor(rarity);
-                GachaUi.Panel(header, "Bar", new Vector2(0f, 0.1f), new Vector2(0.015f, 0.9f), color);
-                GachaUi.Label(header, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.04f, 0f), new Vector2(0.55f, 1f), color,
+                var bar = GachaUi.Panel(header, "Bar", new Vector2(0f, 0.1f), new Vector2(0.015f, 0.9f), color);
+                var groupName = GachaUi.Label(header, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.04f, 0f), new Vector2(0.55f, 1f), color,
                     GachaUi.RarityLabel(rarity) + "  x" + count);
+                // 스킨: 등급색으로 틴트한 pill 위에 "LEGEND x1".
+                if (OripaLook.Apply(bar, "pill", true, color))
+                {
+                    GachaUi.Stretch(bar.rectTransform, new Vector2(0f, 0.08f), new Vector2(0.34f, 0.92f));
+                    GachaUi.Stretch(groupName.rectTransform, new Vector2(0.01f, 0f), new Vector2(0.33f, 1f));
+                    groupName.alignment = TextAnchor.MiddleCenter;
+                    groupName.color = Color.white;
+                    TextOneLine.Fit(groupName, 22, 14);
+                }
                 var total = GachaUi.Label(header, "Total", 16, TextAnchor.MiddleRight, new Vector2(0.5f, 0f), new Vector2(0.99f, 1f), GachaUi.Muted);
                 total.name = "Total" + r;
                 _groupTotals.Add(total);
@@ -192,8 +218,13 @@ namespace ScrapFishing.Gacha
             var color = GachaUi.RarityColor(stack.Gear.Rarity);
             var card = GachaUi.Panel(_list, "Card_" + stack.Gear.Id, Vector2.zero, Vector2.one, GachaUi.Card, color, true);
             GachaUi.Height(card, 92f);
+            var skinned = OripaLook.Apply(card, OripaLook.Of("row", stack.Gear.Rarity));
             var toggle = card.gameObject.AddComponent<Button>();
             toggle.targetGraphic = card;
+            if (skinned)
+            {
+                OripaLook.PressTint(toggle);
+            }
             toggle.onClick.AddListener(() =>
             {
                 AudioManager.Ensure().PlayUiTap();
@@ -211,16 +242,22 @@ namespace ScrapFishing.Gacha
             if (stack.OwnedBefore)
             {
                 var tag = GachaUi.Panel(rect, "OwnedTag", new Vector2(0.72f, 0.58f), new Vector2(0.86f, 0.9f), new Color(0.3f, 0.05f, 0.25f, 1f), Palette.Magenta);
-                GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.Magenta, "보유 중");
+                var owned = GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.Magenta, "보유 중");
+                if (OripaLook.Apply(tag, "pill", true, Palette.Magenta))
+                {
+                    owned.color = Color.white;
+                }
             }
 
             stack.Box = GachaUi.Panel(rect, "Box", new Vector2(0.89f, 0.3f), new Vector2(0.97f, 0.7f), GachaUi.Inset, color);
             stack.BoxFill = GachaUi.Panel(stack.Box.transform, "Fill", new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f), color);
             if (stack.Count > 1)
             {
-                GachaUi.MakeButton(rect, "Minus", "-", new Vector2(0.61f, 0.08f), new Vector2(0.68f, 0.46f), Palette.Cyan, 22, () => Step(stack, -1));
+                var minus = GachaUi.MakeButton(rect, "Minus", "-", new Vector2(0.61f, 0.08f), new Vector2(0.68f, 0.46f), Palette.Cyan, 22, () => Step(stack, -1));
                 stack.SelectText = GachaUi.Label(rect, "Selected", 16, TextAnchor.MiddleCenter, new Vector2(0.68f, 0.08f), new Vector2(0.79f, 0.46f), Palette.Text);
-                GachaUi.MakeButton(rect, "Plus", "+", new Vector2(0.79f, 0.08f), new Vector2(0.86f, 0.46f), Palette.Cyan, 22, () => Step(stack, 1));
+                var plus = GachaUi.MakeButton(rect, "Plus", "+", new Vector2(0.79f, 0.08f), new Vector2(0.86f, 0.46f), Palette.Cyan, 22, () => Step(stack, 1));
+                OripaLook.Button(minus, "btn_outline_gray", Palette.Cyan);
+                OripaLook.Button(plus, "btn_outline_gray", Palette.Cyan);
             }
 
             return rect;
@@ -274,6 +311,13 @@ namespace ScrapFishing.Gacha
                     var fill = stack.BoxFill.color;
                     fill.a = stack.Selected >= stack.Count ? 1f : 0.45f;
                     stack.BoxFill.color = fill;
+                }
+
+                // 스킨: 체크 칸 그림(checkbox_on/off). 일부만 고르면 켜짐 그림을 흐리게.
+                if (stack.Box != null && OripaLook.Apply(stack.Box, stack.Selected > 0 ? "checkbox_on" : "checkbox_off", true,
+                        stack.Selected > 0 && stack.Selected < stack.Count ? new Color(1f, 1f, 1f, 0.55f) : Color.white))
+                {
+                    stack.BoxFill.gameObject.SetActive(false);
                 }
             }
 

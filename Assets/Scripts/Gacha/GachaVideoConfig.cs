@@ -50,6 +50,32 @@ namespace ScrapFishing.Gacha
         public float cardFlipInterval = 0.1f;
         public float cardFlipDuration = 0.2f;
 
+        // 결과 카드 뒤 사이키델릭 파장(ScrapFishing/UI/PsyWaves). 이번 뽑기 최고 등급의 색을 쓴다.
+        [Serializable]
+        public class PsyPalette
+        {
+            public Color a = Color.black;
+            public Color b = Color.gray;
+            public Color c = Color.white;
+            [Tooltip("흐름 속도(셰이더 _Speed)")] public float speed = 0.6f;
+            [Range(0f, 1f)] public float intensity = 1f;
+            [Tooltip("색 순환 속도 배율")] public float cycle = 1f;
+        }
+
+        [Header("결과 배경 파장 (노멀·레어·에픽·레전드·싱크로 순)")]
+        public PsyPalette[] psyPalettes = DefaultPalettes();
+        public float psyFrequency = 36f;
+        public float psySwirl = 6f;
+        [Range(0f, 1f)] public float psyCenterDarken = 0.35f;
+        [Tooltip("흰 화면에서 파장으로 바뀌는 시간(초)")]
+        public float psyFadeIn = 0.4f;
+        [Tooltip("레전드·싱크로: 처음 이 시간 동안 속도·세기를 잠깐 올린다")]
+        public float psyPulseDuration = 0.3f;
+        public float psyPulseSpeed = 2.5f;
+        public float psyPulseIntensity = 0.3f;
+        [Tooltip("렌더 해상도 = 화면 / 이 값(Point 확대로 픽셀아트 느낌)")]
+        [Min(1)] public int psyDownscale = 4;
+
         [Header("안전장치")]
         [Tooltip("재생을 눌렀는데 이 시간 안에 영상이 시작되지 않으면 연출 없이 결과로 넘어간다")]
         public float startTimeout = 4f;
@@ -169,6 +195,36 @@ namespace ScrapFishing.Gacha
                 default: return null;
             }
         }
+
+        public static PsyPalette[] DefaultPalettes()
+        {
+            return new[]
+            {
+                Palette("2A3350", "5A6680", "9AA3B5", 0.6f, 0.5f, 1f),
+                Palette("0E2A66", "3FA9FF", "9FE3FF", 0.6f, 1f, 1f),
+                Palette("2A0E5E", "B45CFF", "FF8AF0", 0.6f, 1f, 1f),
+                Palette("5A1E00", "FF9A2E", "FFE08A", 0.9f, 1f, 1f),
+                Palette("FFFFFF", "FF5FD2", "B8FF3C", 1.1f, 1f, 2.2f),
+            };
+        }
+
+        static PsyPalette Palette(string a, string b, string c, float speed, float intensity, float cycle)
+        {
+            return new PsyPalette { a = Hex(a), b = Hex(b), c = Hex(c), speed = speed, intensity = intensity, cycle = cycle };
+        }
+
+        static Color Hex(string hex)
+        {
+            return ColorUtility.TryParseHtmlString("#" + hex, out var color) ? color : Color.magenta;
+        }
+
+        public PsyPalette PaletteFor(ItemRarity rarity)
+        {
+            var palettes = psyPalettes != null && psyPalettes.Length >= ItemRarityCount ? psyPalettes : DefaultPalettes();
+            return palettes[Mathf.Clamp((int)rarity, 0, palettes.Length - 1)];
+        }
+
+        const int ItemRarityCount = 5;
 
         public static readonly Color[] SynchroFlashColors =
         {

@@ -5,6 +5,7 @@ using ScrapFishing.Audio;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.FX;
+using ScrapFishing.UI;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -40,6 +41,10 @@ namespace ScrapFishing.Gacha
         Image _cards;
         RectTransform _grid;
         Text _skip;
+        // SKIP 글자 뒤 반투명 어두운 바탕(흰 화면에서도 읽히게). 글자와 같이 켜고 끈다.
+        Image _skipBack;
+        // 결과 카드 뒤 사이키델릭 파장(흰 바탕 대신). 셰이더를 못 쓰면 null(흰 바탕 그대로).
+        PsyWavesBackground _psy;
         Text _hint;
         VideoPlayer _player;
         AudioSource _audio;
@@ -71,6 +76,7 @@ namespace ScrapFishing.Gacha
         public AudioSource Audio => _audio;
         public RenderTexture Texture => _texture;
         public GachaVideoConfig Config => _config;
+        public PsyWavesBackground Background => _psy;
         // 마지막 섬광의 등급(노멀이면 섬광 없이 Normal). 테스트·로그용.
         public ItemRarity LastFlash { get; private set; }
 
@@ -110,10 +116,22 @@ namespace ScrapFishing.Gacha
 
             _flash = GachaUi.Panel(root, "Flash", Vector2.zero, Vector2.one, new Color(1f, 1f, 1f, 0f));
             _shards = GachaUi.Rect(root, "Shards", Vector2.zero, Vector2.one);
-            _skip = GachaUi.Label(root, "Skip", 18, TextAnchor.MiddleRight, new Vector2(0.7f, 0.94f), new Vector2(0.96f, 0.985f),
-                new Color(1f, 1f, 1f, 0.75f), "SKIP >>");
-            var outline = _skip.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.6f);
+            // SKIP: 그림 없이 반투명 어두운 바탕(알파 0.55) + 흰 글자, 화면 오른쪽 위.
+            // 파장 배경의 밝은 색(싱크로 하양 등) 위에서도 읽히게 바탕 알파를 0.65로.
+            _skipBack = GachaUi.Panel(root, "SkipBack", new Vector2(0.74f, 0.94f), new Vector2(0.97f, 0.985f), new Color(0f, 0f, 0f, 0.65f));
+            _skip = GachaUi.Label(root, "Skip", 18, TextAnchor.MiddleCenter, new Vector2(0.74f, 0.94f), new Vector2(0.97f, 0.985f),
+                Color.white, "SKIP >>");
+
+            // 스킨: "탭하여 계속"은 tap_continue 판 위에 밝은 글자.
+            if (OripaLook.Behind(_hint, "tap_continue", new Vector2(0.22f, 0.022f), new Vector2(0.78f, 0.078f)) == null)
+            {
+                // 스킨이 없어도 파장 배경 위에서 읽히게 어두운 판을 깐다.
+                var plate = GachaUi.Panel(_cards.transform, _hint.name + "Plate", new Vector2(0.22f, 0.022f), new Vector2(0.78f, 0.078f), new Color(0f, 0f, 0f, 0.6f));
+                plate.transform.SetSiblingIndex(_hint.transform.GetSiblingIndex());
+            }
+
+            _hint.color = Palette.Text;
+            _psy = PsyWavesBackground.Create((RectTransform)_cards.transform, _config);
 
             _player = root.gameObject.AddComponent<VideoPlayer>();
             _player.playOnAwake = false;
@@ -288,7 +306,7 @@ namespace ScrapFishing.Gacha
             _flash.color = new Color(1f, 1f, 1f, 0f);
             GachaUi.Clear(_shards);
             GachaUi.Clear(_grid);
-            _skip.gameObject.SetActive(_canSkip);
+            SetSkipVisible(_canSkip);
         }
 
         // 지난 영상의 마지막 프레임(흰 화면)이 잠깐 보이지 않게 검게 지운다.
@@ -487,7 +505,7 @@ namespace ScrapFishing.Gacha
             var peak = _config.flashAlpha;
             _flash.DOKill(false);
             _flash.transform.SetAsLastSibling();
-            _skip.transform.SetAsLastSibling();
+            SkipToFront();
             if (rarity == ItemRarity.Synchro)
             {
                 FlashSynchro(duration, peak);
@@ -529,7 +547,7 @@ namespace ScrapFishing.Gacha
             }
 
             _shards.SetAsLastSibling();
-            _skip.transform.SetAsLastSibling();
+            SkipToFront();
             const int count = 14;
             for (var i = 0; i < count; i++)
             {
@@ -565,10 +583,14 @@ namespace ScrapFishing.Gacha
                 GachaVideoConfig.MarkSeen(_result.Machine.Id);
             }
 
-            _skip.gameObject.SetActive(false);
+            SetSkipVisible(false);
             _cards.gameObject.SetActive(true);
             _cards.transform.SetSiblingIndex(_video.GetSiblingIndex() + 1);
             BuildCards();
+            if (_psy != null)
+            {
+                _psy.Show(GachaVideoConfig.HighestRarity(_result));
+            }
         }
 
         void BuildCards()
@@ -578,7 +600,13 @@ namespace ScrapFishing.Gacha
             var count = items.Count;
             var interval = Mathf.Max(0f, _config.cardFlipInterval);
             var flip = Mathf.Max(0.05f, _config.cardFlipDuration);
-            if (count == 1)
+            if (count == 1 && OripaLook.On)
+            {
+                // 스킨: 1연도 10연과 같은 가로형 카드(화면 폭 90% = 칸 폭 전체, 비율은 카드 그림 318:218), 가운데.
+                var card = BuildCard(items[0].Gear, new Vector2(0f, 0.18f), new Vector2(1f, 0.82f), 30);
+                Reveal(card, 0f, flip);
+            }
+            else if (count == 1)
             {
                 var card = BuildCard(items[0].Gear, new Vector2(0.17f, 0.2f), new Vector2(0.83f, 0.8f), 34);
                 Reveal(card, 0f, flip);
@@ -603,7 +631,24 @@ namespace ScrapFishing.Gacha
 
             _revealEnd = Time.unscaledTime + Mathf.Max(0, count - 1) * interval + flip;
             _hint.gameObject.SetActive(false);
+            var hintPlate = _hint.transform.parent.Find(_hint.name + "Plate");
+            if (hintPlate != null)
+            {
+                hintPlate.gameObject.SetActive(false);
+            }
             DOVirtual.DelayedCall(_revealEnd - Time.unscaledTime, ShowHint, true).SetLink(_grid.gameObject);
+        }
+
+        void SetSkipVisible(bool visible)
+        {
+            _skip.gameObject.SetActive(visible);
+            _skipBack.gameObject.SetActive(visible);
+        }
+
+        void SkipToFront()
+        {
+            _skipBack.transform.SetAsLastSibling();
+            _skip.transform.SetAsLastSibling();
         }
 
         void ShowHint()
@@ -614,16 +659,29 @@ namespace ScrapFishing.Gacha
             }
 
             _hint.gameObject.SetActive(true);
+            var plate = _hint.transform.parent.Find(_hint.name + "Plate");
+            if (plate != null)
+            {
+                plate.gameObject.SetActive(true);
+            }
+
             _hint.DOKill(false);
             _hint.color = new Color(_hint.color.r, _hint.color.g, _hint.color.b, 1f);
             _hint.DOFade(0.35f, 0.7f).SetLoops(-1, LoopType.Yoyo).SetUpdate(true).SetLink(_hint.gameObject);
         }
 
         // 테두리는 등급 색(싱크로는 하양·핑크·연두로 번갈아), 안쪽은 어두운 카드에 장비 아이콘·이름·등급.
+        // 스킨이면 result_card_{등급}(아래 이름판 포함)을 칸 안에 원래 비율로 넣고, 아이콘 뒤에 등급색 빛·레전드 이상은 반짝이.
         RectTransform BuildCard(GearData gear, Vector2 min, Vector2 max, int nameSize)
         {
             var rarity = gear != null ? gear.Rarity : ItemRarity.Normal;
             var color = GachaUi.RarityColor(rarity);
+            var skin = OripaLook.Get(OripaLook.Of("result_card", rarity));
+            if (skin != null)
+            {
+                return BuildSkinCard(gear, rarity, color, skin, min, max, nameSize);
+            }
+
             var border = GachaUi.Panel(_grid, "Card_" + (gear != null ? gear.Id : "?"), min, max, color);
             var rect = border.rectTransform;
             var inner = GachaUi.Panel(rect, "Inner", Vector2.zero, Vector2.one, GachaUi.Card).rectTransform;
@@ -661,6 +719,48 @@ namespace ScrapFishing.Gacha
                 }
             }
 
+            return rect;
+        }
+
+        RectTransform BuildSkinCard(GearData gear, ItemRarity rarity, Color color, Sprite skin, Vector2 min, Vector2 max, int nameSize)
+        {
+            // 칸(cell) 안에 카드 그림 비율 그대로 맞춘다. 뒤집기 연출은 카드에 건다.
+            var cell = GachaUi.Rect(_grid, "Cell_" + (gear != null ? gear.Id : "?"), min, max);
+            var card = GachaUi.Panel(cell, "Card", Vector2.zero, Vector2.one, Color.white);
+            var fit = card.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            fit.aspectRatio = skin.rect.width / skin.rect.height;
+            OripaLook.Apply(card, OripaLook.Of("result_card", rarity));
+            var rect = card.rectTransform;
+
+            // 아이콘: 카드 높이의 50%, 이름판 위 가운데. 뒤에 등급색 원형 빛.
+            OripaLook.Glow(rect, new Vector2(0.22f, 0.3f), new Vector2(0.78f, 1f), color);
+            var art = GachaUi.Rect(rect, "Art", new Vector2(0.1f, 0.4f), new Vector2(0.9f, 0.9f));
+            if (gear != null && gear.Icon != null)
+            {
+                var icon = art.gameObject.AddComponent<Image>();
+                icon.sprite = gear.Icon;
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+            }
+            else
+            {
+                GachaUi.Panel(art, "Swatch", new Vector2(0.35f, 0.1f), new Vector2(0.65f, 0.9f), color);
+            }
+
+            if (rarity >= ItemRarity.Legend)
+            {
+                OripaLook.Sparkles(rect, rarity == ItemRarity.Synchro ? Color.white : new Color(1f, 0.85f, 0.5f), rarity == ItemRarity.Synchro ? 7 : 5);
+            }
+
+            // 이름판: 왼쪽 점 옆에 이름, 오른쪽에 등급 글자(작게).
+            // 이름판 안에서 이름(왼쪽)과 등급(오른쪽)이 겹치지 않게 칸을 나누고, 각자 한 줄로 줄여 넣는다.
+            var name = GachaUi.Label(rect, "Name", nameSize, TextAnchor.MiddleLeft, new Vector2(0.17f, 0.055f), new Vector2(0.68f, 0.2f), Palette.Text,
+                gear != null ? gear.DisplayName : "?");
+            TextOneLine.Fit(name, nameSize, 9);
+            var label = GachaUi.Label(rect, "Rarity", Mathf.Max(11, nameSize / 2), TextAnchor.MiddleRight, new Vector2(0.69f, 0.055f), new Vector2(0.87f, 0.2f), color,
+                GachaUi.RarityLabel(rarity));
+            TextOneLine.Fit(label, Mathf.Max(11, nameSize / 2), 8);
             return rect;
         }
 
@@ -726,7 +826,12 @@ namespace ScrapFishing.Gacha
             _group.blocksRaycasts = false;
             _group.interactable = false;
             _cards.gameObject.SetActive(false);
-            _skip.gameObject.SetActive(false);
+            if (_psy != null)
+            {
+                _psy.Hide();
+            }
+
+            SetSkipVisible(false);
         }
     }
 }

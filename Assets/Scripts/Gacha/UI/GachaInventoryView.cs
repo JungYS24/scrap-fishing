@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.Data;
 using ScrapFishing.FX;
+using ScrapFishing.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +32,8 @@ namespace ScrapFishing.Gacha
         readonly CanvasGroup _group;
         readonly RectTransform _slots;
         readonly Text _summary;
+        // 스킨: 총 효과를 한 줄에 하나씩(이름 왼쪽, 값 오른쪽) 낚시·잠수·경제 묶음으로.
+        readonly RectTransform _table;
         readonly RectTransform _effectsPanel;
         readonly Button _effectsTab;
         readonly Button _bulkRefund;
@@ -55,11 +59,21 @@ namespace ScrapFishing.Gacha
             _root = GachaUi.Panel(parent, "GachaInventory", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Backdrop, null, true).rectTransform;
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
-            GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.925f), new Vector2(0.7f, 0.99f), Palette.Text, "보관함");
-            GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.928f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, Hide);
+            var title = GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.925f), new Vector2(0.7f, 0.99f), Palette.Text, "보관함");
+            var close = GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.928f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, Hide);
 
-            GachaUi.Label(_root, "SlotsCaption", 16, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.88f), new Vector2(0.96f, 0.915f), GachaUi.Muted,
+            var caption = GachaUi.Label(_root, "SlotsCaption", 16, TextAnchor.MiddleLeft, new Vector2(0.04f, 0.88f), new Vector2(0.96f, 0.915f), GachaUi.Muted,
                 "장착 중 · 다음 출항부터 반영");
+            // 스킨: 제목은 title_bar 안, 닫기(btn_unequip)는 바 오른쪽 바깥, 안내는 strip_caption 띠.
+            if (OripaLook.On)
+            {
+                GachaUi.Stretch(title.rectTransform, new Vector2(0.06f, 0.925f), new Vector2(0.69f, 0.99f));
+                OripaLook.Behind(title, "title_bar", new Vector2(0.025f, 0.923f), new Vector2(0.725f, 0.992f));
+                GachaUi.Stretch((RectTransform)close.transform, new Vector2(0.745f, 0.928f), new Vector2(0.975f, 0.988f));
+                OripaLook.Button(close, "btn_unequip", Palette.Text);
+                OripaLook.Behind(caption, "strip_caption", new Vector2(0.03f, 0.879f), new Vector2(0.97f, 0.916f));
+                caption.rectTransform.offsetMin = new Vector2(10f, 0f);
+            }
             _slots = GachaUi.Rect(_root, "Slots", new Vector2(0.03f, 0.745f), new Vector2(0.97f, 0.875f));
             // 예전에 늘 보이던 총 효과 글자(씬에 남아 있을 수 있음)는 숨기고 탭 패널로 옮긴다.
             var legacySummary = _root.Find("Summary");
@@ -70,6 +84,8 @@ namespace ScrapFishing.Gacha
 
             _effectsTab = GachaUi.MakeButton(_root, "EffectsTab", "총 효과 보기", new Vector2(0.04f, 0.65f), new Vector2(0.48f, 0.735f), Palette.Cyan, 22, ToggleEffects);
             _bulkRefund = GachaUi.MakeButton(_root, "BulkRefund", "일괄 정산", new Vector2(0.52f, 0.65f), new Vector2(0.96f, 0.735f), Palette.Gold, 22, BulkRefund);
+            OripaLook.Button(_effectsTab, "btn_wide_cyan", Palette.Cyan);
+            OripaLook.Button(_bulkRefund, "btn_wide_gold", Palette.Gold);
 
             var tabs = GachaUi.Rect(_root, "Tabs", new Vector2(0.03f, 0.59f), new Vector2(0.97f, 0.635f));
             for (var i = 0; i < Tabs.Length; i++)
@@ -89,6 +105,15 @@ namespace ScrapFishing.Gacha
             _summary.horizontalOverflow = HorizontalWrapMode.Wrap;
             _summary.verticalOverflow = VerticalWrapMode.Truncate;
             _summary.lineSpacing = 1.1f;
+            if (OripaLook.Apply(_effectsPanel.GetComponent<Image>(), "popup_cyan"))
+            {
+                // 표(한 줄에 하나씩)가 들어가게 장비 목록 위를 크게 덮는다.
+                GachaUi.Stretch(_effectsPanel, new Vector2(0.03f, 0.02f), new Vector2(0.97f, 0.645f));
+                GachaUi.Stretch((RectTransform)_effectsPanel.Find("Header"), new Vector2(0.08f, 0.89f), new Vector2(0.92f, 0.97f));
+                _summary.gameObject.SetActive(false);
+                _table = GachaUi.Rect(_effectsPanel, "Table", new Vector2(0.07f, 0.05f), new Vector2(0.93f, 0.87f));
+            }
+
             _effectsPanel.gameObject.SetActive(false);
             _root.gameObject.SetActive(false);
         }
@@ -126,6 +151,8 @@ namespace ScrapFishing.Gacha
                 {
                     image.color = active ? new Color(accent.r * 0.22f, accent.g * 0.22f, accent.b * 0.22f, 1f) : GachaUi.Inset;
                 }
+
+                GachaUi.StyleTab(_tabButtons[i], active);
             }
 
             Refresh();
@@ -141,6 +168,10 @@ namespace ScrapFishing.Gacha
             GearBonuses.Refresh(_shop.Inventory);
             BuildSlots();
             _summary.text = Summary();
+            if (_table != null)
+            {
+                BuildTable();
+            }
             GachaUi.Clear(_list);
             _rows.Clear();
             _rows.AddRange(Rows());
@@ -277,12 +308,19 @@ namespace ScrapFishing.Gacha
                 var gear = _shop.Inventory.Equipped(slot);
                 var min = new Vector2(s / (float)GearInventory.SlotCount + 0.008f, 0f);
                 var max = new Vector2((s + 1) / (float)GearInventory.SlotCount - 0.008f, 1f);
-                var cell = GachaUi.Panel(_slots, "Slot_" + slot, min, max, GachaUi.Inset, gear != null ? GachaUi.RarityColor(gear.Rarity) : GachaUi.Muted).rectTransform;
+                var cellImage = GachaUi.Panel(_slots, "Slot_" + slot, min, max, GachaUi.Inset, gear != null ? GachaUi.RarityColor(gear.Rarity) : GachaUi.Muted);
+                var cell = cellImage.rectTransform;
+                // 스킨: 등급별 장착 칸(equip_slot_*, 위 탭에 슬롯 이름). 빈 칸은 노멀 칸.
+                var skinned = OripaLook.Apply(cellImage, OripaLook.Of("equip_slot", gear != null ? gear.Rarity : ItemRarity.Normal));
                 GachaUi.Label(cell, "Slot", 16, TextAnchor.MiddleCenter, new Vector2(0f, 0.8f), new Vector2(1f, 1f), GachaUi.SlotTint(slot), GachaUi.SlotLabel(slot));
                 if (gear != null)
                 {
-                    // 이름은 빼고 아이콘을 칸에 꽉 차게 키운다.
-                    GachaUi.GearIcon(cell, "Icon", gear, new Vector2(0.04f, 0.03f), new Vector2(0.96f, 0.8f));
+                    // 이름은 빼고 아이콘을 칸에 꽉 차게 키운다. 스킨이면 칸 그림이 테두리라 아이콘 칸 테두리는 숨긴다.
+                    var icon = GachaUi.GearIcon(cell, "Icon", gear, new Vector2(0.06f, 0.05f), new Vector2(0.94f, 0.78f));
+                    if (skinned)
+                    {
+                        icon.GetComponent<Image>().enabled = false;
+                    }
                 }
                 else
                 {
@@ -359,36 +397,61 @@ namespace ScrapFishing.Gacha
         {
             var gear = row.Gear;
             var color = GachaUi.RarityColor(gear.Rarity);
-            var card = GachaUi.Panel(_list, "Gear_" + gear.Id, Vector2.zero, Vector2.one, GachaUi.Card, row.Equipped ? Palette.NeonGreen : color, true).rectTransform;
+            var cardImage = GachaUi.Panel(_list, "Gear_" + gear.Id, Vector2.zero, Vector2.one, GachaUi.Card, row.Equipped ? Palette.NeonGreen : color, true);
+            var card = cardImage.rectTransform;
             GachaUi.Height(card, 128f);
+            OripaLook.Apply(cardImage, OripaLook.Of("row", gear.Rarity));
 
-            GachaUi.GearIcon(card, "Icon", gear, new Vector2(0.02f, 0.12f), new Vector2(0.19f, 0.88f));
+            // 왼쪽 바깥 여백에 일괄 정산 체크 칸, 그 오른쪽에 아이콘(체크 칸이 아이콘을 가리지 않게).
+            GachaUi.GearIcon(card, "Icon", gear, new Vector2(0.075f, 0.12f), new Vector2(0.235f, 0.88f));
             if (row.Stored + row.Unprocessed > 0)
             {
                 CheckBox(card, !_unchecked.Contains(gear.Id), () => ToggleCheck(gear.Id));
             }
 
-            GachaUi.Label(card, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.22f, 0.66f), new Vector2(0.74f, 0.96f), Palette.Text,
-                gear.DisplayName + "  <size=16><color=" + GachaUi.Hex(color) + ">" + GachaUi.RarityLabel(gear.Rarity) + "</color></size>");
-            var effects = GachaUi.Label(card, "Effects", 16, TextAnchor.UpperLeft, new Vector2(0.22f, 0.06f), new Vector2(0.74f, 0.64f), Palette.Cyan,
+            // 윗줄 이름, 둘째 줄 등급 칩 + 보관·미처리 개수, 아래 효과(이름·등급 글자와 겹치지 않게 줄을 나눈다).
+            var name = GachaUi.Label(card, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.26f, 0.7f), new Vector2(0.75f, 0.96f), Palette.Text, gear.DisplayName);
+            TextOneLine.Fit(name, 22, 14);
+            var pill = GachaUi.Panel(card, "RarityPill", new Vector2(0.26f, 0.49f), new Vector2(0.4f, 0.68f), new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f), color);
+            var pillText = GachaUi.Label(pill.transform, "Text", 16, TextAnchor.MiddleCenter, new Vector2(0.06f, 0f), new Vector2(0.94f, 1f), color, GachaUi.RarityLabel(gear.Rarity));
+            if (OripaLook.Apply(pill, "pill", true, color))
+            {
+                pillText.color = Color.white;
+            }
+
+            TextOneLine.Fit(pillText, 14, 9);
+            var spareCount = row.Stored + row.Unprocessed;
+            var count = spareCount > 0 ? "보관 " + row.Stored + (row.Unprocessed > 0 ? " · 미처리 " + row.Unprocessed : string.Empty) : string.Empty;
+            var countText = GachaUi.Label(card, "Count", 16, TextAnchor.MiddleLeft, new Vector2(0.42f, 0.49f), new Vector2(0.75f, 0.68f), GachaUi.Muted, count);
+            TextOneLine.Fit(countText, 16, 11);
+            var effects = GachaUi.Label(card, "Effects", 16, TextAnchor.UpperLeft, new Vector2(0.26f, 0.05f), new Vector2(0.75f, 0.47f), Palette.Cyan,
                 GearBonuses.Describe(gear, "\n"));
             effects.horizontalOverflow = HorizontalWrapMode.Wrap;
+            effects.verticalOverflow = VerticalWrapMode.Truncate;
             effects.lineSpacing = 0.9f;
+            effects.resizeTextForBestFit = true;
+            effects.resizeTextMinSize = 11;
+            effects.resizeTextMaxSize = 16;
 
-            var count = row.Equipped
-                ? "장착 중"
-                : "보관 " + row.Stored + (row.Unprocessed > 0 ? " · 미처리 " + row.Unprocessed : string.Empty);
-            GachaUi.Label(card, "Count", 16, TextAnchor.MiddleRight, new Vector2(0.74f, 0.7f), new Vector2(0.97f, 0.96f),
-                row.Equipped ? Palette.NeonGreen : GachaUi.Muted, count);
-
-            var spare = row.Stored + row.Unprocessed;
+            // 오른쪽: 장착 중이면 위에 "장착 중" 배지 + 해제, 아니면 적용. 아래는 환원(동전 그림 오른쪽부터 글자).
+            var spare = spareCount;
             if (row.Equipped)
             {
-                GachaUi.MakeButton(card, "Unequip", "해제", new Vector2(0.77f, 0.38f), new Vector2(0.97f, 0.66f), GachaUi.Muted, 22, () => Unequip(gear.Slot));
+                var badge = GachaUi.Panel(card, "EquippedBadge", new Vector2(0.77f, 0.7f), new Vector2(0.97f, 0.95f), new Color(0.18f, 0.06f, 0.25f, 1f), Palette.NeonGreen);
+                var badgeText = GachaUi.Label(badge.transform, "Text", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, 0f), new Vector2(0.95f, 1f), Palette.NeonGreen, "장착 중");
+                if (OripaLook.Apply(badge, "badge_equipped"))
+                {
+                    badgeText.color = Palette.Text;
+                }
+
+                TextOneLine.Fit(badgeText, 16, 10);
+                var unequip = GachaUi.MakeButton(card, "Unequip", "해제", new Vector2(0.77f, 0.38f), new Vector2(0.97f, 0.66f), GachaUi.Muted, 22, () => Unequip(gear.Slot));
+                OripaLook.Button(unequip, "btn_unequip", Palette.Text);
             }
             else if (spare > 0)
             {
-                GachaUi.MakeButton(card, "Equip", "적용", new Vector2(0.77f, 0.38f), new Vector2(0.97f, 0.66f), Palette.NeonGreen, 22, () => Equip(gear));
+                var equip = GachaUi.MakeButton(card, "Equip", "적용", new Vector2(0.77f, 0.42f), new Vector2(0.97f, 0.9f), Palette.NeonGreen, 22, () => Equip(gear));
+                OripaLook.Button(equip, "btn_apply", Palette.NeonGreen);
             }
 
             if (spare > 0)
@@ -397,14 +460,97 @@ namespace ScrapFishing.Gacha
                 var label = armed ? "확인" : "환원 " + GachaUi.Money(_shop.RefundValue(gear.Id));
                 var refund = GachaUi.MakeButton(card, "Refund", label, new Vector2(0.75f, 0.06f), new Vector2(0.98f, 0.33f), armed ? Palette.Magenta : Palette.Gold, 16,
                     () => Refund(row));
+                if (OripaLook.Button(refund, "btn_refund", armed ? Palette.Magenta : Palette.Gold))
+                {
+                    var text = GachaUi.LabelOf(refund);
+                    GachaUi.Stretch(text.rectTransform, new Vector2(0.27f, 0f), new Vector2(0.97f, 1f));
+                    TextOneLine.Fit(text, 16, 10);
+                }
+
                 refund.transform.SetAsLastSibling();
             }
         }
 
-        // 일괄 정산 체크 칸(아이콘 왼쪽 위). 기본은 체크, 누르면 해제/다시 체크.
+        // 총 효과 표: 낚시·잠수·경제 묶음마다 section_label 이름표, 그 아래 효과를 한 줄에 하나씩(이름 왼쪽, 값 오른쪽).
+        static readonly (string Name, GearStat[] Stats)[] EffectGroups =
+        {
+            ("낚시", new[]
+            {
+                GearStat.LureCapacity, GearStat.CatchRadiusPercent, GearStat.RareChancePercent, GearStat.SpawnCapBonus, GearStat.GaugeSpeedPercent,
+                GearStat.SteerSpeedPercent, GearStat.ReelSpeedPercent, GearStat.HookHitRadiusPercent, GearStat.MaxDepthPercent,
+                GearStat.BonusCatchChancePercent, GearStat.AutoCollectSeconds
+            }),
+            ("잠수", new[]
+            {
+                GearStat.DroneRadiusPercent, GearStat.OxygenPercent, GearStat.DiveSpeedPercent, GearStat.DiveEveryCastsBonus, GearStat.HazardWarning,
+                GearStat.HazardShield, GearStat.HazardDamageReductionPercent
+            }),
+            ("경제", new[] { GearStat.SellPercent, GearStat.EndBonusPercent }),
+        };
+
+        void BuildTable()
+        {
+            GachaUi.Clear(_table);
+            var entries = new List<(bool Section, string Name, string Value)>();
+            foreach (var group in EffectGroups)
+            {
+                var start = entries.Count;
+                foreach (var stat in group.Stats)
+                {
+                    var value = GearBonuses.Get(stat);
+                    if (Mathf.Approximately(value, 0f))
+                    {
+                        continue;
+                    }
+
+                    var text = GearBonuses.Describe(new GearEffect(stat, value));
+                    var cut = text.LastIndexOf(' ');
+                    entries.Add((false, cut > 0 ? text.Substring(0, cut) : text, cut > 0 ? text.Substring(cut + 1) : "ON"));
+                }
+
+                if (entries.Count > start)
+                {
+                    entries.Insert(start, (true, group.Name, string.Empty));
+                }
+            }
+
+            if (entries.Count == 0)
+            {
+                GachaUi.Label(_table, "Empty", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, GachaUi.Muted, "장착한 장비가 없어요. 아래에서 적용을 눌러 장착하세요.")
+                    .horizontalOverflow = HorizontalWrapMode.Wrap;
+                return;
+            }
+
+            var step = 1f / Mathf.Max(entries.Count, 12);
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var top = 1f - i * step;
+                var min = new Vector2(0f, top - step);
+                var max = new Vector2(1f, top);
+                var entry = entries[i];
+                if (entry.Section)
+                {
+                    var label = OripaLook.Layer(_table, "Section" + i, "section_label", new Vector2(0f, min.y + step * 0.08f), new Vector2(0.32f, max.y - step * 0.08f));
+                    var name = GachaUi.Label(label != null ? label.transform : _table, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one,
+                        new Color(0.04f, 0.1f, 0.06f, 1f), entry.Name);
+                    TextOneLine.Fit(name, 16, 10);
+                    continue;
+                }
+
+                var stat = GachaUi.Label(_table, "Name" + i, 16, TextAnchor.MiddleLeft, new Vector2(0.04f, min.y), new Vector2(0.65f, max.y), Palette.Text, entry.Name);
+                var value = GachaUi.Label(_table, "Value" + i, 16, TextAnchor.MiddleRight, new Vector2(0.65f, min.y), max, Palette.NeonGreen, entry.Value);
+                TextOneLine.Fit(stat, 16, 10);
+                TextOneLine.Fit(value, 16, 10);
+                var line = GachaUi.Panel(_table, "Line" + i, new Vector2(0.02f, min.y), new Vector2(1f, min.y), new Color(1f, 1f, 1f, 0.08f));
+                line.rectTransform.sizeDelta = new Vector2(0f, 1f);
+            }
+        }
+
+        // 일괄 정산 체크 칸(줄 왼쪽 바깥 여백, 아이콘 왼쪽). 기본은 체크, 누르면 해제/다시 체크.
         static void CheckBox(RectTransform card, bool on, Action toggle)
         {
-            var box = GachaUi.Panel(card, "Check", new Vector2(0.012f, 0.64f), new Vector2(0.075f, 0.95f), GachaUi.Inset, on ? Palette.Gold : GachaUi.Muted, true);
+            var box = GachaUi.Panel(card, "Check", new Vector2(0.012f, 0.38f), new Vector2(0.064f, 0.62f), GachaUi.Inset, on ? Palette.Gold : GachaUi.Muted, true);
+            var skinned = OripaLook.Apply(box, on ? "checkbox_on" : "checkbox_off");
             var button = box.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             button.targetGraphic = box;
@@ -413,7 +559,7 @@ namespace ScrapFishing.Gacha
                 AudioManager.Ensure().PlayUiTap();
                 toggle();
             });
-            if (on)
+            if (on && !skinned)
             {
                 GachaUi.Panel(box.transform, "Mark", new Vector2(0.22f, 0.22f), new Vector2(0.78f, 0.78f), Palette.Gold);
             }

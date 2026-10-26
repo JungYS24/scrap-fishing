@@ -2,6 +2,7 @@ using System;
 using DG.Tweening;
 using ScrapFishing.Core;
 using ScrapFishing.FX;
+using ScrapFishing.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,6 +27,9 @@ namespace ScrapFishing.Gacha
         readonly Action _onClose;
         readonly Button _retryTen;
         GachaBanner _banner;
+        // 스킨: 잔액 value_box → arrow_right → value_box_gain.
+        readonly Text _before;
+        readonly Text _after;
 
         public bool IsOpen => _root.gameObject.activeSelf;
 
@@ -41,11 +45,34 @@ namespace ScrapFishing.Gacha
             GachaUi.Label(_confirmPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.8f), new Vector2(0.96f, 0.96f), Palette.Gold, "달러 환원");
             _confirmCount = GachaUi.Label(_confirmPanel, "Count", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.64f), new Vector2(0.96f, 0.78f), Palette.Text);
             _confirmBalance = GachaUi.Label(_confirmPanel, "Balance", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.45f), new Vector2(0.96f, 0.62f), Palette.Text);
-            GachaUi.Label(_confirmPanel, "Note", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.33f), new Vector2(0.96f, 0.44f), GachaUi.Muted,
+            var note = GachaUi.Label(_confirmPanel, "Note", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.33f), new Vector2(0.96f, 0.44f), GachaUi.Muted,
                 "환원한 장비는 되돌릴 수 없습니다");
-            GachaUi.MakeButton(_confirmPanel, "Cancel", "취소", new Vector2(0.05f, 0.06f), new Vector2(0.45f, 0.28f), GachaUi.Muted, 22, HideConfirm);
+            var cancel = GachaUi.MakeButton(_confirmPanel, "Cancel", "취소", new Vector2(0.05f, 0.06f), new Vector2(0.45f, 0.28f), GachaUi.Muted, 22, HideConfirm);
             _confirmButton = GachaUi.MakeButton(_confirmPanel, "Confirm", "확정하기", new Vector2(0.5f, 0.06f), new Vector2(0.95f, 0.28f), Palette.NeonGreen, 22,
                 () => _onConfirm?.Invoke((RectTransform)_confirmButton.transform));
+
+            // 스킨: popup_gold(제목 바 포함, 제목은 노란 바 위 어두운 글자), 잔액 칸, "되돌릴 수 없습니다"는 warning_strip(왼쪽 ! 아이콘) 안, 버튼 btn_gray / btn_green.
+            if (OripaLook.Apply(_confirmPanel.GetComponent<Image>(), "popup_gold"))
+            {
+                var title = (RectTransform)_confirmPanel.Find("Title");
+                GachaUi.Stretch(title, new Vector2(0.08f, 0.8f), new Vector2(0.92f, 0.95f));
+                title.GetComponent<Text>().color = Palette.Gold;
+                GachaUi.Stretch(note.rectTransform, new Vector2(0.06f, 0.32f), new Vector2(0.94f, 0.43f));
+                OripaLook.Behind(note, "warning_strip");
+                note.rectTransform.offsetMin = new Vector2(34f, 0f);
+                note.color = Palette.Gold;
+                TextOneLine.Fit(note, 16, 11);
+
+                _confirmBalance.gameObject.SetActive(false);
+                var row = GachaUi.Rect(_confirmPanel, "BalanceRow", new Vector2(0.06f, 0.46f), new Vector2(0.94f, 0.61f));
+                var beforeBox = OripaLook.Layer(row, "Before", "value_box", Vector2.zero, new Vector2(0.42f, 1f));
+                _before = GachaUi.Label(beforeBox.transform, "Text", 22, TextAnchor.MiddleCenter, new Vector2(0.06f, 0f), new Vector2(0.94f, 1f), Palette.Text);
+                OripaLook.Layer(row, "Arrow", "arrow_right", new Vector2(0.44f, 0.1f), new Vector2(0.56f, 0.9f));
+                var afterBox = OripaLook.Layer(row, "After", "value_box_gain", new Vector2(0.58f, 0f), Vector2.one);
+                _after = GachaUi.Label(afterBox.transform, "Text", 22, TextAnchor.MiddleCenter, new Vector2(0.06f, 0f), new Vector2(0.94f, 1f), Palette.NeonGreen);
+                OripaLook.Button(cancel, "btn_gray", Palette.Text);
+                OripaLook.Button(_confirmButton, "btn_green", Palette.Text);
+            }
 
             _donePanel = GachaUi.Panel(_root, "DonePanel", new Vector2(0.07f, 0.22f), new Vector2(0.93f, 0.78f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
             _check = GachaUi.CheckMark(_donePanel, "Check", new Vector2(0.4f, 0.79f), new Vector2(0.6f, 0.95f), Palette.NeonGreen);
@@ -58,7 +85,16 @@ namespace ScrapFishing.Gacha
             _retryPrice = GachaUi.Label(retry, "Price", 16, TextAnchor.MiddleRight, new Vector2(0.55f, 0.48f), new Vector2(0.95f, 0.76f), Palette.Gold);
             GachaUi.MakeButton(retry, "Retry1", "1회", new Vector2(0.05f, 0.08f), new Vector2(0.48f, 0.42f), Palette.NeonGreen, 22, () => Retry(1));
             _retryTen = GachaUi.MakeButton(retry, "Retry10", "10연", new Vector2(0.52f, 0.08f), new Vector2(0.95f, 0.42f), Palette.NeonGreen, 22, () => Retry(GachaService.TenPull));
-            GachaUi.MakeButton(_donePanel, "Close", "닫기", new Vector2(0.25f, 0.04f), new Vector2(0.75f, 0.15f), GachaUi.Muted, 22, Close);
+            var close = GachaUi.MakeButton(_donePanel, "Close", "닫기", new Vector2(0.25f, 0.04f), new Vector2(0.75f, 0.15f), GachaUi.Muted, 22, Close);
+            // 스킨: 완료 창은 popup_cyan, 다시 뽑기 칸은 info_box, 버튼은 뽑기·닫기 공통 그림.
+            if (OripaLook.Apply(_donePanel.GetComponent<Image>(), "popup_cyan"))
+            {
+                OripaLook.Apply(retry.GetComponent<Image>(), "info_box");
+                OripaLook.Button(retry.Find("Retry1").GetComponent<Button>(), "btn_pull", Palette.NeonGreen);
+                OripaLook.Button(_retryTen, "btn_pull_ten", Palette.Cyan);
+                OripaLook.Button(close, "btn_unequip", Palette.Text);
+            }
+
             _root.gameObject.SetActive(false);
         }
 
@@ -66,6 +102,13 @@ namespace ScrapFishing.Gacha
         {
             _confirmCount.text = "선택한 장비 " + pieces + "개를 환원합니다";
             _confirmBalance.text = GachaUi.Money(balance) + "  →  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + GachaUi.Money(balance + dollars) + "</color>";
+            if (_before != null)
+            {
+                _before.text = GachaUi.Money(balance);
+                _after.text = GachaUi.Money(balance + dollars);
+                TextOneLine.Fit(_before, 22, 13);
+                TextOneLine.Fit(_after, 22, 13);
+            }
             _confirmButton.interactable = true;
             _confirmPanel.gameObject.SetActive(true);
             _donePanel.gameObject.SetActive(false);

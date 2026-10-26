@@ -67,6 +67,8 @@ namespace ScrapFishing.UI
         RectTransform _couponPanel;
         InputField _couponInput;
         Text _couponMessage;
+        // 오리파 스킨이 있으면 쿠폰 입력칸이 틀린 코드에 빨간 칸(input_field_error)으로 바뀐다.
+        bool _couponSkinned;
         RectTransform _credits;
         CanvasGroup _creditsGroup;
         RectTransform _creditsPanel;
@@ -464,9 +466,18 @@ namespace ScrapFishing.UI
             _creditsGroup = _credits.gameObject.AddComponent<CanvasGroup>();
             Clickable(GachaUi.Panel(_credits, "Dim", Vector2.zero, Vector2.one, GachaUi.Dim, null, true), CloseCredits);
 
-            _creditsPanel = GachaUi.Panel(_credits, "Panel", new Vector2(0.06f, 0.1f), new Vector2(0.94f, 0.9f), GachaUi.Card, Palette.Gold, true).rectTransform;
-            GachaUi.Label(_creditsPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.98f), Palette.Gold, "크레딧");
-            var list = GachaUi.Scroll(_creditsPanel, "List", new Vector2(0.04f, 0.14f), new Vector2(0.96f, 0.89f), 12f, out _creditsScroll);
+            var creditsImage = GachaUi.Panel(_credits, "Panel", new Vector2(0.06f, 0.1f), new Vector2(0.94f, 0.9f), GachaUi.Card, Palette.Gold, true);
+            _creditsPanel = creditsImage.rectTransform;
+            var creditsTitle = GachaUi.Label(_creditsPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.98f), Palette.Gold, "크레딧");
+            // 오리파 스킨: popup_gold_tall(제목은 노란 바 위 어두운 글자), 항목 제목은 section_label 칸 안, 오른쪽 스크롤 막대, 닫기 btn_gray_flat.
+            var skinned = OripaLook.Apply(creditsImage, "popup_gold_tall");
+            if (skinned)
+            {
+                GachaUi.Stretch(creditsTitle.rectTransform, new Vector2(0.1f, 0.895f), new Vector2(0.9f, 0.975f));
+                creditsTitle.color = Palette.Gold;
+            }
+
+            var list = GachaUi.Scroll(_creditsPanel, "List", new Vector2(0.06f, 0.14f), new Vector2(skinned ? 0.9f : 0.96f, 0.875f), 12f, out _creditsScroll);
             for (var i = 0; i < Credits.GetLength(0); i++)
             {
                 var head = Credits[i, 0];
@@ -476,15 +487,54 @@ namespace ScrapFishing.UI
                     continue;
                 }
 
+                if (skinned)
+                {
+                    var row = GachaUi.Rect(list, "Head" + i, Vector2.zero, Vector2.one);
+                    GachaUi.Height(row, 30f);
+                    var plate = OripaLook.Layer(row, "Label", "section_label", new Vector2(0.15f, 0.04f), new Vector2(0.85f, 0.96f));
+                    var headText = GachaUi.Label(plate.transform, "Text", 16, TextAnchor.MiddleCenter, new Vector2(0.06f, 0f), new Vector2(0.94f, 1f),
+                        new Color(0.03f, 0.12f, 0.06f, 1f), head);
+                    TextOneLine.Fit(headText, 16, 10);
+                }
+
                 var entry = GachaUi.Label(list, "Credit" + i, 22, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, Palette.Text,
-                    "<color=" + GachaUi.Hex(Palette.NeonGreen) + "><size=16>" + head + "</size></color>\n" + body);
+                    skinned ? body : "<color=" + GachaUi.Hex(Palette.NeonGreen) + "><size=16>" + head + "</size></color>\n" + body);
                 entry.horizontalOverflow = HorizontalWrapMode.Wrap;
                 entry.verticalOverflow = VerticalWrapMode.Overflow;
                 entry.lineSpacing = 1.1f;
             }
 
-            GachaUi.MakeButton(_creditsPanel, "Close", "닫기", new Vector2(0.25f, 0.03f), new Vector2(0.75f, 0.11f), GachaUi.Muted, 22, CloseCredits);
+            var closeCredits = GachaUi.MakeButton(_creditsPanel, "Close", "닫기", new Vector2(0.25f, 0.03f), new Vector2(0.75f, 0.11f), GachaUi.Muted, 22, CloseCredits);
+            if (skinned)
+            {
+                OripaLook.Button(closeCredits, "btn_gray_flat", new Color(0.08f, 0.09f, 0.12f, 1f));
+                AddScrollbar(_creditsPanel, _creditsScroll, new Vector2(0.915f, 0.15f), new Vector2(0.945f, 0.875f));
+            }
             _credits.gameObject.SetActive(false);
+        }
+
+        // 스크롤 막대: scroll_track 안에서 scroll_thumb가 움직인다.
+        static void AddScrollbar(RectTransform parent, ScrollRect scroll, Vector2 min, Vector2 max)
+        {
+            var track = OripaLook.Layer(parent, "Scrollbar", "scroll_track", min, max);
+            if (track == null)
+            {
+                return;
+            }
+
+            track.raycastTarget = true;
+            var area = GachaUi.Rect(track.transform, "SlidingArea", Vector2.zero, Vector2.one);
+            area.offsetMin = new Vector2(0f, 4f);
+            area.offsetMax = new Vector2(0f, -4f);
+            var thumb = OripaLook.Layer(area, "Thumb", "scroll_thumb", new Vector2(0.25f, 0f), new Vector2(0.75f, 1f));
+            thumb.raycastTarget = true;
+            thumb.preserveAspect = false;
+            var bar = track.gameObject.AddComponent<Scrollbar>();
+            bar.handleRect = thumb.rectTransform;
+            bar.targetGraphic = thumb;
+            bar.direction = Scrollbar.Direction.BottomToTop;
+            scroll.verticalScrollbar = bar;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
         }
 
         void OpenCredits()
@@ -517,8 +567,22 @@ namespace ScrapFishing.UI
             _couponInput = CreateInput(_couponPanel, new Vector2(0.08f, 0.5f), new Vector2(0.92f, 0.74f));
             _couponMessage = GachaUi.Label(_couponPanel, "Message", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.34f), new Vector2(0.95f, 0.48f), GachaUi.Muted,
                 "쿠폰 코드를 입력하세요");
-            GachaUi.MakeButton(_couponPanel, "Cancel", "취소", new Vector2(0.08f, 0.07f), new Vector2(0.46f, 0.3f), GachaUi.Muted, 22, CloseCoupon);
-            GachaUi.MakeButton(_couponPanel, "Confirm", "확인", new Vector2(0.54f, 0.07f), new Vector2(0.92f, 0.3f), Palette.NeonGreen, 22, RedeemCoupon);
+            var cancel = GachaUi.MakeButton(_couponPanel, "Cancel", "취소", new Vector2(0.08f, 0.07f), new Vector2(0.46f, 0.3f), GachaUi.Muted, 22, CloseCoupon);
+            var confirm = GachaUi.MakeButton(_couponPanel, "Confirm", "확인", new Vector2(0.54f, 0.07f), new Vector2(0.92f, 0.3f), Palette.NeonGreen, 22, RedeemCoupon);
+            // 오리파 스킨: popup_green(제목은 초록 바 위 어두운 글자), 입력칸 input_field, 버튼 btn_outline_gray / btn_outline_green.
+            _couponSkinned = OripaLook.Apply(_couponPanel.GetComponent<Image>(), "popup_green");
+            if (_couponSkinned)
+            {
+                var title = (RectTransform)_couponPanel.Find("Title");
+                GachaUi.Stretch(title, new Vector2(0.1f, 0.78f), new Vector2(0.9f, 0.95f));
+                title.GetComponent<Text>().color = Palette.NeonGreen;
+                GachaUi.Stretch((RectTransform)_couponInput.transform, new Vector2(0.08f, 0.5f), new Vector2(0.92f, 0.76f));
+                OripaLook.Apply((Image)_couponInput.targetGraphic, "input_field");
+                OripaLook.Button(cancel, "btn_outline_gray", Palette.Text);
+                OripaLook.Button(confirm, "btn_outline_green", Palette.NeonGreen);
+                _couponInput.onValueChanged.AddListener(_ => SetCouponError(false));
+            }
+
             _coupon.gameObject.SetActive(false);
         }
 
@@ -538,9 +602,19 @@ namespace ScrapFishing.UI
             return input;
         }
 
+        // 틀린 코드: 빨간 입력칸(input_field_error). 다시 입력하면 원래 칸으로.
+        void SetCouponError(bool error)
+        {
+            if (_couponSkinned)
+            {
+                OripaLook.Apply((Image)_couponInput.targetGraphic, error ? "input_field_error" : "input_field");
+            }
+        }
+
         void OpenCoupon()
         {
             _couponInput.text = string.Empty;
+            SetCouponError(false);
             _couponMessage.text = "쿠폰 코드를 입력하세요";
             _couponMessage.color = GachaUi.Muted;
             _coupon.SetAsLastSibling();
@@ -575,7 +649,16 @@ namespace ScrapFishing.UI
                 _couponMessage.text = "올바르지 않은 쿠폰이에요";
                 _couponMessage.color = Palette.Magenta;
                 AudioManager.Ensure().PlayUpgradeDenied();
-                Fx.Shake(_couponPanel, 8f, 0.22f);
+                if (_couponSkinned)
+                {
+                    SetCouponError(true);
+                    Fx.Shake(_couponInput.transform, 8f, 0.3f);
+                }
+                else
+                {
+                    Fx.Shake(_couponPanel, 8f, 0.22f);
+                }
+
                 return;
             }
 

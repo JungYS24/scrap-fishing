@@ -87,7 +87,8 @@ namespace ScrapFishing.Gacha
             _root = GachaUi.Panel(area, "BlackMarket", Vector2.zero, Vector2.one, GachaUi.Backdrop, null, true).rectTransform;
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
-            GachaUi.Label(_root, "Notice", 16, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.89f), new Vector2(0.97f, 0.922f), GachaUi.Muted, Notice);
+            var notice = GachaUi.Label(_root, "Notice", 16, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.89f), new Vector2(0.97f, 0.922f), GachaUi.Muted, Notice);
+            OripaLook.Behind(notice, "strip_info");
             BuildTabs();
             _list = GachaUi.Scroll(_root, "Machines", new Vector2(0.03f, 0.015f), new Vector2(0.97f, 0.828f), 10f, out _scroll);
 
@@ -123,6 +124,7 @@ namespace ScrapFishing.Gacha
             _inventory.Hide();
             _video?.HideNow();
             SetDollarVisible(true);
+            SkinDollarPanel(true);
             SelectTab(_filter);
             _group.alpha = 0f;
             _group.blocksRaycasts = true;
@@ -143,6 +145,7 @@ namespace ScrapFishing.Gacha
                 .OnComplete(() =>
                 {
                     _root.gameObject.SetActive(false);
+                    SkinDollarPanel(false);
                     foreach (var card in _cards)
                     {
                         SetPlaying(card, false);
@@ -186,6 +189,13 @@ namespace ScrapFishing.Gacha
             GachaUi.Stretch((RectTransform)inventory.transform, InventoryMin, InventoryMax);
             _close = GachaUi.MakeButton(bar, "Close", "X", CloseMin, CloseMax, Palette.Magenta, 28, Close);
             GachaUi.Stretch((RectTransform)_close.transform, CloseMin, CloseMax);
+            // 스킨: 보관함(초록)·닫기(분홍, 그림에 X가 있어 글자는 뺀다).
+            OripaLook.Button(inventory, "btn_storage", Palette.NeonGreen);
+            if (OripaLook.Button(_close, "btn_close_x"))
+            {
+                GachaUi.LabelOf(_close).text = string.Empty;
+                ((Image)_close.targetGraphic).preserveAspect = true;
+            }
             if (bar.Find("SettingsButton") == null)
             {
                 SettingsView.CreateGearButton(bar, SettingsMin, SettingsMax, () => _onSettings?.Invoke());
@@ -207,6 +217,50 @@ namespace ScrapFishing.Gacha
         public void SetDollarTarget(RectTransform panel)
         {
             _dollarPanel = panel;
+        }
+
+        // 오리파가 열려 있는 동안만 달러 패널을 오리파 스킨(topbar_dollar, 그림에 $가 있어 $ 아이콘은 숨김)으로 바꾸고, 닫으면 되돌린다.
+        Sprite _dollarSprite;
+        Image.Type _dollarType;
+        Color _dollarColor;
+        bool _dollarSkinned;
+
+        void SkinDollarPanel(bool on)
+        {
+            var image = _dollarPanel != null ? _dollarPanel.GetComponent<Image>() : null;
+            var icon = _dollarPanel != null ? _dollarPanel.Find("DollarIcon") : null;
+            if (image == null || on == _dollarSkinned || (on && OripaLook.Get("topbar_dollar") == null))
+            {
+                return;
+            }
+
+            if (on)
+            {
+                _dollarSprite = image.sprite;
+                _dollarType = image.type;
+                _dollarColor = image.color;
+                OripaLook.Apply(image, "topbar_dollar");
+            }
+            else
+            {
+                var fit = image.GetComponent<SlicedFit>();
+                if (fit != null)
+                {
+                    Destroy(fit);
+                }
+
+                image.sprite = _dollarSprite;
+                image.type = _dollarType;
+                image.color = _dollarColor;
+                image.pixelsPerUnitMultiplier = 1f;
+            }
+
+            if (icon != null)
+            {
+                icon.gameObject.SetActive(!on);
+            }
+
+            _dollarSkinned = on;
         }
 
         // 씬에 남아 있을 수 있는 예전 오브젝트는 지우지 않고 숨긴다.
@@ -243,6 +297,8 @@ namespace ScrapFishing.Gacha
                 {
                     image.color = active ? new Color(accent.r * 0.22f, accent.g * 0.22f, accent.b * 0.22f, 1f) : GachaUi.Inset;
                 }
+
+                GachaUi.StyleTab(_tabButtons[i], active);
             }
 
             RefreshCards();
@@ -312,6 +368,9 @@ namespace ScrapFishing.Gacha
             public Text Info;
             public readonly List<Tween> Effects = new List<Tween>();
             public bool Playing;
+            // 스킨 테두리(속이 빈 banner_frame_*, 그림 위에 얹음)와 완료 표시용 어둡게 덮는 판.
+            public Image Frame;
+            public Image Dim;
         }
 
         public IEnumerable<(GachaBanner Banner, RectTransform Root, Image Art, bool Loaded, bool Playing, EllipsisText Desc, Button[] Buttons)> CardStates()
@@ -613,9 +672,23 @@ namespace ScrapFishing.Gacha
             var image = GachaUi.Panel(card.Root, "Art", new Vector2(0f, BannerArt.ArtBottom), Vector2.one, new Color(1f, 1f, 1f, 0f));
             image.preserveAspect = true;
             card.ArtImage = image;
+            // 받기 완료·소진 때 그림 위에 깔 검정(알파 0.35).
+            card.Dim = GachaUi.Panel(card.Root, "DoneDim", Vector2.zero, Vector2.one, new Color(0f, 0f, 0f, 0.35f));
+            card.Dim.gameObject.SetActive(false);
             BannerArt.AddFades(card.Root, banner);
-            // 테두리는 카드 틀(마스크 바깥에 그려지므로 잘리지 않는다).
-            BannerArt.Border(frame, banner, card.Effects);
+            // 테두리: 스킨이 있으면 배너 종류별 그림 테두리를 그림 위에 얹고, 없으면 카드 틀에 선 테두리(마스크 바깥이라 잘리지 않는다).
+            card.Frame = OripaLook.Layer(card.Root, "Frame", FrameSprite(banner), Vector2.zero, Vector2.one, null, false);
+            if (card.Frame == null)
+            {
+                BannerArt.Border(frame, banner, card.Effects);
+            }
+            else if (banner.Type == BannerType.Pickup && banner.Pickup == PickupKind.Synchro)
+            {
+                // 싱크로: 크리스탈 테두리 그림 위에 밝기만 은은하게 맥동.
+                var crystal = card.Frame;
+                card.Effects.Add(DOTween.To(() => crystal.color, c => crystal.color = c, new Color(0.72f, 0.72f, 0.72f, 1f), 1.1f)
+                    .SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetUpdate(true).SetLink(crystal.gameObject));
+            }
 
             var text = GachaUi.Rect(card.Root, "Text", new Vector2(0.05f, ArtTextY(0.21f)), new Vector2(0.55f, ArtTextTop));
             var tagMin = new Vector2(0f, Local(0.86f));
@@ -679,6 +752,17 @@ namespace ScrapFishing.Gacha
             return card;
         }
 
+        public static string FrameSprite(GachaBanner banner)
+        {
+            switch (banner.Type)
+            {
+                case BannerType.Festival: return "banner_frame_festival";
+                case BannerType.Daily: return "banner_frame_daily";
+                case BannerType.Pickup: return banner.Pickup == PickupKind.Synchro ? "banner_frame_synchro" : "banner_frame_legend";
+                default: return "banner_frame_standard";
+            }
+        }
+
         // 카드 설명(2줄까지, 넘치면 …). 잘린 전체 문구는 확인 팝업에서 보여 준다.
         public static string DescriptionOf(GachaBanner banner)
         {
@@ -720,6 +804,9 @@ namespace ScrapFishing.Gacha
                     card.GaugeFill.color = boosting ? GachaUi.LegendColor : GachaUi.RareColor;
                     break;
             }
+
+            // "1회 $9,000 · 오늘 남은 30/30"이 두 줄로 쪼개지지 않게 한 줄로 두고 넘치면 줄인다.
+            OripaLook.FitOneLine(card.Info, 14, 10);
         }
 
         void UpdateCard(BannerCard card)
@@ -741,14 +828,27 @@ namespace ScrapFishing.Gacha
                 }
             }
 
+            var done = (banner.Type == BannerType.Festival && _shop.FestivalRemaining(banner) <= 0)
+                || (banner.Type == BannerType.Daily && !_shop.DailyAvailable(banner));
             switch (banner.Type)
             {
                 case BannerType.Festival:
-                    card.StateTag.text = _shop.FestivalRemaining(banner) > 0 ? "FESTIVAL" : "완료";
+                    card.StateTag.text = done ? OripaLook.CheckGlyph(card.StateTag) + "완료" : "FESTIVAL";
                     break;
                 case BannerType.Daily:
-                    card.StateTag.text = _shop.DailyAvailable(banner) ? "FREE" : "완료";
+                    card.StateTag.text = done ? OripaLook.CheckGlyph(card.StateTag) + "완료" : "FREE";
                     break;
+            }
+
+            // 받기 완료·축제 소진: 테두리 밝기 40%, 그림 위 검정 0.35(버튼 비활성은 아래 UpdatePullButtons).
+            if (card.Dim != null)
+            {
+                card.Dim.gameObject.SetActive(done);
+            }
+
+            if (card.Frame != null && !(banner.Type == BannerType.Pickup && banner.Pickup == PickupKind.Synchro))
+            {
+                card.Frame.color = done ? new Color(0.4f, 0.4f, 0.4f, 1f) : Color.white;
             }
 
             var counter = _shop.Counter(banner);
@@ -841,6 +941,7 @@ namespace ScrapFishing.Gacha
                 var min = new Vector2(left + i * (width + (card.Art ? ArtButtonGap : gap)), card.Art ? ArtButtonBottom : 0.04f);
                 var max = new Vector2(min.x + width, card.Art ? ArtButtonTop : 0.24f);
                 var button = GachaUi.MakeButton(card.Root, "Pull" + count, string.Empty, min, max, Palette.NeonGreen, card.Art ? 16 : 22, () => ShowConfirm(banner, count));
+                OripaLook.Button(button, PullSprite(count));
                 var text = GachaUi.LabelOf(button);
                 if (text != null)
                 {
@@ -872,6 +973,8 @@ namespace ScrapFishing.Gacha
 
                 var locked = block == BannerBlock.DailyDone || block == BannerBlock.LimitReached || block == BannerBlock.NotOffered;
                 GachaUi.SetEnabled(card.Buttons[i], !locked, block == BannerBlock.None ? Palette.NeonGreen : GachaUi.Muted);
+                // 스킨: 1연 btn_pull, 10연 btn_pull_ten(강조), 받기 완료·소진·달러 부족은 btn_pull_disabled(달러 부족은 눌러서 안내를 볼 수 있다).
+                OripaLook.SwapState(card.Buttons[i], block == BannerBlock.None, PullSprite(count), "btn_pull_disabled", count > 1 ? Palette.Cyan : Palette.NeonGreen);
             }
         }
 
@@ -924,9 +1027,24 @@ namespace ScrapFishing.Gacha
             card.GaugeFill.color = boosting ? GachaUi.LegendColor : GachaUi.RareColor;
         }
 
+        static string PullSprite(int count)
+        {
+            return count > 1 ? "btn_pull_ten" : "btn_pull";
+        }
+
+        // 태그: 스킨이면 FESTIVAL은 tag_plate_pink, 나머지(PICK UP·FREE·완료·확률 상승 중·신규)는 tag_plate_white를 색으로 틴트.
         static Text Tag(RectTransform parent, string name, string text, Color color, Vector2 min, Vector2 max)
         {
             var tag = GachaUi.Panel(parent, name, min, max, new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f), color);
+            if (name == "FestivalTag")
+            {
+                OripaLook.Apply(tag, "tag_plate_pink");
+            }
+            else
+            {
+                OripaLook.Apply(tag, "tag_plate_white", true, color);
+            }
+
             return GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, color, text);
         }
 

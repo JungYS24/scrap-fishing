@@ -257,6 +257,15 @@ namespace ScrapFishing.Gacha
             return button;
         }
 
+        // 탭 스킨: 고른 탭 tab_on, 나머지 tab_off(스킨이 없으면 그대로).
+        public static void StyleTab(Button tab, bool active)
+        {
+            if (tab != null && OripaLook.Apply(tab.targetGraphic as Image, active ? "tab_on" : "tab_off"))
+            {
+                OripaLook.PressTint(tab);
+            }
+        }
+
         public static Text LabelOf(Button button)
         {
             return button != null ? button.GetComponentInChildren<Text>(true) : null;
@@ -355,6 +364,8 @@ namespace ScrapFishing.Gacha
             var rarity = gear != null ? gear.Rarity : ItemRarity.Normal;
             var color = RarityColor(rarity);
             var frame = Panel(parent, name, min, max, new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f), color);
+            // 스킨이 있으면 등급별 아이콘 칸(icon_slot_*) 그림을 쓴다.
+            OripaLook.Apply(frame, OripaLook.Of("icon_slot", rarity));
             if (gear != null && gear.Icon != null)
             {
                 var icon = Panel(frame.transform, "Icon", new Vector2(0.08f, 0.08f), new Vector2(0.92f, 0.92f), Color.white);
