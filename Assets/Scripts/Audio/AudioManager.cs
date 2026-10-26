@@ -137,6 +137,14 @@ namespace ScrapFishing.Audio
             SoundChanged?.Invoke();
         }
 
+        // 저장 초기화(SaveReset) 뒤에 음소거·음량을 저장값(기본값)으로 다시 적용한다.
+        public void ReloadPrefs()
+        {
+            ApplySoundPref();
+            ApplyBgmVolume();
+            SoundChanged?.Invoke();
+        }
+
         public void ToggleSound()
         {
             SetSoundOn(!SoundOn);

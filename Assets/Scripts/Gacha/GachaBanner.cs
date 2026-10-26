@@ -42,9 +42,13 @@ namespace ScrapFishing.Gacha
         public float LegendRate = -1f;
         public float SynchroRate = -1f;
 
-        // 축제: 등급 확률(합 1), 평생 횟수 제한, N번째 뽑기 확정.
+        // 횟수별 가격(예: 10연 87000). 없는 횟수는 1회 가격 × 횟수.
+        public readonly Dictionary<int, int> PullPrices = new Dictionary<int, int>();
+
+        // 축제: 등급 확률(합 1), 횟수 제한(DailyLimit이면 하루마다, 아니면 평생), N번째 뽑기 확정(제한과 같은 기간 기준).
         public float[] GradeRates;
         public int MaxPulls;
+        public bool DailyLimit;
         public int PityAt;
         public ItemRarity PityMin = ItemRarity.Legend;
 
@@ -217,6 +221,16 @@ namespace ScrapFishing.Gacha
                 PullCounts = Counts(map, "pullCounts", defaultCounts),
                 BannerImage = Text(map, "bannerImage"),
             };
+            if (map.TryGetValue("pullPrices", out var pricesValue) && pricesValue is Dictionary<string, object> prices)
+            {
+                foreach (var pair in prices)
+                {
+                    if (int.TryParse(pair.Key, out var count) && pair.Value is double price && count > 0)
+                    {
+                        banner.PullPrices[count] = (int)price;
+                    }
+                }
+            }
 
             if (type == BannerType.Standard || type == BannerType.Pickup)
             {
@@ -287,6 +301,7 @@ namespace ScrapFishing.Gacha
             if (map.TryGetValue("limit", out var limitValue) && limitValue is Dictionary<string, object> limit)
             {
                 banner.MaxPulls = (int)Number(limit, "maxPulls");
+                banner.DailyLimit = Text(limit, "scope") == "daily";
             }
 
             if (map.TryGetValue("pity", out var pityValue) && pityValue is Dictionary<string, object> pity)

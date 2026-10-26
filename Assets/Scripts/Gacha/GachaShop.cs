@@ -91,6 +91,8 @@ namespace ScrapFishing.Gacha
         public const string DailyDayKey = "GachaDailyDay_";
         public const string FestivalPullsKey = "GachaFestivalPulls_";
         public const string FestivalHighKey = "GachaFestivalHigh_";
+        // 하루 제한 축제: 횟수·확정 기록이 어느 날(KST 05:00 기준) 것인지.
+        public const string FestivalDayKey = "GachaFestivalDay_";
 
         readonly GachaService _service;
         readonly IGachaWallet _wallet;
@@ -194,7 +196,26 @@ namespace ScrapFishing.Gacha
 
         public static int CostOf(GachaBanner banner, int count)
         {
+            if (banner == null || count <= 0)
+            {
+                return 0;
+            }
+
+            return banner.PullPrices.TryGetValue(count, out var price) ? Math.Max(0, price) : ListPriceOf(banner, count);
+        }
+
+        // 1회 가격 × 횟수(할인 전 가격).
+        public static int ListPriceOf(GachaBanner banner, int count)
+        {
             return banner != null && count > 0 ? Math.Max(0, banner.Price) * count : 0;
+        }
+
+        // 1회 가격 × 횟수보다 싸면 할인율(%, 반올림). 같거나 비싸면 0.
+        public static int DiscountPercent(GachaBanner banner, int count)
+        {
+            var list = ListPriceOf(banner, count);
+            var cost = CostOf(banner, count);
+            return list > 0 && cost < list ? (int)Math.Round((1.0 - cost / (double)list) * 100.0) : 0;
         }
 
         public BannerBlock Block(GachaBanner banner, int count)
@@ -243,9 +264,15 @@ namespace ScrapFishing.Gacha
             return banner.WeekdayPool.TryGetValue(DailyDay().DayOfWeek, out var machine) ? machine : null;
         }
 
+        // 하루 제한 축제는 저장된 기록이 오늘 것이 아니면 0회(확정 기록도 없음)로 본다.
+        bool FestivalStale(GachaBanner banner)
+        {
+            return banner.DailyLimit && _store.GetInt(FestivalDayKey + banner.Id, 0) != DayStamp(DailyDay());
+        }
+
         public int FestivalPulls(GachaBanner banner)
         {
-            return Math.Max(0, _store.GetInt(FestivalPullsKey + banner.Id, 0));
+            return FestivalStale(banner) ? 0 : Math.Max(0, _store.GetInt(FestivalPullsKey + banner.Id, 0));
         }
 
         public int FestivalRemaining(GachaBanner banner)
@@ -255,7 +282,7 @@ namespace ScrapFishing.Gacha
 
         public bool FestivalHadHigh(GachaBanner banner)
         {
-            return _store.GetInt(FestivalHighKey + banner.Id, 0) != 0;
+            return !FestivalStale(banner) && _store.GetInt(FestivalHighKey + banner.Id, 0) != 0;
         }
 
         // 머신 천장 카운터(standard·pickup). daily·festival은 -1.
@@ -318,6 +345,13 @@ namespace ScrapFishing.Gacha
                     GachaService.Rates(banner, 0, false, rates);
                     var pulled = FestivalPulls(banner);
                     var hadHigh = FestivalHadHigh(banner);
+                    if (FestivalStale(banner))
+                    {
+                        // 새 날: 지난 기록을 지우고 오늘 날짜로 시작한다(달러 차감이 실패하면 BannerKeys가 되돌린다).
+                        _store.DeleteKey(FestivalHighKey + banner.Id);
+                        _store.SetInt(FestivalDayKey + banner.Id, DayStamp(DailyDay()));
+                    }
+
                     var pityIndex = !hadHigh && banner.PityAt > pulled && banner.PityAt <= pulled + count ? banner.PityAt - pulled - 1 : -1;
                     gears = _service.PullPool(Catalog.AllGears, rates, count, ItemRarity.Normal, pityIndex, banner.PityMin);
                     _store.SetInt(FestivalPullsKey + banner.Id, pulled + count);
@@ -415,6 +449,7 @@ namespace ScrapFishing.Gacha
             readonly int? _day;
             readonly int? _pulls;
             readonly int? _high;
+            readonly int? _festivalDay;
 
             public BannerKeys(IKeyValueStore store, GachaBanner banner)
             {
@@ -422,6 +457,7 @@ namespace ScrapFishing.Gacha
                 _day = Read(store, DailyDayKey + _id);
                 _pulls = Read(store, FestivalPullsKey + _id);
                 _high = Read(store, FestivalHighKey + _id);
+                _festivalDay = Read(store, FestivalDayKey + _id);
             }
 
             public void Restore(IKeyValueStore store)
@@ -429,6 +465,7 @@ namespace ScrapFishing.Gacha
                 Write(store, DailyDayKey + _id, _day);
                 Write(store, FestivalPullsKey + _id, _pulls);
                 Write(store, FestivalHighKey + _id, _high);
+                Write(store, FestivalDayKey + _id, _festivalDay);
             }
 
             static int? Read(IKeyValueStore store, string key)

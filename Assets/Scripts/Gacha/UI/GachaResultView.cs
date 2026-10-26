@@ -41,7 +41,6 @@ namespace ScrapFishing.Gacha
         readonly Action<List<RefundPick>, RectTransform> _onRefund;
         readonly Action<List<RefundPick>> _onStore;
         readonly Action _onClose;
-        readonly Action<GachaBanner, int> _onAgain;
         int _count;
         readonly List<Stack> _stacks = new List<Stack>();
         readonly List<Text> _groupTotals = new List<Text>();
@@ -50,30 +49,28 @@ namespace ScrapFishing.Gacha
         public GachaBanner Banner { get; private set; }
         public bool IsOpen => _root.gameObject.activeSelf;
 
-        // onAgain: 같은 배너·같은 횟수로 다시 뽑기(연속 뽑기). 고르지 않은 장비는 닫기와 같이 미처리로 남는다.
-        public GachaResultView(RectTransform parent, Action<List<RefundPick>, RectTransform> onRefund, Action<List<RefundPick>> onStore, Action onClose,
-            Action<GachaBanner, int> onAgain = null)
+        public GachaResultView(RectTransform parent, Action<List<RefundPick>, RectTransform> onRefund, Action<List<RefundPick>> onStore, Action onClose)
         {
             _onRefund = onRefund;
             _onStore = onStore;
             _onClose = onClose;
-            _onAgain = onAgain;
             _root = GachaUi.Panel(parent, "GachaResult", Vector2.zero, new Vector2(1f, 0.925f), GachaUi.Backdrop, null, true).rectTransform;
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _title = GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.92f), new Vector2(0.72f, 0.99f), Palette.Text);
             GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.925f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, () => _onClose?.Invoke());
-            GachaUi.MakeButton(_root, "Again", "연속 뽑기", new Vector2(0.49f, 0.925f), new Vector2(0.72f, 0.985f), Palette.NeonGreen, 22,
-                () => _onAgain?.Invoke(Banner, _count));
-            // 제목이 연속 뽑기 버튼과 겹치지 않게, 씬 기본 폭(0.72)이면 왼쪽 절반으로 줄인다.
-            var titleRect = _title.rectTransform;
-            if (titleRect.anchorMax.x > 0.48f)
+            // 연속 뽑기 버튼은 없앴다. 씬에 남아 있을 수 있는 예전 버튼은 숨기고, 제목은 닫기 버튼 앞까지 다시 넓힌다.
+            var again = _root.Find("Again");
+            if (again != null)
             {
-                titleRect.anchorMax = new Vector2(0.48f, titleRect.anchorMax.y);
-                _title.resizeTextForBestFit = true;
-                _title.resizeTextMinSize = 16;
-                _title.resizeTextMaxSize = 28;
+                again.gameObject.SetActive(false);
             }
+
+            var titleRect = _title.rectTransform;
+            titleRect.anchorMax = new Vector2(0.72f, titleRect.anchorMax.y);
+            _title.resizeTextForBestFit = true;
+            _title.resizeTextMinSize = 16;
+            _title.resizeTextMaxSize = 28;
 
             _list = GachaUi.Scroll(_root, "List", new Vector2(0.03f, 0.235f), new Vector2(0.97f, 0.915f), 6f, out _scroll);
 

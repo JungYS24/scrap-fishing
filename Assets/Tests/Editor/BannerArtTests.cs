@@ -193,7 +193,19 @@ namespace ScrapFishing.Tests
             Debug.Log($"한 화면 카드 수: 지금 {viewportHeight / (cardWidth * 0.6f + spacing):0.00}장, 예전(폭×0.75) {viewportHeight / (cardWidth * 0.75f + spacing):0.00}장 (목록 높이 {viewportHeight:0}px, 카드 {cardWidth * 0.6f:0}px ← {cardWidth * 0.75f:0}px)");
             Debug.Log($"배너 그림 메모리: 처음 화면 {loadedAtOpen}장, 26장 모두 {textureBytes / 1024f / 1024f:0.0}MB (장당 {textureBytes / 26f / 1024f:0}KB), 오리파 열기 전후 할당 증가 {(Profiler.GetTotalAllocatedMemoryLong() - before) / 1024f / 1024f:0.0}MB");
 
-            // 머신 탭: 상시 1 + 픽업 3 = 4장씩, 각자 그 머신 그림.
+            // 전체 탭 순서: 대축제 → 오늘의 암시장(받기 완료면 맨 아래) → 싱크로 픽업 6 → 레전드 픽업 12 → 상시 6.
+            var order = view.CardStates().Select(c => c.Banner).ToList();
+            var siblings = view.CardStates().Select(c => c.Root.GetSiblingIndex()).ToList();
+            CollectionAssert.AreEqual(Enumerable.Range(0, 26).ToList(), siblings, "화면 순서 = 카드 순서");
+            Assert.AreEqual(BannerType.Festival, order[0].Type);
+            var dailyAvailable = view.Shop.DailyAvailable(order.First(b => b.Type == BannerType.Daily));
+            Assert.AreEqual(BannerType.Daily, (dailyAvailable ? order[1] : order[25]).Type, dailyAvailable ? "받을 수 있으면 두 번째" : "받기 완료면 맨 아래");
+            var rest = order.Where(b => b.Type != BannerType.Festival && b.Type != BannerType.Daily).ToList();
+            Assert.IsTrue(rest.Take(6).All(b => b.Type == BannerType.Pickup && b.Pickup == PickupKind.Synchro), "싱크로 픽업이 먼저");
+            Assert.IsTrue(rest.Skip(6).Take(12).All(b => b.Type == BannerType.Pickup && b.Pickup == PickupKind.Legend), "그다음 레전드 픽업");
+            Assert.IsTrue(rest.Skip(18).All(b => b.Type == BannerType.Standard), "상시 머신은 맨 아래");
+
+            // 머신 탭: 싱크로 픽업 → 레전드 픽업 2 → 상시, 4장씩, 각자 그 머신 그림.
             var select = typeof(GachaShopView).GetMethod("SelectTab", BindingFlags.Instance | BindingFlags.NonPublic);
             foreach (var slot in new[] { GearSlot.Lure, GearSlot.Rod, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Helmet })
             {
@@ -201,6 +213,10 @@ namespace ScrapFishing.Tests
                 yield return new WaitForSecondsRealtime(0.2f);
                 var active = view.CardStates().Where(c => c.Root.gameObject.activeSelf).ToList();
                 Assert.AreEqual(4, active.Count, slot + " 탭 4장");
+                var key = slot.ToString().ToLowerInvariant();
+                CollectionAssert.AreEqual(
+                    new[] { "banner_" + key + "_pickup_synchro_01", "banner_" + key + "_pickup_legend_01", "banner_" + key + "_pickup_legend_02", "banner_" + key + "_standard" },
+                    active.Select(c => c.Banner.Id).ToArray(), slot + " 탭 순서");
                 foreach (var card in active)
                 {
                     Assert.AreEqual(slot, card.Banner.Machine.Slot);
@@ -210,6 +226,23 @@ namespace ScrapFishing.Tests
 
             select.Invoke(view, new object[] { null });
             yield return null;
+
+            // 오리파 상단 오른쪽 끝은 설정 톱니, 보관함·닫기는 그 왼쪽. 톱니를 누르면 설정창이 오리파 위에 열린다.
+            var bar = view.transform.Find("GameArea/BlackMarket/TopBar") ?? GameObject.Find("BlackMarket").transform.Find("TopBar");
+            var gear = (RectTransform)bar.Find("SettingsButton");
+            Assert.IsNotNull(gear, "TopBar/SettingsButton");
+            var closeButton = (RectTransform)bar.Find("Close");
+            var inventoryButton = (RectTransform)bar.Find("Inventory");
+            Assert.Greater(gear.anchorMin.x, closeButton.anchorMax.x, "톱니가 닫기 오른쪽");
+            Assert.Greater(closeButton.anchorMin.x, inventoryButton.anchorMax.x, "닫기가 보관함 오른쪽");
+            gear.GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            var settingsPanel = GameObject.Find("Settings");
+            Assert.IsNotNull(settingsPanel, "오리파에서 설정창 열림");
+            Assert.Greater(settingsPanel.transform.GetSiblingIndex(), GameObject.Find("BlackMarket").transform.GetSiblingIndex(), "설정창이 오리파 위");
+            settingsPanel.transform.Find("Panel/Close").GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.IsFalse(settingsPanel.activeSelf);
 
             // 확인 팝업: 같은 그림을 위에, 카드에서 잘린 설명 전체.
             var popup = (GachaConfirmPopup)typeof(GachaShopView).GetField("_confirm", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(view);

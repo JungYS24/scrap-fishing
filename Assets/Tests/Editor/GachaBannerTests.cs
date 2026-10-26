@@ -106,8 +106,11 @@ namespace ScrapFishing.Tests
             }
 
             var festival = Banner("banner_festival");
-            Assert.AreEqual(7500, festival.Price);
+            Assert.AreEqual(9000, festival.Price);
+            Assert.AreEqual(9000, GachaShop.CostOf(festival, 1));
+            Assert.AreEqual(87000, GachaShop.CostOf(festival, 10), "10연 가격은 json pullPrices");
             Assert.AreEqual(30, festival.MaxPulls);
+            Assert.IsTrue(festival.DailyLimit, "하루 30회");
             Assert.AreEqual(30, festival.PityAt);
             var daily = Banner("banner_daily");
             Assert.AreEqual(0, daily.Price);
@@ -355,8 +358,11 @@ namespace ScrapFishing.Tests
 
             Assert.AreEqual(30, shop.FestivalRemaining(festival));
             Assert.IsTrue(shop.TryPull(festival, 1, out var one));
-            Assert.AreEqual(7500, one.Cost);
-            Assert.IsTrue(shop.TryPull(festival, 10, out _));
+            Assert.AreEqual(9000, one.Cost);
+            var balance = wallet.Balance;
+            Assert.IsTrue(shop.TryPull(festival, 10, out var ten));
+            Assert.AreEqual(87000, ten.Cost);
+            Assert.AreEqual(balance - 87000, wallet.Balance);
             Assert.IsTrue(shop.TryPull(festival, 10, out _));
             Assert.AreEqual(9, shop.FestivalRemaining(festival));
             Assert.AreEqual(BannerBlock.LimitReached, shop.Block(festival, 10));
@@ -374,6 +380,52 @@ namespace ScrapFishing.Tests
             Assert.AreEqual(BannerBlock.LimitReached, shop.Block(festival, 1));
             Assert.IsFalse(shop.TryPull(festival, 1, out _));
             Assert.AreEqual(30, NewShop(store, wallet).FestivalPulls(festival), "저장된 횟수를 다시 읽는다");
+
+            // 다음 날 05:00(KST) 전까지는 그대로, 05:00부터 다시 30회.
+            _now = Kst(2026, 10, 27, 4, 59);
+            Assert.AreEqual(0, shop.FestivalRemaining(festival));
+            _now = Kst(2026, 10, 27, 5, 0);
+            Assert.AreEqual(30, shop.FestivalRemaining(festival), "하루가 지나면 다시 30회");
+            Assert.AreEqual(BannerBlock.None, shop.Block(festival, 10));
+            Assert.IsTrue(shop.TryPull(festival, 10, out _));
+            Assert.AreEqual(20, NewShop(store, wallet).FestivalRemaining(festival));
+        }
+
+        [Test]
+        public void Festival_PityResetsEachDay()
+        {
+            var store = new MemoryKeyValueStore();
+            var festival = Banner("banner_festival");
+            var high = NewShop(store, new MemoryWallet(10000000), new FixedRandom(0.99999f));
+            Assert.IsTrue(high.TryPull(festival, 1, out _));
+            Assert.IsTrue(high.FestivalHadHigh(festival), "오늘은 레전드 이상을 받았다");
+
+            // 다음 날은 확정 기록도 새로 시작한다: 가장 낮은 난수로 30번 뽑으면 30번째가 레전드 이상.
+            _now = Kst(2026, 10, 27, 6, 0);
+            var low = NewShop(store, new MemoryWallet(10000000), new FixedRandom(0f));
+            Assert.IsFalse(low.FestivalHadHigh(festival));
+            var last = ItemRarity.Normal;
+            for (var i = 0; i < 30; i++)
+            {
+                Assert.IsTrue(low.TryPull(festival, 1, out var result), "#" + (i + 1));
+                last = result.Items[0].Gear.Rarity;
+            }
+
+            Assert.GreaterOrEqual((int)last, (int)ItemRarity.Legend, "그날 30번째 확정");
+        }
+
+        [Test]
+        public void Discount_OnlyWhenCheaperThanSinglePulls()
+        {
+            var festival = Banner("banner_festival");
+            Assert.AreEqual(90000, GachaShop.ListPriceOf(festival, 10));
+            Assert.AreEqual(0, GachaShop.DiscountPercent(festival, 1));
+            Assert.AreEqual(3, GachaShop.DiscountPercent(festival, 10), "10연 $87,000 = 1회 × 10($90,000)보다 3% 할인");
+            Assert.AreEqual(0, GachaShop.DiscountPercent(Banner("banner_lure_standard"), 10), "상시 머신은 할인 없음");
+
+            var cheap = new GachaBanner { Id = "test", Type = BannerType.Festival, Price = 10000 };
+            cheap.PullPrices[10] = 90000;
+            Assert.AreEqual(10, GachaShop.DiscountPercent(cheap, 10));
         }
 
         [Test]
@@ -454,7 +506,7 @@ namespace ScrapFishing.Tests
         public void Festival_FailedSpendRestoresKeys()
         {
             var store = new MemoryKeyValueStore();
-            var shop = NewShop(store, new MemoryWallet(7499));
+            var shop = NewShop(store, new MemoryWallet(8999));
             var festival = Banner("banner_festival");
             Assert.AreEqual(BannerBlock.NoDollars, shop.Block(festival, 1));
             Assert.IsFalse(shop.TryPull(festival, 1, out _));

@@ -149,7 +149,10 @@ namespace ScrapFishing.Gacha
             var label = GachaUi.LabelOf(_confirm);
             if (label != null)
             {
-                label.text = cost > 0 ? GachaUi.Money(cost) + "로 뽑기" : "무료로 뽑기";
+                var discount = GachaShop.DiscountPercent(banner, count);
+                label.text = cost > 0
+                    ? GachaUi.Money(cost) + "로 뽑기" + (discount > 0 ? " <color=" + GachaUi.Hex(Palette.Gold) + ">(" + discount + "% 할인)</color>" : string.Empty)
+                    : "무료로 뽑기";
             }
 
             GachaUi.SetEnabled(_confirm, block == BannerBlock.None, Palette.NeonGreen);
@@ -224,7 +227,7 @@ namespace ScrapFishing.Gacha
             switch (block)
             {
                 case BannerBlock.DailyDone: return "오늘은 이미 받았어요. 내일 05:00(KST)에 갱신됩니다";
-                case BannerBlock.LimitReached: return "남은 횟수가 부족합니다";
+                case BannerBlock.LimitReached: return "오늘 남은 횟수가 부족합니다. 매일 05:00(KST)에 갱신됩니다";
                 case BannerBlock.NotOffered: return "이 배너에서는 이 횟수로 뽑을 수 없습니다";
                 case BannerBlock.NoDollars: return "달러가 부족합니다. 출항해서 벌어 오세요!";
                 default: return string.Empty;
@@ -276,7 +279,7 @@ namespace ScrapFishing.Gacha
                         + "회째부터 상승 (천장 없음, 상시 머신과 카운트 공유)\n";
                     break;
                 case BannerType.Festival:
-                    lines += "· 남은 횟수 " + shop.FestivalRemaining(banner) + "/" + banner.MaxPulls
+                    lines += "· " + (banner.DailyLimit ? "오늘 남은 횟수 " : "남은 횟수 ") + shop.FestivalRemaining(banner) + "/" + banner.MaxPulls
                         + (shop.FestivalHadHigh(banner) ? " · 레전드 이상 획득함\n" : " · " + banner.PityAt + "회째에 레전드 이상 확정\n");
                     break;
                 case BannerType.Daily:

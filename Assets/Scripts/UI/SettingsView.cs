@@ -561,6 +561,14 @@ namespace ScrapFishing.UI
 
         void RedeemCoupon()
         {
+            // "reset": 모든 저장을 지우고 처음 상태로 다시 시작한다(튜토리얼 확인용).
+            if (SaveReset.IsResetCode(_couponInput.text))
+            {
+                AudioManager.Ensure().PlayUpgradeBuy();
+                SaveReset.ResetAll();
+                return;
+            }
+
             var dollars = CouponReward(_couponInput.text, Progression.Dollars);
             if (dollars <= 0)
             {

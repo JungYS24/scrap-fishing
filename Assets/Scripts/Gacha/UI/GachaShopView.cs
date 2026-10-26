@@ -50,6 +50,7 @@ namespace ScrapFishing.Gacha
         float _flyDeadline;
         float _nextVisibilityCheck;
         System.Action _flyFinish;
+        System.Action _onSettings;
 
         public bool IsOpen => _root != null && _root.gameObject.activeSelf;
         public GachaShop Shop => _shop;
@@ -90,7 +91,7 @@ namespace ScrapFishing.Gacha
             BuildTabs();
             _list = GachaUi.Scroll(_root, "Machines", new Vector2(0.03f, 0.015f), new Vector2(0.97f, 0.828f), 10f, out _scroll);
 
-            _result = new GachaResultView(_root, RequestRefund, StorePicks, CloseResult, PullAgain);
+            _result = new GachaResultView(_root, RequestRefund, StorePicks, CloseResult);
             _confirm = new GachaConfirmPopup(_root, ConfirmPull);
             _refund = new GachaRefundPopup(_root, ExecuteRefund, ShowConfirm, RefreshCards);
             _inventory = new GachaInventoryView(_root, HandleInventoryRefund);
@@ -180,8 +181,27 @@ namespace ScrapFishing.Gacha
             // 로고와 달러 패널은 없앤다. 달러는 타이틀 화면의 달러 패널이 오리파 위에 그대로 보인다.
             HideLegacy(bar, "Logo");
             HideLegacy(bar, "DollarPanel");
-            GachaUi.MakeButton(bar, "Inventory", "보관함", new Vector2(0.67f, 0.14f), new Vector2(0.845f, 0.86f), Palette.NeonGreen, 22, OpenInventory);
-            _close = GachaUi.MakeButton(bar, "Close", "X", new Vector2(0.86f, 0.14f), new Vector2(0.97f, 0.86f), Palette.Magenta, 28, Close);
+            // 오른쪽 위 끝은 설정 톱니(타이틀·HUD와 같은 버튼), 보관함·닫기는 그 왼쪽으로. 씬에 있던 버튼도 이 자리로 옮긴다.
+            var inventory = GachaUi.MakeButton(bar, "Inventory", "보관함", InventoryMin, InventoryMax, Palette.NeonGreen, 22, OpenInventory);
+            GachaUi.Stretch((RectTransform)inventory.transform, InventoryMin, InventoryMax);
+            _close = GachaUi.MakeButton(bar, "Close", "X", CloseMin, CloseMax, Palette.Magenta, 28, Close);
+            GachaUi.Stretch((RectTransform)_close.transform, CloseMin, CloseMax);
+            if (bar.Find("SettingsButton") == null)
+            {
+                SettingsView.CreateGearButton(bar, SettingsMin, SettingsMax, () => _onSettings?.Invoke());
+            }
+        }
+
+        static readonly Vector2 InventoryMin = new Vector2(0.55f, 0.14f);
+        static readonly Vector2 InventoryMax = new Vector2(0.73f, 0.86f);
+        static readonly Vector2 CloseMin = new Vector2(0.75f, 0.14f);
+        static readonly Vector2 CloseMax = new Vector2(0.86f, 0.86f);
+        static readonly Vector2 SettingsMin = new Vector2(0.88f, 0.08f);
+        static readonly Vector2 SettingsMax = new Vector2(0.99f, 0.92f);
+
+        public void BindSettings(System.Action onSettings)
+        {
+            _onSettings = onSettings;
         }
 
         public void SetDollarTarget(RectTransform panel)
@@ -319,6 +339,7 @@ namespace ScrapFishing.Gacha
                 }
             }
 
+            SortCards();
             var index = 0;
             var artHeight = ArtCardHeight();
             foreach (var card in _cards)
@@ -428,26 +449,39 @@ namespace ScrapFishing.Gacha
             }
         }
 
-        // 전체 탭 순서: 대축제 → 오늘의 암시장 → 상시 6종 → 픽업 18종. 머신 탭은 같은 순서에서 그 머신(상시 1 + 픽업)만 켠다.
+        // 순서: 대축제 → 오늘의 암시장 → 싱크로 픽업 → 레전드 픽업 → 상시. 같은 묶음은 json order(머신 순) 그대로.
+        // 머신 탭은 같은 순서에서 그 머신만 켠다(싱크로 → 레전드 2종 → 상시). 받기 완료한 오늘의 암시장은 맨 아래로.
         List<GachaBanner> OrderedBanners()
         {
             var list = new List<GachaBanner>(_shop.Catalog.Banners);
-            list.Sort((a, b) =>
-            {
-                var byRank = Rank(a.Type).CompareTo(Rank(b.Type));
-                return byRank != 0 ? byRank : a.Order.CompareTo(b.Order);
-            });
+            list.Sort(CompareBanners);
             return list;
         }
 
-        static int Rank(BannerType type)
+        int CompareBanners(GachaBanner a, GachaBanner b)
         {
-            switch (type)
+            var byRank = Rank(a).CompareTo(Rank(b));
+            return byRank != 0 ? byRank : a.Order.CompareTo(b.Order);
+        }
+
+        int Rank(GachaBanner banner)
+        {
+            switch (banner.Type)
             {
                 case BannerType.Festival: return 0;
-                case BannerType.Daily: return 1;
-                case BannerType.Standard: return 2;
-                default: return 3;
+                case BannerType.Daily: return _shop.DailyAvailable(banner) ? 1 : 9;
+                case BannerType.Pickup: return banner.Pickup == PickupKind.Synchro ? 2 : 3;
+                default: return 4;
+            }
+        }
+
+        // 데일리 완료 여부가 바뀌면 순서도 바뀌므로 갱신할 때마다 카드 순서를 다시 맞춘다.
+        void SortCards()
+        {
+            _cards.Sort((a, b) => CompareBanners(a.Banner, b.Banner));
+            for (var i = 0; i < _cards.Count; i++)
+            {
+                _cards[i].Root.SetSiblingIndex(i);
             }
         }
 
@@ -665,7 +699,9 @@ namespace ScrapFishing.Gacha
             {
                 case BannerType.Festival:
                     var remaining = _shop.FestivalRemaining(banner);
-                    card.Info.text = remaining > 0 ? price + " · 남은 횟수 " + remaining + "/" + banner.MaxPulls : "완료 · 0/" + banner.MaxPulls;
+                    card.Info.text = remaining > 0
+                        ? price + (banner.DailyLimit ? " · 오늘 남은 " : " · 남은 횟수 ") + remaining + "/" + banner.MaxPulls
+                        : banner.DailyLimit ? "오늘 완료 · 내일 05:00 갱신" : "완료 · 0/" + banner.MaxPulls;
                     card.Info.color = remaining > 0 ? Palette.Gold : GachaUi.Muted;
                     break;
                 case BannerType.Daily:
@@ -829,7 +865,9 @@ namespace ScrapFishing.Gacha
                 if (text != null)
                 {
                     var small = card.Art ? 12 : 16;
-                    text.text = cost > 0 ? title + "\n<size=" + small + ">" + GachaUi.Money(cost) + "</size>" : title;
+                    var discount = GachaShop.DiscountPercent(banner, count);
+                    var off = discount > 0 ? " <color=" + GachaUi.Hex(Palette.Gold) + ">-" + discount + "%</color>" : string.Empty;
+                    text.text = cost > 0 ? title + off + "\n<size=" + small + ">" + GachaUi.Money(cost) + "</size>" : title;
                 }
 
                 var locked = block == BannerBlock.DailyDone || block == BannerBlock.LimitReached || block == BannerBlock.NotOffered;
@@ -1030,19 +1068,6 @@ namespace ScrapFishing.Gacha
             _result.Hide();
             RefreshCards();
             ShowToast(stored > 0 ? "보관함에 " + stored + "개를 보관했어요" : "보관할 장비가 없어요");
-        }
-
-        // 결과창의 연속 뽑기: 결과를 닫고(고르지 않은 장비는 미처리로 남음) 같은 배너·횟수의 뽑기 확인을 띄운다.
-        void PullAgain(GachaBanner banner, int count)
-        {
-            if (banner == null || count <= 0)
-            {
-                return;
-            }
-
-            _result.Hide();
-            RefreshCards();
-            ShowConfirm(banner, count);
         }
 
         void CloseResult()

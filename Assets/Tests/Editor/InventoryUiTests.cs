@@ -13,18 +13,10 @@ namespace ScrapFishing.Tests
     {
         // EnterPlayMode는 도메인을 다시 불러와 코루틴의 람다 캡처 객체가 사라지므로, 콜백 결과는 정적 필드에 둔다.
         static int _refunded;
-        static GachaBanner _askedBanner;
-        static int _askedCount;
 
         static void AddRefunded(int dollars)
         {
             _refunded += dollars;
-        }
-
-        static void RecordAgain(GachaBanner banner, int count)
-        {
-            _askedBanner = banner;
-            _askedCount = count;
         }
 
         static void IgnoreRefund(System.Collections.Generic.List<RefundPick> picks, RectTransform from)
@@ -126,7 +118,7 @@ namespace ScrapFishing.Tests
         }
 
         [UnityTest]
-        public IEnumerator Result_AgainButtonRequestsSameBannerAndCount()
+        public IEnumerator Result_HasNoAgainButton()
         {
             yield return new EnterPlayMode();
             var machines = OripaCatalogJson.Load();
@@ -136,18 +128,15 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(shop.TryPull(banner, 10, out var result));
 
             var canvas = MakeArea(out var area);
-            _askedBanner = null;
-            _askedCount = 0;
-            var view = new GachaResultView(area, IgnoreRefund, IgnoreStore, IgnoreClose, RecordAgain);
+            var view = new GachaResultView(area, IgnoreRefund, IgnoreStore, IgnoreClose);
             view.Show(shop, result);
             yield return null;
 
-            var again = area.Find("GachaResult/Again").GetComponent<Button>();
-            again.onClick.Invoke();
-            Assert.AreSame(banner, _askedBanner);
-            Assert.AreEqual(10, _askedCount);
+            var again = area.Find("GachaResult/Again");
+            Assert.IsTrue(again == null || !again.gameObject.activeSelf, "연속 뽑기 버튼 없음");
             var title = (RectTransform)area.Find("GachaResult/Title");
-            Assert.LessOrEqual(title.anchorMax.x, 0.48f, "제목이 연속 뽑기 버튼과 겹치지 않는다");
+            var close = (RectTransform)area.Find("GachaResult/Close");
+            Assert.LessOrEqual(title.anchorMax.x, close.anchorMin.x, "제목은 닫기 버튼 앞까지");
 
             Object.DestroyImmediate(canvas);
             foreach (var m in machines)

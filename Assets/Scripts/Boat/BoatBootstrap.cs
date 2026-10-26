@@ -348,6 +348,7 @@ namespace ScrapFishing.Boat
             area.Adopt();
             _canvasUi.PinDollarPanel();
             _market.SetDollarTarget(_canvasUi.DollarPanel);
+            _market.BindSettings(OpenSettings);
         }
 
         void OpenMarket()
@@ -364,7 +365,7 @@ namespace ScrapFishing.Boat
         // 플레이 중이면 열려 있는 동안 게임을 멈춘다(제한 시간·산소·움직임). 화면 탭은 설정창이 가려 게임으로 가지 않는다.
         void OpenSettings()
         {
-            if (_settingsView == null || _settingsView.IsOpen || (_market != null && _market.IsOpen))
+            if (_settingsView == null || _settingsView.IsOpen)
             {
                 return;
             }

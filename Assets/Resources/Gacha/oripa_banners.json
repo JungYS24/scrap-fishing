@@ -20,9 +20,12 @@
       "order": 1,
       "nameKo": "네오도쿄 대축제",
       "nameEn": "Neo-Tokyo Grand Festival",
-      "descKo": "6종 머신의 모든 장비가 한 풀에! 레전드·싱크로 확률 2배. 1인 30회 한정, 30회째 레전드 이상 확정.",
+      "descKo": "6종 머신의 모든 장비가 한 풀에! 레전드·싱크로 확률 2배. 하루 30회 한정, 그날 30회째 레전드 이상 확정.",
       "pool": "all",
-      "price": 7500,
+      "price": 9000,
+      "pullPrices": {
+        "10": 87000
+      },
       "pullCounts": [
         1,
         10
@@ -35,7 +38,7 @@
         "Synchro": 0.008
       },
       "limit": {
-        "scope": "lifetime",
+        "scope": "daily",
         "maxPulls": 30
       },
       "pity": {
