@@ -49,7 +49,7 @@ namespace ScrapFishing.Boat
             _canvasUi = FindFirstObjectByType<BoatCanvas>();
             if (_canvasUi == null)
             {
-                Debug.LogError("Canvas에 BoatCanvas가 없습니다. 메뉴 Scrap Fishing > Build Scene UI를 실행하세요.");
+                Debug.LogError("Canvas에 BoatCanvas가 없습니다. Boat 씬의 Canvas를 확인하세요.");
             }
 
             ConfigureCamera();
@@ -104,7 +104,7 @@ namespace ScrapFishing.Boat
             _hook = FindFirstObjectByType<HookMover>(FindObjectsInactive.Include);
             if (_hook == null)
             {
-                Debug.LogWarning("씬에 Lure(HookMover)가 없어 임시 루어를 만듭니다. 메뉴 Scrap Fishing > Build Boat Scene을 실행하세요.");
+                Debug.LogWarning("씬에 Lure(HookMover)가 없어 임시 루어를 만듭니다.");
                 var hookGo = CreateSprite("Lure", PlaceholderFactory.Circle(Palette.NeonGreen), Vector3.zero, Vector3.one * 0.28f, 6);
                 _hook = hookGo.AddComponent<HookMover>();
             }
@@ -218,7 +218,7 @@ namespace ScrapFishing.Boat
             var root = GameObject.Find("SurfaceProps");
             if (root == null)
             {
-                Debug.LogWarning("씬에 SurfaceProps(Nomad)가 없습니다. 메뉴 Scrap Fishing > Build Boat Scene을 실행하세요.");
+                Debug.LogWarning("씬에 SurfaceProps(Nomad)가 없습니다.");
                 root = new GameObject("SurfaceProps");
             }
 

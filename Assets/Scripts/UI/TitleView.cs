@@ -205,7 +205,7 @@ namespace ScrapFishing.UI
             }
         }
 
-        // 로고 바로 위에 버전 글자를 만든다. 로고를 씬에서 옮겼어도 그 위치를 따라간다. 에디터 씬 빌더도 이 함수를 쓴다.
+        // 로고 바로 위에 버전 글자를 만든다. 로고를 씬에서 옮겼어도 그 위치를 따라간다.
         public static Text CreateVersionText(RectTransform title)
         {
             var text = UiFonts.CreateText(title, VersionTextName, 16, TextAnchor.MiddleCenter);
@@ -253,7 +253,7 @@ namespace ScrapFishing.UI
             return button;
         }
 
-        // 출항 버튼 바로 아래에 같은 크기의 빨간 오리파 버튼을 만든다. 에디터 씬 빌더도 이 함수를 쓴다.
+        // 출항 버튼 바로 아래에 같은 크기의 빨간 오리파 버튼을 만든다.
         public static Button CreateMarketButton(RectTransform parent, Button start)
         {
             var min = new Vector2(0.25f, 0.35f);

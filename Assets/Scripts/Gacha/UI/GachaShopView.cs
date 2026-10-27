@@ -74,7 +74,7 @@ namespace ScrapFishing.Gacha
         }
 
         // area 아래에 BlackMarket이 있으면 그 하이러키를 그대로 쓰고, 빠진 오브젝트만 만든다.
-        // 에디터의 Scrap Fishing > Build Oripa UI도 이 함수로 씬에 화면 틀을 만든다.
+        // 씬의 화면 틀은 이미 만들어 두었고, 없는 오브젝트만 여기서 채운다.
         public void BuildLayout(RectTransform area)
         {
             using (GachaUi.Reuse())
