@@ -120,6 +120,55 @@ namespace ScrapFishing.Tests
             PlayerPrefs.Save();
         }
 
+        // 강화 3종을 모두 최대로 올린 저장으로 한 판을 끝내도 결과창이 뜨는지(풀강 후 60초가 끝나면 멈추던 버그).
+        // richDollars: 쿠폰을 여러 번 써서 달러가 int 최대값 근처인 경우.
+        [UnityTest]
+        public IEnumerator Results_ShowWhenAllUpgradesMaxed([Values(false, true)] bool richDollars)
+        {
+            var dollars = PlayerPrefs.GetInt(Progression.DollarKey, 0);
+            var best = PlayerPrefs.GetInt("BestCY", 0);
+            // 플레이 모드에 들어가며 도메인이 다시 읽혀도 남도록 배열 대신 값 하나씩 둔다.
+            var reel = PlayerPrefs.GetInt(Progression.LevelKey(UpgradeKind.Reel), 0);
+            var boat = PlayerPrefs.GetInt(Progression.LevelKey(UpgradeKind.Boat), 0);
+            var depth = PlayerPrefs.GetInt(Progression.LevelKey(UpgradeKind.Depth), 0);
+            PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Reel), Progression.MaxUpgradeLevel);
+            PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Boat), Progression.MaxUpgradeLevel);
+            PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Depth), Progression.MaxUpgradeLevel);
+            PlayerPrefs.SetInt(Progression.DollarKey, richDollars ? int.MaxValue - 10 : 0);
+            try
+            {
+                yield return new EnterPlayMode();
+                yield return LoadAndBegin();
+                var boot = Object.FindFirstObjectByType<BoatBootstrap>();
+                var flow = boot.GetComponent<GameFlow>();
+                var session = boot.GetComponent<RunSession>();
+                foreach (var item in ScrapFishing.Data.ItemDatabase.Instance.Items)
+                {
+                    if (item != null && item.Chip > 0)
+                    {
+                        session.AddSettledCatch(null, item, Vector3.zero, out _, out _);
+                    }
+                }
+
+                session.Tick(RunSession.Duration + 1f);
+                yield return WaitForResults(flow, 5f);
+                yield return new WaitForSecondsRealtime(4f);
+                AssertVisible("maxed rich=" + richDollars);
+                Assert.GreaterOrEqual(Progression.Dollars, 0, "달러가 넘쳐 음수가 되면 안 된다");
+                yield return new ExitPlayMode();
+            }
+            finally
+            {
+                PlayerPrefs.SetInt(Progression.DollarKey, dollars);
+                PlayerPrefs.SetInt("BestCY", best);
+                PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Reel), reel);
+                PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Boat), boat);
+                PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Depth), depth);
+
+                PlayerPrefs.Save();
+            }
+        }
+
         static IEnumerator LoadAndBegin()
         {
             var load = EditorSceneManager.LoadSceneAsyncInPlayMode(BoatScene, new LoadSceneParameters(LoadSceneMode.Single));

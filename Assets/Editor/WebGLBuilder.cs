@@ -71,7 +71,9 @@ namespace ScrapFishing.Build
         public static void ApplySettings()
         {
             PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
-            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
+            // None이면 DOTween 안전 모드 등이 try/catch로 잡는 예외도 웹에서는 잡히지 않아 게임 전체가 멈춘다.
+            // 직접 던진 예외만 잡는 설정으로 두어, 오류가 나도 그 연출만 건너뛰고 게임은 계속 돈다.
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             PlayerSettings.WebGL.decompressionFallback = true;
             PlayerSettings.WebGL.template = "PROJECT:ScrapFishing";

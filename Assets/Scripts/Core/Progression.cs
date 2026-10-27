@@ -14,13 +14,15 @@ namespace ScrapFishing.Core
     public static class Progression
     {
         // 강화 30단계. 예전 12단계 효과 범위(반경 +0.6, 칩 +60%, 수심 1000m)를 30등분했다.
-        // 비용 곡선은 그대로라 Lv12까지 드는 돈은 예전과 같고, 그 뒤로도 같은 비율로 계속 오른다.
+        // Lv12까지(구매 12번)는 예전 곡선(×1.38) 그대로이고, 그 뒤로는 ×1.10씩만 오른다.
         public const int MaxUpgradeLevel = 30;
 
         public const string DollarKey = "Dollar";
         const float ReelRadiusPerLevel = 0.6f / MaxUpgradeLevel;
         const float BoatChipPerLevel = 0.6f / MaxUpgradeLevel;
         const float CostGrowth = 1.38f;
+        const int LegacyLevels = 12;
+        const float LateCostGrowth = 1.10f;
         const int ReelBaseCost = 250;
         const int BoatBaseCost = 320;
         const int DepthBaseCost = 380;
@@ -59,7 +61,9 @@ namespace ScrapFishing.Core
         public static int CostAt(UpgradeKind kind, int level)
         {
             level = Mathf.Max(0, level);
-            return Mathf.Max(1, Mathf.RoundToInt(BaseCost(kind) * Mathf.Pow(CostGrowth, level)));
+            var early = Mathf.Min(level, LegacyLevels);
+            var late = level - early;
+            return Mathf.Max(1, Mathf.RoundToInt(BaseCost(kind) * Mathf.Pow(CostGrowth, early) * Mathf.Pow(LateCostGrowth, late)));
         }
 
         public static void MigrateSave()
@@ -169,7 +173,8 @@ namespace ScrapFishing.Core
                 return;
             }
 
-            PlayerPrefs.SetInt(DollarKey, Dollars + amount);
+            // 쿠폰을 여러 번 쓰면 int 최대값 근처까지 갈 수 있어서, 넘쳐 음수가 되지 않게 자른다.
+            PlayerPrefs.SetInt(DollarKey, (int)System.Math.Min(int.MaxValue, (long)Dollars + amount));
             PlayerPrefs.Save();
             Changed?.Invoke();
         }
