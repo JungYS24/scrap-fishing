@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -106,10 +106,26 @@
       var iosInstallTimer = 0;
       var fsUnlocked = false;
 
+      // 마지막으로 맞춘 화면 크기. 모바일 키보드가 올라오면 visualViewport 높이만 크게 줄어드는데,
+      // 그대로 따라가면 게임 캔버스 전체가 작아지므로 그동안은 이 크기를 유지한다.
+      var shellWidth = 0;
+      var shellHeight = 0;
+      var KEYBOARD_SHRINK = 0.85;
+
       function fitShell() {
         var vv = window.visualViewport;
         var width = Math.round(vv ? vv.width : window.innerWidth);
         var height = Math.round(vv ? vv.height : window.innerHeight);
+        // 너비는 그대로인데 높이만 15% 넘게 줄었다 = 키보드가 열린 상태. 크기는 그대로 두고, 페이지가 밀렸으면 되돌린다.
+        // 회전·너비 변화, 키보드가 닫혀 높이가 돌아온 경우는 아래에서 정상적으로 갱신한다.
+        if (shellHeight > 0 && Math.abs(width - shellWidth) <= 1 && height < shellHeight * KEYBOARD_SHRINK) {
+          if (window.scrollX || window.scrollY || (vv && (vv.offsetTop || vv.offsetLeft))) {
+            window.scrollTo(0, 0);
+          }
+          return;
+        }
+        shellWidth = width;
+        shellHeight = height;
         document.documentElement.style.setProperty("--app-width", width + "px");
         document.documentElement.style.setProperty("--app-height", height + "px");
         if (shell && vv) {

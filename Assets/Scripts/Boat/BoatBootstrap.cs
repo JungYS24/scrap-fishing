@@ -353,6 +353,18 @@ namespace ScrapFishing.Boat
             _canvasUi.PinDollarPanel();
             _market.SetDollarTarget(_canvasUi.DollarPanel);
             _market.BindSettings(OpenSettings);
+            _title.BindStorage(() => OpenTitleStorage(area.Area));
+        }
+
+        // 타이틀 보관함 버튼: 오리파를 거치지 않고 보관함만 연다. 닫으면 타이틀로 돌아온다.
+        void OpenTitleStorage(RectTransform area)
+        {
+            if (_market == null || _flow.Phase != GamePhase.Title)
+            {
+                return;
+            }
+
+            _market.OpenTitleInventory(area);
         }
 
         void OpenMarket()

@@ -39,6 +39,8 @@ namespace ScrapFishing.Gacha
         GachaResultView _result;
         GachaRefundPopup _refund;
         GachaInventoryView _inventory;
+        // 타이틀에서 바로 여는 보관함(오리파 화면 밖, area 바로 아래).
+        GachaInventoryView _titleInventory;
         GachaVideoView _video;
         GachaMachineData _lastMachine;
         readonly Dictionary<string, float> _refundRates = new Dictionary<string, float>();
@@ -140,6 +142,7 @@ namespace ScrapFishing.Gacha
             _result?.Relabel();
             _refund?.Relabel();
             _inventory?.Relabel();
+            _titleInventory?.Relabel();
         }
 
         public void Open()
@@ -219,14 +222,10 @@ namespace ScrapFishing.Gacha
             HideLegacy(bar, "Logo");
             HideLegacy(bar, "DollarPanel");
             // 오른쪽 위 끝은 설정 톱니(타이틀·HUD와 같은 버튼), 보관함·닫기는 그 왼쪽으로. 씬에 있던 버튼도 이 자리로 옮긴다.
-            var inventory = GachaUi.MakeButton(bar, "Inventory", string.Empty, InventoryMin, InventoryMax, Palette.NeonGreen, 22, OpenInventory);
-            GachaUi.Stretch((RectTransform)inventory.transform, InventoryMin, InventoryMax);
-            TextOneLine.Fit(GachaUi.LabelOf(inventory), 22, 12);
-            LocText.Bind(inventory, "ui.shop.storage_button");
+            CreateStorageButton(bar, "Inventory", InventoryMin, InventoryMax, OpenInventory);
             _close = GachaUi.MakeButton(bar, "Close", "X", CloseMin, CloseMax, Palette.Magenta, 28, Close);
             GachaUi.Stretch((RectTransform)_close.transform, CloseMin, CloseMax);
-            // 스킨: 보관함(초록)·닫기(분홍, 그림에 X가 있어 글자는 뺀다).
-            OripaLook.Button(inventory, "btn_storage", Palette.NeonGreen);
+            // 스킨: 닫기(분홍, 그림에 X가 있어 글자는 뺀다).
             if (OripaLook.Button(_close, "btn_close_x"))
             {
                 GachaUi.LabelOf(_close).text = string.Empty;
@@ -1098,6 +1097,17 @@ namespace ScrapFishing.Gacha
             return text.transform.parent.gameObject;
         }
 
+        // 보관함 버튼(초록 btn_storage 스킨, 글자 "보관함"/"Slot"). 오리파 상단과 타이틀이 같이 쓴다.
+        public static Button CreateStorageButton(RectTransform parent, string name, Vector2 min, Vector2 max, System.Action onClick)
+        {
+            var button = GachaUi.MakeButton(parent, name, string.Empty, min, max, Palette.NeonGreen, 22, onClick);
+            GachaUi.Stretch((RectTransform)button.transform, min, max);
+            TextOneLine.Fit(GachaUi.LabelOf(button), 22, 12);
+            LocText.Bind(button, "ui.shop.storage_button");
+            OripaLook.Button(button, "btn_storage", Palette.NeonGreen);
+            return button;
+        }
+
         void OpenInventory()
         {
             if (_flying || _confirm.IsOpen || _result.IsOpen || _refund.IsOpen)
@@ -1106,6 +1116,25 @@ namespace ScrapFishing.Gacha
             }
 
             _inventory.Show(_shop);
+        }
+
+        public bool TitleInventoryOpen => _titleInventory != null && _titleInventory.IsOpen;
+
+        // 타이틀의 보관함 버튼: 오리파 화면을 거치지 않고 보관함만 area 위에 띄운다. 닫으면 그대로 타이틀이 보인다.
+        // 장비·환원은 오리파 보관함과 같은 GachaShop을 쓰고, 달러 표시는 Progression.Changed로 바로 갱신된다.
+        public void OpenTitleInventory(RectTransform area)
+        {
+            if (_shop == null || area == null || IsOpen)
+            {
+                return;
+            }
+
+            if (_titleInventory == null)
+            {
+                _titleInventory = new GachaInventoryView(area, _ => { });
+            }
+
+            _titleInventory.Show(_shop);
         }
 
         void HandleInventoryRefund(int dollars)

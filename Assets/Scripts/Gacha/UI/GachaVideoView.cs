@@ -702,13 +702,10 @@ namespace ScrapFishing.Gacha
                 GachaUi.Panel(art, "Swatch", new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.8f), color);
             }
 
-            var name = GachaUi.Label(inner, "Name", nameSize, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.12f), new Vector2(0.97f, 0.3f), Palette.Text,
+            // 등급은 테두리 색으로 구분하므로 등급 글자는 두지 않고, 이름을 아래 칸 전체에 가운데 한 줄로 둔다.
+            var name = GachaUi.Label(inner, "Name", nameSize, TextAnchor.MiddleCenter, new Vector2(0.03f, 0.04f), new Vector2(0.97f, 0.28f), Palette.Text,
                 gear != null ? gear.DisplayName : "?");
-            name.resizeTextForBestFit = true;
-            name.resizeTextMinSize = 10;
-            name.resizeTextMaxSize = nameSize;
-            GachaUi.Label(inner, "Rarity", Mathf.Max(12, nameSize - 6), TextAnchor.MiddleCenter, new Vector2(0f, 0.01f), new Vector2(1f, 0.13f), color,
-                GachaUi.RarityLabel(rarity));
+            TextOneLine.Fit(name, nameSize, 9);
 
             if (rarity == ItemRarity.Synchro)
             {
@@ -754,14 +751,11 @@ namespace ScrapFishing.Gacha
                 OripaLook.Sparkles(rect, rarity == ItemRarity.Synchro ? Color.white : new Color(1f, 0.85f, 0.5f), rarity == ItemRarity.Synchro ? 7 : 5);
             }
 
-            // 이름판: 왼쪽 점 옆에 이름, 오른쪽에 등급 글자(작게).
-            // 이름판 안에서 이름(왼쪽)과 등급(오른쪽)이 겹치지 않게 칸을 나누고, 각자 한 줄로 줄여 넣는다.
-            var name = GachaUi.Label(rect, "Name", nameSize, TextAnchor.MiddleLeft, new Vector2(0.17f, 0.055f), new Vector2(0.68f, 0.2f), Palette.Text,
+            // 이름판: 등급은 카드 테두리 색과 아이콘 뒤 빛으로 구분하므로 등급 글자는 두지 않는다.
+            // 이름은 왼쪽 점 장식과 겹치지 않는 범위에서 좌우 대칭으로 넓히고 가운데 한 줄(넘치면 줄임).
+            var name = GachaUi.Label(rect, "Name", nameSize, TextAnchor.MiddleCenter, new Vector2(0.14f, 0.055f), new Vector2(0.86f, 0.2f), Palette.Text,
                 gear != null ? gear.DisplayName : "?");
             TextOneLine.Fit(name, nameSize, 9);
-            var label = GachaUi.Label(rect, "Rarity", Mathf.Max(11, nameSize / 2), TextAnchor.MiddleRight, new Vector2(0.69f, 0.055f), new Vector2(0.87f, 0.2f), color,
-                GachaUi.RarityLabel(rarity));
-            TextOneLine.Fit(label, Mathf.Max(11, nameSize / 2), 8);
             return rect;
         }
 

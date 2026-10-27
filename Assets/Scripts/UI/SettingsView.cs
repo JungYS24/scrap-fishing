@@ -577,7 +577,8 @@ namespace ScrapFishing.UI
             _couponGroup = _coupon.gameObject.AddComponent<CanvasGroup>();
             Clickable(GachaUi.Panel(_coupon, "Dim", Vector2.zero, Vector2.one, GachaUi.Dim, null, true), CloseCoupon);
 
-            _couponPanel = GachaUi.Panel(_coupon, "Panel", new Vector2(0.08f, 0.36f), new Vector2(0.92f, 0.64f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
+            // 모바일 키보드가 화면 아래 40~45%를 덮어도 입력칸·안내·버튼이 다 보이게 창을 화면 위쪽 절반에 둔다.
+            _couponPanel = GachaUi.Panel(_coupon, "Panel", new Vector2(0.08f, 0.58f), new Vector2(0.92f, 0.86f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
             LocText.Bind(GachaUi.Label(_couponPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.78f), new Vector2(0.95f, 0.96f), Palette.NeonGreen),
                 "ui.coupon.title");
             _couponInput = CreateInput(_couponPanel, new Vector2(0.08f, 0.5f), new Vector2(0.92f, 0.74f));
@@ -639,7 +640,11 @@ namespace ScrapFishing.UI
             _coupon.SetAsLastSibling();
             _coupon.gameObject.SetActive(true);
             ShowOverlay(_couponGroup, _couponPanel);
-            _couponInput.ActivateInputField();
+            // 모바일은 입력칸을 직접 눌렀을 때 키보드를 띄운다(사용자 터치 없이 포커스를 주면 브라우저가 막거나 화면이 밀린다).
+            if (!Application.isMobilePlatform)
+            {
+                _couponInput.ActivateInputField();
+            }
         }
 
         void CloseCoupon()
@@ -648,6 +653,9 @@ namespace ScrapFishing.UI
             {
                 return;
             }
+
+            // 확인·취소·바깥 탭 모두 여기로 온다. 입력칸 포커스를 풀어 모바일 키보드도 같이 닫는다.
+            _couponInput.DeactivateInputField();
 
             HideOverlay(_couponGroup, _couponPanel, () => _coupon.gameObject.SetActive(false));
         }

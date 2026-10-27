@@ -2,6 +2,7 @@ using System;
 using DG.Tweening;
 using ScrapFishing.Audio;
 using ScrapFishing.Core;
+using ScrapFishing.Gacha;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +17,10 @@ namespace ScrapFishing.UI
         public static string StartLabel => Loc.T("ui.title.start");
         public const string OripaButtonName = "OripaButton";
         public const string VersionTextName = "VersionText";
+        public const string StorageButtonName = "StorageButton";
+        // 설정 톱니(0.86~0.98 × 0.91~0.98) 바로 왼쪽, 같은 높이·같은 크기, 0.01 간격.
+        static readonly Vector2 StorageMin = new Vector2(0.73f, 0.91f);
+        static readonly Vector2 StorageMax = new Vector2(0.85f, 0.98f);
         // 출항 버튼과 오리파 버튼 사이 간격(화면 높이 비율).
         public const float MarketGap = 0.02f;
         const float PulseHalf = 0.6f;
@@ -33,6 +38,7 @@ namespace ScrapFishing.UI
         public Button StartButton => startButton;
         public Button MarketButton => oripaButton;
         Action _onSettings;
+        Action _onStorage;
         RectTransform _marketRect;
         Vector3 _marketScale = Vector3.one;
         UiFxSettings _settings;
@@ -86,6 +92,16 @@ namespace ScrapFishing.UI
             if (transform.Find("SettingsButton") == null)
             {
                 SettingsView.CreateGearButton((RectTransform)transform, new Vector2(0.86f, 0.91f), new Vector2(0.98f, 0.98f), () => _onSettings?.Invoke());
+            }
+        }
+
+        // 설정 톱니 왼쪽에 보관함 버튼(오리파 상단 보관함과 같은 모양). 씬에 없으면 만든다.
+        public void BindStorage(Action onStorage)
+        {
+            _onStorage = onStorage;
+            if (transform.Find(StorageButtonName) == null)
+            {
+                GachaShopView.CreateStorageButton((RectTransform)transform, StorageButtonName, StorageMin, StorageMax, () => _onStorage?.Invoke());
             }
         }
 
