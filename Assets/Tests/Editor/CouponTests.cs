@@ -14,6 +14,15 @@ namespace ScrapFishing.Tests
         }
 
         [Test]
+        public void Fish_Gives500000Once()
+        {
+            Assert.AreEqual(500000, SettingsView.CouponReward("fish"));
+            Assert.AreEqual(500000, SettingsView.CouponReward(" FISH "), "대소문자·앞뒤 공백 무시");
+            Assert.AreEqual(0, SettingsView.CouponReward("fish", 0, true), "이미 받았으면 0");
+            Assert.AreEqual(9999999, SettingsView.CouponReward("smtm", 0, true), "smtm은 fish 사용 여부와 무관");
+        }
+
+        [Test]
         public void WrongCode_GivesNothing()
         {
             Assert.AreEqual(0, SettingsView.CouponReward(""));

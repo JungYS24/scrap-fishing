@@ -347,6 +347,18 @@ namespace ScrapFishing.Boat
             }
 
             _hook.Tint(DepthZone.MarkerColor(DepthZone.FromWorldY(hook.y)));
+            // 내려가는 동안은 끌어당기지 않고 기본 반경으로만 줍는다. 강화·장비로 커진 흡착 반경은 올라올 때만 쓴다.
+            // (반경이 크면 얕은 곳의 낮은 등급을 피할 수 없어 깊은 곳에 닿기 전에 보관 한도가 차 버린다.)
+            if (_descending)
+            {
+                if (!_settling)
+                {
+                    _spawner.CollectNear(hook, collectRadius, _session, _collector);
+                }
+
+                return;
+            }
+
             var lureScale = GearBonuses.Scale(GearStat.CatchRadiusPercent);
             _spawner.AttractToward(hook, attractRadius * lureScale, attractSpeed);
             if (!_settling)

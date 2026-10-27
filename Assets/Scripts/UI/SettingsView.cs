@@ -60,6 +60,10 @@ namespace ScrapFishing.UI
         // 쿠폰 코드(대소문자·앞뒤 공백 무시)와 받는 달러. 몇 번이든 쓸 수 있다.
         public const string CouponCode = "smtm";
         public const int CouponDollars = 9999999;
+        // 발표용 쿠폰. 저장 하나당 한 번만 받는다(쓴 기록은 PlayerPrefs, reset 쿠폰이면 같이 지워진다).
+        public const string EventCouponCode = "fish";
+        public const int EventCouponDollars = 500000;
+        public const string EventCouponUsedKey = "CouponUsed_fish";
 
         RectTransform _coupon;
         CanvasGroup _couponGroup;
@@ -108,8 +112,10 @@ namespace ScrapFishing.UI
             }
 
             BuildHeader();
-            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, Art(58f, 165f), Art(436f, 125f), GachaUi.Muted, Loc.T("ui.settings.volume"));
+            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, Art(58f, 165f), Art(372f, 125f), GachaUi.Muted, Loc.T("ui.settings.volume"));
             BuildSoundButton(Art(452f, 177f), Art(516f, 117f));
+            // 음소거 바로 왼쪽(같은 크기, 8px 간격). 모바일 전체화면일 때만 보인다.
+            BuildFullscreenButton(Art(380f, 177f), Art(444f, 117f));
             for (var i = 0; i < Channels.Length; i++)
             {
                 var top = 172f + i * 102f;
@@ -227,6 +233,18 @@ namespace ScrapFishing.UI
             // HUD 음소거 버튼과 같은 이름(SoundToggle)으로 두고, 글자 대신 스피커 그림만 바꾼다.
             var button = IconButton("SoundToggle", min, max, _skin.soundOn, () => AudioManager.Ensure().ToggleSound(), false);
             button.gameObject.AddComponent<SettingsSoundButton>().Bind((Image)button.targetGraphic, _skin.soundOn, _skin.soundOff);
+        }
+
+        void BuildFullscreenButton(Vector2 min, Vector2 max)
+        {
+            var sprite = Resources.Load<Sprite>(FullscreenExitButton.IconResource);
+            if (sprite == null)
+            {
+                return;
+            }
+
+            var button = IconButton("FullscreenExit", min, max, sprite, FullscreenExitButton.Exit, true);
+            button.gameObject.AddComponent<FullscreenExitButton>().Bind((Image)button.targetGraphic, button);
         }
 
         Button IconButton(string name, Vector2 min, Vector2 max, Sprite sprite, Action onClick, bool tapSound)
@@ -670,10 +688,11 @@ namespace ScrapFishing.UI
                 return;
             }
 
-            var dollars = CouponReward(_couponInput.text, Progression.Dollars);
+            var eventUsed = PlayerPrefs.GetInt(EventCouponUsedKey, 0) != 0;
+            var dollars = CouponReward(_couponInput.text, Progression.Dollars, eventUsed);
             if (dollars <= 0)
             {
-                _couponMessage.text = Loc.T("ui.coupon.invalid");
+                _couponMessage.text = Loc.T(eventUsed && IsEventCoupon(_couponInput.text) ? "ui.coupon.used" : "ui.coupon.invalid");
                 _couponMessage.color = Palette.Magenta;
                 AudioManager.Ensure().PlayUpgradeDenied();
                 if (_couponSkinned)
@@ -689,6 +708,11 @@ namespace ScrapFishing.UI
                 return;
             }
 
+            if (IsEventCoupon(_couponInput.text))
+            {
+                PlayerPrefs.SetInt(EventCouponUsedKey, 1);
+            }
+
             Progression.AddDollars(dollars);
             AudioManager.Ensure().PlayUpgradeBuy();
             CloseCoupon();
@@ -696,14 +720,29 @@ namespace ScrapFishing.UI
         }
 
         // 쿠폰으로 받을 달러. 틀린 코드면 0. 달러가 int 최대값을 넘지 않게 자른다.
-        public static int CouponReward(string code, int currentDollars = 0)
+        // eventUsed: 발표용 쿠폰(fish)을 이미 받았으면 그 코드는 0.
+        public static int CouponReward(string code, int currentDollars = 0, bool eventUsed = false)
         {
-            if (!string.Equals((code ?? string.Empty).Trim(), CouponCode, StringComparison.OrdinalIgnoreCase))
+            int reward;
+            if (string.Equals((code ?? string.Empty).Trim(), CouponCode, StringComparison.OrdinalIgnoreCase))
+            {
+                reward = CouponDollars;
+            }
+            else if (IsEventCoupon(code) && !eventUsed)
+            {
+                reward = EventCouponDollars;
+            }
+            else
             {
                 return 0;
             }
 
-            return (int)Math.Min(CouponDollars, (long)int.MaxValue - Math.Max(0, currentDollars));
+            return (int)Math.Min(reward, (long)int.MaxValue - Math.Max(0, currentDollars));
+        }
+
+        public static bool IsEventCoupon(string code)
+        {
+            return string.Equals((code ?? string.Empty).Trim(), EventCouponCode, StringComparison.OrdinalIgnoreCase);
         }
 
         void ShowToast(string message)

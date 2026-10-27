@@ -139,6 +139,7 @@ ui.coupon.title,쿠폰 입력,Enter Coupon
 ui.coupon.hint,쿠폰 코드를 입력하세요,Enter a coupon code
 ui.coupon.placeholder,코드,Code
 ui.coupon.invalid,올바르지 않은 쿠폰이에요,Invalid coupon code
+ui.coupon.used,이미 받은 쿠폰이에요,Coupon already redeemed
 ui.coupon.applied,쿠폰 적용 +{0},Coupon applied +{0}
 ui.credits.made_by,제작,Created by
 ui.credits.made_by_body,"정윤성 (2023137028)
