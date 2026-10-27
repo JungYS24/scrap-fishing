@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace ScrapFishing.UI
 {
-    // 설정창: 음량 3종(전체·배경음·효과음), 기본값, 언어(준비 중), 크레딧, 버전.
+    // 설정창: 음량 3종(전체·배경음·효과음), 기본값, 언어(한↔영 즉시 전환), 크레딧, 버전.
     // 타이틀·결과 화면과 플레이 중 HUD(보트·잠수)의 톱니 버튼으로 연다. 겉모습은 Resources/UI/SettingsSkin 스프라이트(9-slice)로 그리고,
     // 스킨이 없으면 오리파 화면(GachaUi)과 같은 단색 톤으로 그린다.
     // 배치 값은 스킨 시안(560×820)의 픽셀 위치를 패널 비율로 옮긴 것이다(패널 크기·위치는 그대로).
@@ -33,24 +33,23 @@ namespace ScrapFishing.UI
         const float MutedRowAlpha = 0.4f;
         const float OpenDuration = 0.2f;
         const float CloseDuration = 0.15f;
-        const string LanguageLabel = "언어: 한국어";
         const string GearIconResource = "UI/icon_settings";
 
         static readonly VolumeChannel[] Channels = { VolumeChannel.Master, VolumeChannel.Bgm, VolumeChannel.Sfx };
-        static readonly string[] ChannelNames = { "전체 음량", "배경음", "효과음" };
+        static readonly string[] ChannelKeys = { "ui.settings.vol.master", "ui.settings.vol.bgm", "ui.settings.vol.sfx" };
 
-        // 크레딧 항목. 내용이 빈 항목은 화면에 나오지 않는다(출처를 확인하면 채운다).
+        // 크레딧 항목(제목 키, 내용 키 또는 번역하지 않는 고유 이름). 내용이 빈 항목은 화면에 나오지 않는다(출처를 확인하면 채운다).
         static readonly string[,] Credits =
         {
-            { "제작", "정윤성 (2023137028)\n2026-2 네트워크프로그래밍 프로젝트" },
-            { "엔진", "Unity 6" },
-            { "트윈", "DOTween Pro (Demigiant)" },
-            { "폰트", "갈무리 Galmuri11 · Galmuri14\n© Lee Minseo (quiple)\nSIL Open Font License 1.1" },
-            { "아트", "Retro Diffusion으로 생성한 도트 에셋" },
-            { "잠수 배경", "Underwater Diving 에셋\nLuis Zuno (@ansimuz) · 퍼블릭 도메인" },
-            { "효과음 · 타이틀 BGM", "직접 제작" },
-            { "플레이 BGM 「Neo-Tokyo Sludge」", "" },
-            { "UI 패널 아트", "" }
+            { "ui.credits.made_by", "ui.credits.made_by_body" },
+            { "ui.credits.engine", "Unity 6" },
+            { "ui.credits.tween", "DOTween Pro (Demigiant)" },
+            { "ui.credits.font", "ui.credits.font_body" },
+            { "ui.credits.art", "ui.credits.art_body" },
+            { "ui.credits.dive_bg", "ui.credits.dive_bg_body" },
+            { "ui.credits.sfx", "ui.credits.sfx_body" },
+            { "ui.credits.play_bgm", "" },
+            { "ui.credits.ui_art", "" }
         };
 
         static Sprite _gear;
@@ -109,7 +108,7 @@ namespace ScrapFishing.UI
             }
 
             BuildHeader();
-            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, Art(58f, 165f), Art(436f, 125f), GachaUi.Muted, "음량");
+            _volumeHeader = GachaUi.Label(_panel, "VolumeHeader", 16, TextAnchor.MiddleLeft, Art(58f, 165f), Art(436f, 125f), GachaUi.Muted, Loc.T("ui.settings.volume"));
             BuildSoundButton(Art(452f, 177f), Art(516f, 117f));
             for (var i = 0; i < Channels.Length; i++)
             {
@@ -117,10 +116,11 @@ namespace ScrapFishing.UI
                 BuildRow(i, Art(56f, top + 78f), Art(504f, top));
             }
 
-            WideButton("Defaults", "기본값으로", 478f, 534f, Palette.Cyan, Skinned ? _skin.wideCyan : null, ResetDefaults);
-            WideButton("Language", LanguageLabel, 543f, 600f, GachaUi.Muted, Skinned ? _skin.wideGray : null, () => ShowToast("준비 중입니다"));
-            WideButton("Credits", "크레딧", 610f, 667f, Palette.Gold, Skinned ? _skin.wideYellow : null, OpenCredits);
-            WideButton("Coupon", "쿠폰", 676f, 733f, Palette.NeonGreen, Skinned ? _skin.wideGreen : null, OpenCoupon);
+            WideButton("Defaults", "ui.settings.reset", 478f, 534f, Palette.Cyan, Skinned ? _skin.wideCyan : null, ResetDefaults);
+            // 누르면 창 없이 바로 한↔영 전환. 버튼 글자도 바뀐 언어로("Language: English") 다시 쓰인다.
+            WideButton("Language", "ui.settings.language", 543f, 600f, GachaUi.Muted, Skinned ? _skin.wideGray : null, Loc.Toggle);
+            WideButton("Credits", "ui.settings.credits", 610f, 667f, Palette.Gold, Skinned ? _skin.wideYellow : null, OpenCredits);
+            WideButton("Coupon", "ui.settings.coupon", 676f, 733f, Palette.NeonGreen, Skinned ? _skin.wideGreen : null, OpenCoupon);
             BuildFooter();
 
             var toast = GachaUi.Panel(_panel, "Toast", new Vector2(0.12f, 0.085f), new Vector2(0.88f, 0.16f), GachaUi.Inset, Palette.NeonGreen);
@@ -132,6 +132,7 @@ namespace ScrapFishing.UI
             BuildCoupon();
             VolumeSettings.Changed += Sync;
             AudioManager.SoundChanged += Sync;
+            Loc.Changed += Sync;
             _root.gameObject.SetActive(false);
         }
 
@@ -139,6 +140,7 @@ namespace ScrapFishing.UI
         {
             VolumeSettings.Changed -= Sync;
             AudioManager.SoundChanged -= Sync;
+            Loc.Changed -= Sync;
         }
 
         public void Open()
@@ -204,12 +206,13 @@ namespace ScrapFishing.UI
             {
                 var bar = GachaUi.Panel(_panel, "Header", min, max, Color.white);
                 SlicedFit.Apply(bar, _skin.headerBar);
-                GachaUi.Label(bar.transform, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.06f, 0f), new Vector2(0.96f, 1f), Palette.Text, "설정");
+                LocText.Bind(GachaUi.Label(bar.transform, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.06f, 0f), new Vector2(0.96f, 1f), Palette.Text),
+                    "ui.settings.title");
                 IconButton("Close", closeMin, closeMax, _skin.close, Close, true);
                 return;
             }
 
-            GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleLeft, min, max, Palette.Text, "설정");
+            LocText.Bind(GachaUi.Label(_panel, "Title", 28, TextAnchor.MiddleLeft, min, max, Palette.Text), "ui.settings.title");
             GachaUi.MakeButton(_panel, "Close", "X", closeMin, closeMax, Palette.Magenta, 28, Close);
         }
 
@@ -249,9 +252,9 @@ namespace ScrapFishing.UI
         }
 
         // 넓은 버튼 4개: 스킨이면 9-slice 그림을 깔고 기존 테두리 선은 끈다. 글자 색은 버튼 테두리 색(accent).
-        void WideButton(string name, string label, float top, float bottom, Color accent, Sprite sprite, Action onClick)
+        void WideButton(string name, string key, float top, float bottom, Color accent, Sprite sprite, Action onClick)
         {
-            var button = GachaUi.MakeButton(_panel, name, label, Art(55f, bottom), Art(505f, top), accent, 22, onClick);
+            var button = LocText.Bind(GachaUi.MakeButton(_panel, name, string.Empty, Art(55f, bottom), Art(505f, top), accent, 22, onClick), key);
             if (sprite == null)
             {
                 return;
@@ -285,12 +288,12 @@ namespace ScrapFishing.UI
             {
                 var box = GachaUi.Panel(_panel, "Footer", min, max, Color.white);
                 SlicedFit.Apply(box, _skin.footerBox);
-                GachaUi.Label(box.transform, "Version", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, GachaUi.Muted, TitleView.VersionLabel);
+                LocText.Bind(GachaUi.Label(box.transform, "Version", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, GachaUi.Muted), () => TitleView.VersionLabel);
                 return;
             }
 
-            GachaUi.Label(_panel, "Version", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, min.y), new Vector2(0.95f, max.y), GachaUi.Muted,
-                TitleView.VersionLabel);
+            LocText.Bind(GachaUi.Label(_panel, "Version", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, min.y), new Vector2(0.95f, max.y), GachaUi.Muted),
+                () => TitleView.VersionLabel);
         }
 
         // 윗줄은 이름과 수치를 한 칸에("전체 음량  40", 수치는 초록), 아랫줄은 손가락으로 끌기 쉬운 넓은 슬라이더.
@@ -409,7 +412,7 @@ namespace ScrapFishing.UI
         // "전체 음량  40": 이름 바로 옆에 수치를 초록으로 붙인다.
         public static string VolumeLabel(int index, int value)
         {
-            return ChannelNames[index] + "  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + value + "</color>";
+            return Loc.T(ChannelKeys[index]) + "  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + value + "</color>";
         }
 
         // 음소거는 슬라이더 값과 별개로 동작한다. 음소거 중이면 값은 그대로 두고 줄을 흐리게, 머리글에 표시한다.
@@ -418,7 +421,7 @@ namespace ScrapFishing.UI
             var muted = !AudioManager.Ensure().SoundOn;
             if (_volumeHeader != null)
             {
-                _volumeHeader.text = muted ? "음량 · 음소거 중" : "음량";
+                _volumeHeader.text = Loc.T(muted ? "ui.settings.volume_muted" : "ui.settings.volume");
                 _volumeHeader.color = muted ? Palette.Magenta : GachaUi.Muted;
             }
 
@@ -457,7 +460,7 @@ namespace ScrapFishing.UI
         {
             VolumeSettings.ResetDefaults();
             Sync();
-            ShowToast("기본값으로 되돌렸어요");
+            ShowToast(Loc.T("ui.settings.reset_done"));
         }
 
         void BuildCredits()
@@ -468,7 +471,8 @@ namespace ScrapFishing.UI
 
             var creditsImage = GachaUi.Panel(_credits, "Panel", new Vector2(0.06f, 0.1f), new Vector2(0.94f, 0.9f), GachaUi.Card, Palette.Gold, true);
             _creditsPanel = creditsImage.rectTransform;
-            var creditsTitle = GachaUi.Label(_creditsPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.98f), Palette.Gold, "크레딧");
+            var creditsTitle = GachaUi.Label(_creditsPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.98f), Palette.Gold);
+            LocText.Bind(creditsTitle, "ui.settings.credits");
             // 오리파 스킨: popup_gold_tall(제목은 노란 바 위 어두운 글자), 항목 제목은 section_label 칸 안, 오른쪽 스크롤 막대, 닫기 btn_gray_flat.
             var skinned = OripaLook.Apply(creditsImage, "popup_gold_tall");
             if (skinned)
@@ -482,6 +486,7 @@ namespace ScrapFishing.UI
             {
                 var head = Credits[i, 0];
                 var body = Credits[i, 1];
+                var plain = skinned;
                 if (string.IsNullOrEmpty(body))
                 {
                     continue;
@@ -493,24 +498,34 @@ namespace ScrapFishing.UI
                     GachaUi.Height(row, 30f);
                     var plate = OripaLook.Layer(row, "Label", "section_label", new Vector2(0.15f, 0.04f), new Vector2(0.85f, 0.96f));
                     var headText = GachaUi.Label(plate.transform, "Text", 16, TextAnchor.MiddleCenter, new Vector2(0.06f, 0f), new Vector2(0.94f, 1f),
-                        new Color(0.03f, 0.12f, 0.06f, 1f), head);
+                        new Color(0.03f, 0.12f, 0.06f, 1f));
                     TextOneLine.Fit(headText, 16, 10);
+                    LocText.Bind(headText, head);
                 }
 
-                var entry = GachaUi.Label(list, "Credit" + i, 22, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, Palette.Text,
-                    skinned ? body : "<color=" + GachaUi.Hex(Palette.NeonGreen) + "><size=16>" + head + "</size></color>\n" + body);
+                var entry = GachaUi.Label(list, "Credit" + i, 22, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, Palette.Text);
+                LocText.Bind(entry, () => plain
+                    ? CreditText(body)
+                    : "<color=" + GachaUi.Hex(Palette.NeonGreen) + "><size=16>" + Loc.T(head) + "</size></color>\n" + CreditText(body));
                 entry.horizontalOverflow = HorizontalWrapMode.Wrap;
                 entry.verticalOverflow = VerticalWrapMode.Overflow;
                 entry.lineSpacing = 1.1f;
             }
 
-            var closeCredits = GachaUi.MakeButton(_creditsPanel, "Close", "닫기", new Vector2(0.25f, 0.03f), new Vector2(0.75f, 0.11f), GachaUi.Muted, 22, CloseCredits);
+            var closeCredits = LocText.Bind(GachaUi.MakeButton(_creditsPanel, "Close", string.Empty, new Vector2(0.25f, 0.03f), new Vector2(0.75f, 0.11f), GachaUi.Muted, 22,
+                CloseCredits), "ui.common.close");
             if (skinned)
             {
                 OripaLook.Button(closeCredits, "btn_gray_flat", new Color(0.08f, 0.09f, 0.12f, 1f));
                 AddScrollbar(_creditsPanel, _creditsScroll, new Vector2(0.915f, 0.15f), new Vector2(0.945f, 0.875f));
             }
             _credits.gameObject.SetActive(false);
+        }
+
+        // 내용 칸: 번역 키면 번역, 아니면("Unity 6" 같은 고유 이름) 그대로.
+        static string CreditText(string body)
+        {
+            return Loc.Or(body, body);
         }
 
         // 스크롤 막대: scroll_track 안에서 scroll_thumb가 움직인다.
@@ -563,12 +578,15 @@ namespace ScrapFishing.UI
             Clickable(GachaUi.Panel(_coupon, "Dim", Vector2.zero, Vector2.one, GachaUi.Dim, null, true), CloseCoupon);
 
             _couponPanel = GachaUi.Panel(_coupon, "Panel", new Vector2(0.08f, 0.36f), new Vector2(0.92f, 0.64f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
-            GachaUi.Label(_couponPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.78f), new Vector2(0.95f, 0.96f), Palette.NeonGreen, "쿠폰 입력");
+            LocText.Bind(GachaUi.Label(_couponPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.78f), new Vector2(0.95f, 0.96f), Palette.NeonGreen),
+                "ui.coupon.title");
             _couponInput = CreateInput(_couponPanel, new Vector2(0.08f, 0.5f), new Vector2(0.92f, 0.74f));
             _couponMessage = GachaUi.Label(_couponPanel, "Message", 16, TextAnchor.MiddleCenter, new Vector2(0.05f, 0.34f), new Vector2(0.95f, 0.48f), GachaUi.Muted,
-                "쿠폰 코드를 입력하세요");
-            var cancel = GachaUi.MakeButton(_couponPanel, "Cancel", "취소", new Vector2(0.08f, 0.07f), new Vector2(0.46f, 0.3f), GachaUi.Muted, 22, CloseCoupon);
-            var confirm = GachaUi.MakeButton(_couponPanel, "Confirm", "확인", new Vector2(0.54f, 0.07f), new Vector2(0.92f, 0.3f), Palette.NeonGreen, 22, RedeemCoupon);
+                Loc.T("ui.coupon.hint"));
+            var cancel = LocText.Bind(GachaUi.MakeButton(_couponPanel, "Cancel", string.Empty, new Vector2(0.08f, 0.07f), new Vector2(0.46f, 0.3f), GachaUi.Muted, 22,
+                CloseCoupon), "ui.common.cancel");
+            var confirm = LocText.Bind(GachaUi.MakeButton(_couponPanel, "Confirm", string.Empty, new Vector2(0.54f, 0.07f), new Vector2(0.92f, 0.3f), Palette.NeonGreen, 22,
+                RedeemCoupon), "ui.common.confirm");
             // 오리파 스킨: popup_green(제목은 초록 바 위 어두운 글자), 입력칸 input_field, 버튼 btn_outline_gray / btn_outline_green.
             _couponSkinned = OripaLook.Apply(_couponPanel.GetComponent<Image>(), "popup_green");
             if (_couponSkinned)
@@ -592,7 +610,8 @@ namespace ScrapFishing.UI
             var text = GachaUi.Label(box.transform, "Text", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f), Palette.Text);
             text.supportRichText = false;
             var placeholder = GachaUi.Label(box.transform, "Placeholder", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0f), new Vector2(0.96f, 1f),
-                GachaUi.Disabled, "코드");
+                GachaUi.Disabled);
+            LocText.Bind(placeholder, "ui.coupon.placeholder");
             var input = box.gameObject.AddComponent<InputField>();
             input.targetGraphic = box;
             input.textComponent = text;
@@ -615,7 +634,7 @@ namespace ScrapFishing.UI
         {
             _couponInput.text = string.Empty;
             SetCouponError(false);
-            _couponMessage.text = "쿠폰 코드를 입력하세요";
+            _couponMessage.text = Loc.T("ui.coupon.hint");
             _couponMessage.color = GachaUi.Muted;
             _coupon.SetAsLastSibling();
             _coupon.gameObject.SetActive(true);
@@ -646,7 +665,7 @@ namespace ScrapFishing.UI
             var dollars = CouponReward(_couponInput.text, Progression.Dollars);
             if (dollars <= 0)
             {
-                _couponMessage.text = "올바르지 않은 쿠폰이에요";
+                _couponMessage.text = Loc.T("ui.coupon.invalid");
                 _couponMessage.color = Palette.Magenta;
                 AudioManager.Ensure().PlayUpgradeDenied();
                 if (_couponSkinned)
@@ -665,7 +684,7 @@ namespace ScrapFishing.UI
             Progression.AddDollars(dollars);
             AudioManager.Ensure().PlayUpgradeBuy();
             CloseCoupon();
-            ShowToast("쿠폰 적용 +" + GachaUi.Money(dollars));
+            ShowToast(Loc.F("ui.coupon.applied", GachaUi.Money(dollars)));
         }
 
         // 쿠폰으로 받을 달러. 틀린 코드면 0. 달러가 int 최대값을 넘지 않게 자른다.

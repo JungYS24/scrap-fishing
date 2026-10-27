@@ -37,7 +37,8 @@ namespace ScrapFishing.Data
         [SerializeField] GameObject prefab;
 
         public string Id => id;
-        public string DisplayName => displayName;
+        // 화면 이름은 번역 표(scrap.<id>.name)를 먼저 보고, 없으면 임포트한 이름 그대로.
+        public string DisplayName => ScrapFishing.Core.Loc.Or("scrap." + id + ".name", displayName);
         public ItemCategory Category => category;
         public ItemRarity Rarity => rarity;
         public string Zone => zone;

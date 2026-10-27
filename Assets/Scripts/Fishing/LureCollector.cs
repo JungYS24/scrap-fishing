@@ -456,7 +456,7 @@ namespace ScrapFishing.Fishing
                     _session.AddSettledCatch(item.View.Definition, item.View.data, pos, out var bonusChip, out var bonusGold);
                     chip += bonusChip;
                     gold += bonusGold;
-                    Fx.FloatText(pos + Vector3.up * 0.3f, "+1 보너스", Palette.NeonGreen);
+                    Fx.FloatText(pos + Vector3.up * 0.3f, Loc.T("ui.hud.bonus_plus1"), Palette.NeonGreen);
                 }
             }
 

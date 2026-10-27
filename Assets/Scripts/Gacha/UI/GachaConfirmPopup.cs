@@ -14,7 +14,7 @@ namespace ScrapFishing.Gacha
     // 화면 틀은 씬에 있을 수 있어(Reuse) 배치는 여기서 다시 맞춘다.
     public sealed class GachaConfirmPopup
     {
-        public const string Disclaimer = "표시된 확률은 이 배너 기준이며, 천장 보정이 적용되면 레전드 확률이 올라갑니다";
+        public static string Disclaimer => Loc.T("ui.confirm.disclaimer");
 
         readonly RectTransform _root;
         readonly CanvasGroup _group;
@@ -42,6 +42,7 @@ namespace ScrapFishing.Gacha
         readonly Text _after;
         readonly Image _afterBox;
         GachaBanner _banner;
+        GachaShop _shop;
         int _count;
 
         public bool IsOpen => _root.gameObject.activeSelf;
@@ -104,11 +105,12 @@ namespace ScrapFishing.Gacha
             _balance = Place(GachaUi.Label(_panel, "Balance", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.155f), new Vector2(0.96f, 0.212f), Palette.Text),
                 new Vector2(0.04f, 0.155f), new Vector2(0.96f, 0.212f));
             _warning = Place(GachaUi.Label(_panel, "Warning", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.152f), Palette.Magenta,
-                "달러가 부족합니다. 출항해서 벌어 오세요!"), new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.152f));
+                BlockText(BannerBlock.NoDollars)), new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.152f));
 
-            Place((RectTransform)GachaUi.MakeButton(_panel, "Cancel", "취소", new Vector2(0.05f, 0.02f), new Vector2(0.4f, 0.1f), GachaUi.Muted, 22, Hide).transform,
-                new Vector2(0.05f, 0.02f), new Vector2(0.4f, 0.1f));
-            _confirm = GachaUi.MakeButton(_panel, "Confirm", "뽑기", new Vector2(0.44f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, Confirm);
+            var cancel = GachaUi.MakeButton(_panel, "Cancel", string.Empty, new Vector2(0.05f, 0.02f), new Vector2(0.4f, 0.1f), GachaUi.Muted, 22, Hide);
+            Place((RectTransform)cancel.transform, new Vector2(0.05f, 0.02f), new Vector2(0.4f, 0.1f));
+            LocText.Bind(cancel, "ui.common.cancel");
+            _confirm = GachaUi.MakeButton(_panel, "Confirm", Loc.T("ui.confirm.pull"), new Vector2(0.44f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, Confirm);
             Place((RectTransform)_confirm.transform, new Vector2(0.44f, 0.02f), new Vector2(0.95f, 0.1f));
             // "$87,000로 뽑기 / 3% 할인"이 버튼 밖으로 넘치지 않게 두 줄 + 자동 축소(최소 16px).
             var confirmLabel = GachaUi.LabelOf(_confirm);
@@ -167,7 +169,28 @@ namespace ScrapFishing.Gacha
         public void Show(GachaShop shop, GachaBanner banner, int count)
         {
             _banner = banner;
+            _shop = shop;
             _count = count;
+            Fill(shop, banner, count);
+            _root.SetAsLastSibling();
+            _root.gameObject.SetActive(true);
+            _group.alpha = 0f;
+            _group.DOKill(false);
+            _group.DOFade(1f, 0.15f).SetUpdate(true).SetLink(_root.gameObject);
+            Fx.Pop(_panel);
+        }
+
+        // 열려 있는 동안 언어가 바뀌면 같은 배너·횟수로 글자를 다시 채운다.
+        public void Relabel()
+        {
+            if (IsOpen && _banner != null && _shop != null)
+            {
+                Fill(_shop, _banner, _count);
+            }
+        }
+
+        void Fill(GachaShop shop, GachaBanner banner, int count)
+        {
             var cost = GachaShop.CostOf(banner, count);
             var balance = shop.Balance;
             var afford = balance >= cost;
@@ -223,8 +246,8 @@ namespace ScrapFishing.Gacha
 
             _disclaimer.text = DisclaimerFor(banner);
             var afterColor = afford ? Palette.Text : Palette.Hazard;
-            _balance.text = "잔액 " + GachaUi.Money(balance) + "  →  <color=" + GachaUi.Hex(afterColor) + ">"
-                + (afford ? GachaUi.Money(balance - cost) : "-" + GachaUi.Money(cost - balance)) + "</color>";
+            _balance.text = Loc.F("ui.confirm.balance", GachaUi.Money(balance), "<color=" + GachaUi.Hex(afterColor) + ">"
+                + (afford ? GachaUi.Money(balance - cost) : "-" + GachaUi.Money(cost - balance)) + "</color>");
             if (_skinned)
             {
                 _before.text = GachaUi.Money(balance);
@@ -241,17 +264,12 @@ namespace ScrapFishing.Gacha
             {
                 var discount = GachaShop.DiscountPercent(banner, count);
                 label.text = cost > 0
-                    ? GachaUi.Money(cost) + "로 뽑기" + (discount > 0 ? "\n<size=14><color=" + GachaUi.Hex(Palette.Gold) + ">" + discount + "% 할인</color></size>" : string.Empty)
-                    : "무료로 뽑기";
+                    ? Loc.F("ui.confirm.pull_for", GachaUi.Money(cost))
+                        + (discount > 0 ? "\n<size=14><color=" + GachaUi.Hex(Palette.Gold) + ">" + Loc.F("ui.confirm.discount", discount) + "</color></size>" : string.Empty)
+                    : Loc.T("ui.confirm.pull_free");
             }
 
             GachaUi.SetEnabled(_confirm, block == BannerBlock.None, Palette.NeonGreen);
-            _root.SetAsLastSibling();
-            _root.gameObject.SetActive(true);
-            _group.alpha = 0f;
-            _group.DOKill(false);
-            _group.DOFade(1f, 0.15f).SetUpdate(true).SetLink(_root.gameObject);
-            Fx.Pop(_panel);
         }
 
         public void Hide()
@@ -262,7 +280,7 @@ namespace ScrapFishing.Gacha
 
         public static string CountLabel(int count)
         {
-            return count <= 1 ? "1회" : count + "연";
+            return count <= 1 ? Loc.T("ui.common.pull_once") : Loc.F("ui.common.pull_n", count);
         }
 
         static string BannerCaption(GachaShop shop, GachaBanner banner)
@@ -272,7 +290,7 @@ namespace ScrapFishing.Gacha
                 case BannerType.Pickup:
                     return "PICK UP · " + GachaUi.SlotLabel(banner.Machine.Slot);
                 case BannerType.Festival:
-                    return "FESTIVAL · 전체 머신";
+                    return Loc.T("ui.confirm.caption_festival");
                 case BannerType.Daily:
                     return "FREE · " + DailyMachineName(shop, banner);
                 default:
@@ -283,7 +301,7 @@ namespace ScrapFishing.Gacha
         public static string DailyMachineName(GachaShop shop, GachaBanner banner)
         {
             var machine = shop.DailyMachine(banner);
-            return machine != null ? machine.DisplayName : "전체 머신";
+            return machine != null ? machine.DisplayName : Loc.T("ui.confirm.all_machines");
         }
 
         // 확률 안내 문구. 데일리·축제는 천장 보정 대신 확정 조건을 적는다.
@@ -292,23 +310,24 @@ namespace ScrapFishing.Gacha
             switch (banner.Type)
             {
                 case BannerType.Daily:
-                    return "표시된 확률은 이 배너 기준이며, " + KoreanName(banner.GuaranteeMin) + " 이상 확정입니다";
+                    return Loc.F("ui.confirm.disclaimer_daily", GradeName(banner.GuaranteeMin));
                 case BannerType.Festival:
-                    return "표시된 확률은 이 배너 기준이며, " + banner.PityAt + "회째 " + KoreanName(banner.PityMin) + " 이상 확정입니다";
+                    return Loc.F("ui.confirm.disclaimer_festival", banner.PityAt, GradeName(banner.PityMin));
                 default:
                     return Disclaimer;
             }
         }
 
-        static string KoreanName(ItemRarity rarity)
+        // 문장 속 등급 이름(레어·Rare). 칩·태그의 대문자 표기(RARE)는 GachaUi.RarityLabel.
+        public static string GradeName(ItemRarity rarity)
         {
             switch (rarity)
             {
-                case ItemRarity.Rare: return "레어";
-                case ItemRarity.Epic: return "에픽";
-                case ItemRarity.Legend: return "레전드";
-                case ItemRarity.Synchro: return "싱크로";
-                default: return "노멀";
+                case ItemRarity.Rare: return Loc.T("ui.grade.rare");
+                case ItemRarity.Epic: return Loc.T("ui.grade.epic");
+                case ItemRarity.Legend: return Loc.T("ui.grade.legend");
+                case ItemRarity.Synchro: return Loc.T("ui.grade.synchro");
+                default: return Loc.T("ui.grade.normal");
             }
         }
 
@@ -316,10 +335,10 @@ namespace ScrapFishing.Gacha
         {
             switch (block)
             {
-                case BannerBlock.DailyDone: return "오늘은 이미 받았어요. 내일 05:00(KST)에 갱신됩니다";
-                case BannerBlock.LimitReached: return "오늘 남은 횟수가 부족합니다. 매일 05:00(KST)에 갱신됩니다";
-                case BannerBlock.NotOffered: return "이 배너에서는 이 횟수로 뽑을 수 없습니다";
-                case BannerBlock.NoDollars: return "달러가 부족합니다. 출항해서 벌어 오세요!";
+                case BannerBlock.DailyDone: return Loc.T("ui.confirm.block_daily_done");
+                case BannerBlock.LimitReached: return Loc.T("ui.confirm.block_limit");
+                case BannerBlock.NotOffered: return Loc.T("ui.confirm.block_count");
+                case BannerBlock.NoDollars: return Loc.T("ui.confirm.block_money");
                 default: return string.Empty;
             }
         }
@@ -352,28 +371,27 @@ namespace ScrapFishing.Gacha
                 refundMin = 0;
             }
 
-            var lines = new List<(string, Color)> { ("환원가 " + GachaUi.Money(refundMin) + " ~ " + GachaUi.Money(refundMax) + " (등급별)", Palette.Gold) };
+            var lines = new List<(string, Color)> { (Loc.F("ui.confirm.refund_range", GachaUi.Money(refundMin), GachaUi.Money(refundMax)), Palette.Gold) };
             if (banner.Type != BannerType.Daily)
             {
                 var refundRate = banner.Type == BannerType.Standard
                     ? GachaService.ExpectedRefundRate(banner.Machine)
                     : GachaService.ExpectedRefundRate(banner, shop.Catalog);
-                lines.Add(("총 환원율 약 " + Mathf.RoundToInt(refundRate * 100f) + "% (등급별 환원가 기댓값)", Palette.Cyan));
+                lines.Add((Loc.F("ui.confirm.refund_rate", Mathf.RoundToInt(refundRate * 100f)), Palette.Cyan));
             }
 
             switch (banner.Type)
             {
                 case BannerType.Standard:
                 case BannerType.Pickup:
-                    lines.Add(("확률 보간: 지금 Legend " + GachaUi.Percent(rates[(int)ItemRarity.Legend]) + ", " + banner.Machine.BoostStart
-                        + "회째부터 상승 (천장 없음, 상시 머신과 카운트 공유)", GachaUi.LegendColor));
+                    lines.Add((Loc.F("ui.confirm.pity_line", GachaUi.Percent(rates[(int)ItemRarity.Legend]), banner.Machine.BoostStart), GachaUi.LegendColor));
                     break;
                 case BannerType.Festival:
-                    lines.Add(((banner.DailyLimit ? "오늘 남은 횟수 " : "남은 횟수 ") + shop.FestivalRemaining(banner) + "/" + banner.MaxPulls
-                        + (shop.FestivalHadHigh(banner) ? " · 레전드 이상 획득함" : " · " + banner.PityAt + "회째에 레전드 이상 확정"), Palette.Magenta));
+                    lines.Add((Loc.F(banner.DailyLimit ? "ui.confirm.festival_left_today" : "ui.confirm.festival_left", shop.FestivalRemaining(banner), banner.MaxPulls)
+                        + (shop.FestivalHadHigh(banner) ? Loc.T("ui.confirm.festival_got_high") : Loc.F("ui.confirm.festival_pity", banner.PityAt)), Palette.Magenta));
                     break;
                 case BannerType.Daily:
-                    lines.Add(("오늘의 머신: " + DailyMachineName(shop, banner) + " (매일 05:00 KST 갱신)", Palette.NeonGreen));
+                    lines.Add((Loc.F("ui.confirm.daily_machine", DailyMachineName(shop, banner)), Palette.NeonGreen));
                     break;
             }
 
@@ -385,8 +403,9 @@ namespace ScrapFishing.Gacha
             var guarantee = banner.Type == BannerType.Daily ? banner.GuaranteeMin : GachaService.GuaranteeFor(count);
             if (guarantee != ItemRarity.Normal)
             {
-                lines.Add(("<color=" + GachaUi.Hex(GachaUi.RarityColor(guarantee)) + ">" + GachaUi.RarityLabel(guarantee)
-                    + (banner.Type == BannerType.Daily ? " 이상 확정</color>" : " 이상 1개 확정</color>"), GachaUi.RarityColor(guarantee)));
+                lines.Add(("<color=" + GachaUi.Hex(GachaUi.RarityColor(guarantee)) + ">"
+                    + Loc.F(banner.Type == BannerType.Daily ? "ui.confirm.guarantee_daily" : "ui.confirm.guarantee_multi", GachaUi.RarityLabel(guarantee))
+                    + "</color>", GachaUi.RarityColor(guarantee)));
             }
 
             return lines;
@@ -404,7 +423,7 @@ namespace ScrapFishing.Gacha
                 text += (i > 0 ? "\n" : string.Empty) + "· " + lines[i].Text;
                 if (i == typeLine - 1)
                 {
-                    text += "\n· 확률 " + RateLine(rates, floor);
+                    text += "\n· " + Loc.T("ui.confirm.rate_prefix") + RateLine(rates, floor);
                 }
             }
 
@@ -477,15 +496,15 @@ namespace ScrapFishing.Gacha
             }
 
             var color = GachaUi.Hex(GachaUi.RarityColor(rarity));
-            var line = "· <color=" + color + ">픽업 " + banner.Featured.DisplayName + " " + GachaUi.Percent(gradeRate * share) + "</color>";
+            var line = "· <color=" + color + ">" + Loc.F("ui.confirm.pickup", banner.Featured.DisplayName, GachaUi.Percent(gradeRate * share)) + "</color>";
             if (others > 0)
             {
-                line += " · 다른 " + GachaUi.RarityLabel(rarity) + " " + GachaUi.Percent(gradeRate * (1f - share));
+                line += Loc.F("ui.confirm.pickup_others", GachaUi.RarityLabel(rarity), GachaUi.Percent(gradeRate * (1f - share)));
             }
 
             if (banner.Pickup == PickupKind.Synchro)
             {
-                line += " · LEGEND 2종 각 " + GachaUi.Percent(rates[(int)ItemRarity.Legend] * 0.5f);
+                line += Loc.F("ui.confirm.pickup_legend_each", GachaUi.Percent(rates[(int)ItemRarity.Legend] * 0.5f));
             }
 
             return line;

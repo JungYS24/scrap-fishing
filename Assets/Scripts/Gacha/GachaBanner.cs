@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
 
@@ -31,6 +32,10 @@ namespace ScrapFishing.Gacha
         public string NameKo;
         public string NameEn;
         public string DescKo;
+
+        // 화면 글자. 번역 표(banner.<id>.name|desc)를 먼저 보고, 없으면 JSON의 한국어 값 그대로.
+        public string Name => Loc.Or("banner." + Id + ".name", NameKo);
+        public string Desc => Loc.Or("banner." + Id + ".desc", DescKo);
         public int Price;
         public int[] PullCounts = { 1, GachaService.TenPull };
 

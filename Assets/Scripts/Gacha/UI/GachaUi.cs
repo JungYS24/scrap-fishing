@@ -100,12 +100,12 @@ namespace ScrapFishing.Gacha
         {
             switch (slot)
             {
-                case GearSlot.Boat: return "보트";
-                case GearSlot.Drone: return "드론";
-                case GearSlot.Helmet: return "헬멧";
-                case GearSlot.Fisher: return "피셔";
-                case GearSlot.Rod: return "낚싯대";
-                default: return "루어";
+                case GearSlot.Boat: return Loc.T("ui.slot.boat");
+                case GearSlot.Drone: return Loc.T("ui.slot.drone");
+                case GearSlot.Helmet: return Loc.T("ui.slot.helmet");
+                case GearSlot.Fisher: return Loc.T("ui.slot.fisher");
+                case GearSlot.Rod: return Loc.T("ui.slot.rod");
+                default: return Loc.T("ui.slot.lure");
             }
         }
 
@@ -243,15 +243,17 @@ namespace ScrapFishing.Gacha
         {
             var min = new Vector2(index / (float)count + 0.005f, 0f);
             var max = new Vector2((index + 1) / (float)count - 0.005f, 1f);
-            var label = slot.HasValue ? SlotLabel(slot.Value) : "전체";
+            Func<string> label = () => slot.HasValue ? SlotLabel(slot.Value) : Loc.T("ui.common.all");
             var size = count >= 7 ? 18 : 22;
-            var button = MakeButton(bar, "Tab" + index, label, min, max, Muted, size, onClick);
+            var button = MakeButton(bar, "Tab" + index, label(), min, max, Muted, size, onClick);
             Stretch((RectTransform)button.transform, min, max);
             var text = LabelOf(button);
             if (text != null)
             {
-                text.text = label;
                 text.fontSize = size;
+                // 영어 탭 이름(Drone, Helmet…)이 칸보다 길면 글자를 줄인다.
+                TextOneLine.Fit(text, size, 12);
+                LocText.Bind(text, label);
             }
 
             return button;

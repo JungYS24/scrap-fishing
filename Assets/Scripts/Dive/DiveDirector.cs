@@ -209,7 +209,7 @@ namespace ScrapFishing.Dive
             {
                 if (_diver != null)
                 {
-                    Fx.FloatText(_diver.Position, "방어!", Palette.Cyan);
+                    Fx.FloatText(_diver.Position, Loc.T("ui.dive.blocked"), Palette.Cyan);
                 }
 
                 return;

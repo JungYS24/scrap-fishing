@@ -112,7 +112,8 @@ namespace ScrapFishing.Gacha
             _cards = GachaUi.Panel(root, "Cards", Vector2.zero, Vector2.one, Color.white);
             _grid = GachaUi.Rect(_cards.transform, "Grid", new Vector2(0.05f, 0.1f), new Vector2(0.95f, 0.92f));
             _hint = GachaUi.Label(_cards.transform, "Hint", 22, TextAnchor.MiddleCenter, new Vector2(0f, 0.02f), new Vector2(1f, 0.08f),
-                new Color(0.2f, 0.24f, 0.32f), "탭하여 계속");
+                new Color(0.2f, 0.24f, 0.32f));
+            LocText.Bind(_hint, "ui.common.tap_continue");
 
             _flash = GachaUi.Panel(root, "Flash", Vector2.zero, Vector2.one, new Color(1f, 1f, 1f, 0f));
             _shards = GachaUi.Rect(root, "Shards", Vector2.zero, Vector2.one);

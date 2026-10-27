@@ -1,3 +1,4 @@
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
 
@@ -7,15 +8,25 @@ namespace ScrapFishing.Scrap
     public class ScrapDefinition : ScriptableObject
     {
         public string DisplayName;
+        // 번역 키(scrap.<id>.name, scrap.fallback.NN). 화면에는 Label을 쓴다. 키가 없으면 DisplayName 그대로.
+        public string NameKey;
         public ScrapGrade Grade;
         public int Value;
         public Sprite Sprite;
         public Color PlaceholderColor = Color.white;
 
-        public static ScrapDefinition CreateRuntime(string displayName, ScrapGrade grade, int value, Color color)
+        public string Label => Loc.Or(NameKey, DisplayName);
+
+        public static string KeyOf(ItemData data)
+        {
+            return data != null && !string.IsNullOrEmpty(data.Id) ? "scrap." + data.Id + ".name" : null;
+        }
+
+        public static ScrapDefinition CreateRuntime(string displayName, ScrapGrade grade, int value, Color color, string nameKey = null)
         {
             var definition = CreateInstance<ScrapDefinition>();
             definition.DisplayName = displayName;
+            definition.NameKey = nameKey;
             definition.Grade = grade;
             definition.Value = value;
             definition.PlaceholderColor = color;
@@ -29,7 +40,7 @@ namespace ScrapFishing.Scrap
                 return CreateRuntime("scrap", ScrapGrade.Junk, 8, Color.white);
             }
 
-            var definition = CreateRuntime(data.DisplayName, GradeOf(data.Rarity), data.Chip, Color.white);
+            var definition = CreateRuntime(data.DisplayName, GradeOf(data.Rarity), data.Chip, Color.white, KeyOf(data));
             definition.Sprite = data.Icon;
             return definition;
         }

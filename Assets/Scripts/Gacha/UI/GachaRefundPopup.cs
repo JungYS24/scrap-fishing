@@ -27,6 +27,7 @@ namespace ScrapFishing.Gacha
         readonly Action _onClose;
         readonly Button _retryTen;
         GachaBanner _banner;
+        int _pieces;
         // 스킨: 잔액 value_box → arrow_right → value_box_gain.
         readonly Text _before;
         readonly Text _after;
@@ -42,14 +43,17 @@ namespace ScrapFishing.Gacha
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _confirmPanel = GachaUi.Panel(_root, "ConfirmPanel", new Vector2(0.07f, 0.3f), new Vector2(0.93f, 0.7f), GachaUi.Card, Palette.Gold, true).rectTransform;
-            GachaUi.Label(_confirmPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.8f), new Vector2(0.96f, 0.96f), Palette.Gold, "달러 환원");
+            LocText.Bind(GachaUi.Label(_confirmPanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.8f), new Vector2(0.96f, 0.96f), Palette.Gold),
+                "ui.result.refund");
             _confirmCount = GachaUi.Label(_confirmPanel, "Count", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.64f), new Vector2(0.96f, 0.78f), Palette.Text);
             _confirmBalance = GachaUi.Label(_confirmPanel, "Balance", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.45f), new Vector2(0.96f, 0.62f), Palette.Text);
-            var note = GachaUi.Label(_confirmPanel, "Note", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.33f), new Vector2(0.96f, 0.44f), GachaUi.Muted,
-                "환원한 장비는 되돌릴 수 없습니다");
-            var cancel = GachaUi.MakeButton(_confirmPanel, "Cancel", "취소", new Vector2(0.05f, 0.06f), new Vector2(0.45f, 0.28f), GachaUi.Muted, 22, HideConfirm);
-            _confirmButton = GachaUi.MakeButton(_confirmPanel, "Confirm", "확정하기", new Vector2(0.5f, 0.06f), new Vector2(0.95f, 0.28f), Palette.NeonGreen, 22,
+            var note = GachaUi.Label(_confirmPanel, "Note", 16, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.33f), new Vector2(0.96f, 0.44f), GachaUi.Muted);
+            LocText.Bind(note, "ui.refund.irreversible");
+            var cancel = LocText.Bind(GachaUi.MakeButton(_confirmPanel, "Cancel", string.Empty, new Vector2(0.05f, 0.06f), new Vector2(0.45f, 0.28f), GachaUi.Muted, 22,
+                HideConfirm), "ui.common.cancel");
+            _confirmButton = GachaUi.MakeButton(_confirmPanel, "Confirm", string.Empty, new Vector2(0.5f, 0.06f), new Vector2(0.95f, 0.28f), Palette.NeonGreen, 22,
                 () => _onConfirm?.Invoke((RectTransform)_confirmButton.transform));
+            LocText.Bind(_confirmButton, "ui.refund.confirm");
 
             // 스킨: popup_gold(제목 바 포함, 제목은 노란 바 위 어두운 글자), 잔액 칸, "되돌릴 수 없습니다"는 warning_strip(왼쪽 ! 아이콘) 안, 버튼 btn_gray / btn_green.
             if (OripaLook.Apply(_confirmPanel.GetComponent<Image>(), "popup_gold"))
@@ -76,16 +80,21 @@ namespace ScrapFishing.Gacha
 
             _donePanel = GachaUi.Panel(_root, "DonePanel", new Vector2(0.07f, 0.22f), new Vector2(0.93f, 0.78f), GachaUi.Card, Palette.NeonGreen, true).rectTransform;
             _check = GachaUi.CheckMark(_donePanel, "Check", new Vector2(0.4f, 0.79f), new Vector2(0.6f, 0.95f), Palette.NeonGreen);
-            GachaUi.Label(_donePanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.68f), new Vector2(0.96f, 0.78f), Palette.NeonGreen, "달러로 교환했어요");
+            LocText.Bind(GachaUi.Label(_donePanel, "Title", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.68f), new Vector2(0.96f, 0.78f), Palette.NeonGreen),
+                "ui.refund.done");
             _doneBalance = GachaUi.Label(_donePanel, "Balance", 28, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.56f), new Vector2(0.96f, 0.67f), Palette.Text);
 
             var retry = GachaUi.Panel(_donePanel, "Retry", new Vector2(0.05f, 0.2f), new Vector2(0.95f, 0.52f), GachaUi.Inset, Palette.Magenta).rectTransform;
-            GachaUi.Label(retry, "Caption", 16, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.96f), GachaUi.Muted, "다시 뽑기");
+            LocText.Bind(GachaUi.Label(retry, "Caption", 16, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.96f), GachaUi.Muted),
+                "ui.refund.pull_again");
             _retryName = GachaUi.Label(retry, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.48f), new Vector2(0.6f, 0.76f), Palette.Text);
             _retryPrice = GachaUi.Label(retry, "Price", 16, TextAnchor.MiddleRight, new Vector2(0.55f, 0.48f), new Vector2(0.95f, 0.76f), Palette.Gold);
-            GachaUi.MakeButton(retry, "Retry1", "1회", new Vector2(0.05f, 0.08f), new Vector2(0.48f, 0.42f), Palette.NeonGreen, 22, () => Retry(1));
-            _retryTen = GachaUi.MakeButton(retry, "Retry10", "10연", new Vector2(0.52f, 0.08f), new Vector2(0.95f, 0.42f), Palette.NeonGreen, 22, () => Retry(GachaService.TenPull));
-            var close = GachaUi.MakeButton(_donePanel, "Close", "닫기", new Vector2(0.25f, 0.04f), new Vector2(0.75f, 0.15f), GachaUi.Muted, 22, Close);
+            LocText.Bind(GachaUi.MakeButton(retry, "Retry1", string.Empty, new Vector2(0.05f, 0.08f), new Vector2(0.48f, 0.42f), Palette.NeonGreen, 22, () => Retry(1)),
+                () => GachaConfirmPopup.CountLabel(1));
+            _retryTen = GachaUi.MakeButton(retry, "Retry10", string.Empty, new Vector2(0.52f, 0.08f), new Vector2(0.95f, 0.42f), Palette.NeonGreen, 22, () => Retry(GachaService.TenPull));
+            LocText.Bind(_retryTen, () => GachaConfirmPopup.CountLabel(GachaService.TenPull));
+            var close = LocText.Bind(GachaUi.MakeButton(_donePanel, "Close", string.Empty, new Vector2(0.25f, 0.04f), new Vector2(0.75f, 0.15f), GachaUi.Muted, 22, Close),
+                "ui.common.close");
             // 스킨: 완료 창은 popup_cyan, 다시 뽑기 칸은 info_box, 버튼은 뽑기·닫기 공통 그림.
             if (OripaLook.Apply(_donePanel.GetComponent<Image>(), "popup_cyan"))
             {
@@ -100,7 +109,8 @@ namespace ScrapFishing.Gacha
 
         public void ShowConfirm(int pieces, int dollars, int balance)
         {
-            _confirmCount.text = "선택한 장비 " + pieces + "개를 환원합니다";
+            _pieces = pieces;
+            _confirmCount.text = Loc.F("ui.refund.count", pieces);
             _confirmBalance.text = GachaUi.Money(balance) + "  →  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + GachaUi.Money(balance + dollars) + "</color>";
             if (_before != null)
             {
@@ -133,8 +143,7 @@ namespace ScrapFishing.Gacha
         {
             _banner = banner;
             _doneBalance.text = GachaUi.Money(before) + "  →  <color=" + GachaUi.Hex(Palette.NeonGreen) + ">" + GachaUi.Money(after) + "</color>";
-            _retryName.text = banner != null ? banner.NameKo : string.Empty;
-            _retryPrice.text = banner != null ? (banner.Price > 0 ? "1회 " + GachaUi.Money(banner.Price) : "무료") : string.Empty;
+            WriteRetry();
             _retryTen.gameObject.SetActive(banner == null || banner.Offers(GachaService.TenPull));
             _confirmPanel.gameObject.SetActive(false);
             _donePanel.gameObject.SetActive(true);
@@ -146,6 +155,24 @@ namespace ScrapFishing.Gacha
         {
             _group.DOKill(false);
             _root.gameObject.SetActive(false);
+        }
+
+        // 열려 있는 동안 언어가 바뀌면 값이 들어간 글자(개수·다시 뽑기 배너)만 다시 쓴다.
+        public void Relabel()
+        {
+            if (!IsOpen)
+            {
+                return;
+            }
+
+            _confirmCount.text = Loc.F("ui.refund.count", _pieces);
+            WriteRetry();
+        }
+
+        void WriteRetry()
+        {
+            _retryName.text = _banner != null ? _banner.Name : string.Empty;
+            _retryPrice.text = _banner != null ? (_banner.Price > 0 ? Loc.F("ui.common.price_once", GachaUi.Money(_banner.Price)) : Loc.T("ui.common.free")) : string.Empty;
         }
 
         void Open(RectTransform panel)

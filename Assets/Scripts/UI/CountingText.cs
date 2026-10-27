@@ -41,6 +41,18 @@ namespace ScrapFishing.UI
             CaptureScale();
         }
 
+        // 언어가 바뀌면 앞 글자만 바꾸고 지금 보이는 숫자를 다시 쓴다(세는 중이면 다음 단계에서 반영).
+        public void SetPrefix(string numberPrefix)
+        {
+            prefix = numberPrefix;
+            EnsureText();
+            if (_countTween == null || !_countTween.IsActive())
+            {
+                _written = int.MinValue;
+                Write(Displayed);
+            }
+        }
+
         public void Snap(int value)
         {
             KillCount(false);

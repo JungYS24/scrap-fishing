@@ -466,11 +466,11 @@ namespace ScrapFishing.Boat
             }
             else if (!_session.HasDiveCharge)
             {
-                _hud.Notify($"잠수까지 캐스팅 {_session.CastsUntilDive}회");
+                _hud.Notify(Loc.F("ui.hud.casts_until_dive", _session.CastsUntilDive));
             }
             else if (!_session.HasDiveTime)
             {
-                _hud.Notify("남은 시간이 부족해 잠수 불가");
+                _hud.Notify(Loc.T("ui.hud.no_time_to_dive"));
             }
         }
 

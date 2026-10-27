@@ -25,10 +25,10 @@ namespace ScrapFishing.Gacha
         static Sprite _fadeUp;
         static Sprite _band;
 
-        // 언어 설정이 생기면 여기서 NameEn을 고르면 된다(카드·확인 팝업이 모두 이 문구를 쓴다).
+        // 카드·확인 팝업이 모두 이 문구를 쓴다. 언어는 GachaBanner.Name이 번역 표(banner.<id>.name)로 고른다.
         public static string Title(GachaBanner banner)
         {
-            return banner != null ? banner.NameKo : string.Empty;
+            return banner != null ? banner.Name : string.Empty;
         }
 
         // 왼쪽 불투명 → 오른쪽 투명(64×1). 왼쪽 그라데이션에 쓴다.

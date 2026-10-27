@@ -9,8 +9,11 @@ namespace ScrapFishing.UI
 {
     public class TitleView : MonoBehaviour
     {
-        public const string VersionLabel = "1014 버전";
-        public const string MarketLabel = "오리파!";
+        // 버전 값은 여기서만 바꾸고, "{0} 버전"/"Ver. {0}" 틀은 번역 표(ui.title.version)를 따른다.
+        public const string Version = "1014";
+        public static string VersionLabel => Loc.F("ui.title.version", Version);
+        public static string MarketLabel => Loc.T("ui.title.oripa_button");
+        public static string StartLabel => Loc.T("ui.title.start");
         public const string OripaButtonName = "OripaButton";
         public const string VersionTextName = "VersionText";
         // 출항 버튼과 오리파 버튼 사이 간격(화면 높이 비율).
@@ -153,15 +156,14 @@ namespace ScrapFishing.UI
 
             if (_howTo != null)
             {
-                var howTo = _howTo.GetComponent<Text>();
-                if (howTo != null)
-                {
-                    howTo.text = "깊게 탭할수록 고가\n좌우로 스와이프해서 루어 조종\n아래로 스와이프 잠수\n스틱 유영";
-                }
+                LocText.Bind(_howTo.GetComponent<Text>(), "ui.title.controls");
             }
 
             EnsureVersion();
             EnsureMarketButton();
+            // 씬에 구워 둔 버튼 글자("출항", "오리파!")도 언어를 따라간다.
+            LocText.Bind(startButton, "ui.title.start");
+            LocText.Bind(oripaButton, "ui.title.oripa_button");
         }
 
         // 오리파 버튼은 씬 하이러키(Title/OripaButton)에 둔다. 없을 때만 출항 버튼 아래에 같은 크기로 만든다.
@@ -289,7 +291,7 @@ namespace ScrapFishing.UI
                 _versionRect = _versionText.rectTransform;
             }
 
-            _versionText.text = VersionLabel;
+            LocText.Bind(_versionText, () => VersionLabel);
             _versionText.color = Palette.NeonGreen;
             _versionText.raycastTarget = false;
             _versionGroup = _versionText.GetComponent<CanvasGroup>();

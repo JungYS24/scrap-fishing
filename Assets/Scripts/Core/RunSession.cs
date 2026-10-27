@@ -191,7 +191,7 @@ namespace ScrapFishing.Core
                 gold = data.Gold;
                 if (definition == null)
                 {
-                    definition = ScrapDefinition.CreateRuntime(data.DisplayName, ScrapGrade.Common, data.Chip, Color.white);
+                    definition = ScrapDefinition.CreateRuntime(data.DisplayName, ScrapGrade.Common, data.Chip, Color.white, ScrapDefinition.KeyOf(data));
                 }
             }
             else
@@ -326,7 +326,7 @@ namespace ScrapFishing.Core
             public ScrapDefinition Definition { get; }
             public int Count;
             public ItemRarity Rarity { get; }
-            public string Name => Data != null ? Data.DisplayName : Definition != null ? Definition.DisplayName : "scrap";
+            public string Name => Data != null ? Data.DisplayName : Definition != null ? Definition.Label : "scrap";
             public Sprite Icon => Data != null && Data.Icon != null ? Data.Icon : Definition != null ? Definition.Sprite : null;
             public Color Placeholder => Definition != null ? Definition.PlaceholderColor : Color.white;
 

@@ -91,7 +91,7 @@ namespace ScrapFishing.UI
 
             if (definition.Grade == ScrapGrade.Mutant)
             {
-                ShowBanner(definition.DisplayName);
+                ShowBanner(definition.Label);
             }
 
             var to = TargetLocal();

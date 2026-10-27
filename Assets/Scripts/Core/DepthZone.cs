@@ -16,10 +16,10 @@ namespace ScrapFishing.Core
         {
             switch (Index(normalized))
             {
-                case 0: return "표층";
-                case 1: return "드론 묘지";
-                case 2: return "슬러지";
-                default: return "심연";
+                case 0: return Loc.T("ui.zone.surface");
+                case 1: return Loc.T("ui.zone.drone_graveyard");
+                case 2: return Loc.T("ui.zone.sludge");
+                default: return Loc.T("ui.zone.abyss");
             }
         }
 
@@ -32,7 +32,7 @@ namespace ScrapFishing.Core
         }
 
         // 잠수 구역: 낚시 4단계(심연, ~1000m)보다 아래인 해저. 수면 1500m ~ 바닥 1600m.
-        public const string DiveZoneName = "해저 평원";
+        public static string DiveZoneName => Loc.T("ui.zone.seabed_plain");
         public const float DiveTopMeters = 1500f;
         public const float DiveSpanMeters = 100f;
 

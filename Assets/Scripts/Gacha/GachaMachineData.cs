@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
 
@@ -34,9 +35,10 @@ namespace ScrapFishing.Gacha
         [SerializeField] Sprite banner;
 
         public string Id => id;
-        public string DisplayName => displayName;
+        // 화면 글자는 번역 표(machine.<lure 등>.name|copy)를 먼저 보고, 없으면 JSON 값 그대로.
+        public string DisplayName => Loc.Or("machine." + GachaVideoConfig.KeyOf(id) + ".name", displayName);
         public string EnglishName => englishName;
-        public string BannerCopy => bannerCopy;
+        public string BannerCopy => Loc.Or("machine." + GachaVideoConfig.KeyOf(id) + ".copy", bannerCopy);
         public GearSlot Slot => slot;
         public int Price => price;
         public int BoostCycle => boostCycle;

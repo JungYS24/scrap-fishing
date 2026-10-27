@@ -46,6 +46,7 @@ namespace ScrapFishing.Gacha
         readonly List<Stack> _stacks = new List<Stack>();
         readonly List<Text> _groupTotals = new List<Text>();
         GachaShop _shop;
+        GachaPullResult _result;
 
         public GachaBanner Banner { get; private set; }
         public bool IsOpen => _root.gameObject.activeSelf;
@@ -59,7 +60,8 @@ namespace ScrapFishing.Gacha
             _group = GachaUi.GetOrAdd<CanvasGroup>(_root);
 
             _title = GachaUi.Label(_root, "Title", 28, TextAnchor.MiddleLeft, new Vector2(0.05f, 0.92f), new Vector2(0.72f, 0.99f), Palette.Text);
-            GachaUi.MakeButton(_root, "Close", "닫기", new Vector2(0.74f, 0.925f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, () => _onClose?.Invoke());
+            LocText.Bind(GachaUi.MakeButton(_root, "Close", string.Empty, new Vector2(0.74f, 0.925f), new Vector2(0.95f, 0.985f), GachaUi.Muted, 22, () => _onClose?.Invoke()),
+                "ui.common.close");
             // 연속 뽑기 버튼은 없앴다. 씬에 남아 있을 수 있는 예전 버튼은 숨기고, 제목은 닫기 버튼 앞까지 다시 넓힌다.
             var again = _root.Find("Again");
             if (again != null)
@@ -84,11 +86,16 @@ namespace ScrapFishing.Gacha
 
             _list = GachaUi.Scroll(_root, "List", new Vector2(0.03f, 0.235f), new Vector2(0.97f, 0.915f), 6f, out _scroll);
 
-            var selectAll = GachaUi.MakeButton(_root, "SelectAll", "전체 선택", new Vector2(0.05f, 0.17f), new Vector2(0.48f, 0.225f), Palette.Cyan, 22, SelectAll);
-            var reset = GachaUi.MakeButton(_root, "Reset", "초기화", new Vector2(0.52f, 0.17f), new Vector2(0.95f, 0.225f), GachaUi.Muted, 22, ResetSelection);
+            var selectAll = GachaUi.MakeButton(_root, "SelectAll", string.Empty, new Vector2(0.05f, 0.17f), new Vector2(0.48f, 0.225f), Palette.Cyan, 22, SelectAll);
+            var reset = GachaUi.MakeButton(_root, "Reset", string.Empty, new Vector2(0.52f, 0.17f), new Vector2(0.95f, 0.225f), GachaUi.Muted, 22, ResetSelection);
             _selection = GachaUi.Label(_root, "Selection", 22, TextAnchor.MiddleCenter, new Vector2(0.04f, 0.11f), new Vector2(0.96f, 0.165f), Palette.Gold);
-            _refund = GachaUi.MakeButton(_root, "Refund", "달러 환원", new Vector2(0.05f, 0.02f), new Vector2(0.48f, 0.1f), Palette.Gold, 22, RequestRefund);
-            var store = GachaUi.MakeButton(_root, "Store", "보관함으로", new Vector2(0.52f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, RequestStore);
+            _refund = GachaUi.MakeButton(_root, "Refund", string.Empty, new Vector2(0.05f, 0.02f), new Vector2(0.48f, 0.1f), Palette.Gold, 22, RequestRefund);
+            var store = GachaUi.MakeButton(_root, "Store", string.Empty, new Vector2(0.52f, 0.02f), new Vector2(0.95f, 0.1f), Palette.NeonGreen, 22, RequestStore);
+            BindButton(selectAll, "ui.result.select_all");
+            BindButton(reset, "ui.result.reset");
+            BindButton(_refund, "ui.result.refund");
+            BindButton(store, "ui.result.to_storage");
+            TextOneLine.Fit(_selection, 22, 14);
             // 스킨: 전체 선택 btn_wide_cyan, 초기화 btn_unequip, 달러 환원 btn_wide_gold(선택 없으면 비활성), 보관함으로 btn_green.
             OripaLook.Button(selectAll, "btn_wide_cyan", Palette.Cyan);
             OripaLook.Button(reset, "btn_unequip", Palette.Text);
@@ -100,12 +107,10 @@ namespace ScrapFishing.Gacha
         public void Show(GachaShop shop, GachaPullResult result)
         {
             _shop = shop;
+            _result = result;
             Banner = result.Banner;
             _count = result.Count;
-            var name = result.Banner != null ? result.Banner.NameKo : result.Machine.DisplayName;
-            _title.text = name + " " + GachaConfirmPopup.CountLabel(result.Count) + " 결과";
-            // 제목 바 안에서 한 줄로 줄여 넣는다(닫기 버튼에 가리지 않게).
-            TextOneLine.Fit(_title, 28, 14);
+            WriteTitle();
             BuildStacks(result);
             Rebuild();
             _root.SetAsLastSibling();
@@ -124,6 +129,33 @@ namespace ScrapFishing.Gacha
         {
             _group.DOKill(false);
             _root.gameObject.SetActive(false);
+        }
+
+        // 열려 있는 동안 언어가 바뀌면 제목과 카드(장비 이름·개당 환원가)를 다시 그린다. 고른 개수는 그대로 둔다.
+        public void Relabel()
+        {
+            if (!IsOpen || _result == null)
+            {
+                return;
+            }
+
+            WriteTitle();
+            Rebuild();
+        }
+
+        void WriteTitle()
+        {
+            var name = _result.Banner != null ? _result.Banner.Name : _result.Machine.DisplayName;
+            _title.text = Loc.F("ui.result.title", name, GachaConfirmPopup.CountLabel(_result.Count));
+            // 제목 바 안에서 한 줄로 줄여 넣는다(닫기 버튼에 가리지 않게).
+            TextOneLine.Fit(_title, 28, 14);
+        }
+
+        // 아래 버튼 4개: 영어가 길면 한 줄 안에서 글자를 줄인다.
+        static void BindButton(Button button, string key)
+        {
+            TextOneLine.Fit(GachaUi.LabelOf(button), 22, 12);
+            LocText.Bind(button, key);
         }
 
         void BuildStacks(GachaPullResult result)
@@ -238,11 +270,12 @@ namespace ScrapFishing.Gacha
             GachaUi.Label(rect, "Name", 22, TextAnchor.MiddleLeft, new Vector2(0.21f, 0.52f), new Vector2(0.71f, 0.94f), Palette.Text, stack.Gear.DisplayName);
             var refund = _shop.RefundValue(stack.Gear.Id);
             GachaUi.Label(rect, "Detail", 16, TextAnchor.MiddleLeft, new Vector2(0.21f, 0.08f), new Vector2(0.6f, 0.48f), GachaUi.Muted,
-                "x" + stack.Count + " · 개당 " + GachaUi.Money(refund));
+                Loc.F("ui.result.each", stack.Count, GachaUi.Money(refund)));
             if (stack.OwnedBefore)
             {
                 var tag = GachaUi.Panel(rect, "OwnedTag", new Vector2(0.72f, 0.58f), new Vector2(0.86f, 0.9f), new Color(0.3f, 0.05f, 0.25f, 1f), Palette.Magenta);
-                var owned = GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.Magenta, "보유 중");
+                var owned = GachaUi.Label(tag.transform, "Text", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Palette.Magenta, Loc.T("ui.common.owned"));
+                TextOneLine.Fit(owned, 16, 10);
                 if (OripaLook.Apply(tag, "pill", true, Palette.Magenta))
                 {
                     owned.color = Color.white;
@@ -324,10 +357,10 @@ namespace ScrapFishing.Gacha
             foreach (var total in _groupTotals)
             {
                 var r = total.name[total.name.Length - 1] - '0';
-                total.text = "합계 " + GachaUi.Money(groupDollars[r]);
+                total.text = Loc.F("ui.result.group_total", GachaUi.Money(groupDollars[r]));
             }
 
-            _selection.text = pieces > 0 ? "선택 " + pieces + "개 · 환원 " + GachaUi.Money(dollars) : "환원할 장비를 고르세요";
+            _selection.text = pieces > 0 ? Loc.F("ui.result.selected", pieces, GachaUi.Money(dollars)) : Loc.T("ui.result.pick_hint");
             GachaUi.SetEnabled(_refund, pieces > 0, Palette.Gold);
         }
 

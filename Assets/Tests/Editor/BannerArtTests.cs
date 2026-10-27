@@ -251,7 +251,7 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(popup.IsOpen);
             Assert.AreEqual(festival.Banner.BannerSprite, popup.Art.sprite, "팝업에 같은 배너 그림");
             Assert.IsTrue(popup.Art.gameObject.activeSelf);
-            Assert.AreEqual(festival.Banner.DescKo, popup.Description.text, "잘린 설명 전체");
+            Assert.AreEqual(festival.Banner.Desc, popup.Description.text, "잘린 설명 전체");
             popup.Hide();
             yield return new ExitPlayMode();
         }

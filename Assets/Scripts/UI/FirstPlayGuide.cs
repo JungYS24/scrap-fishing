@@ -182,6 +182,19 @@ namespace ScrapFishing.UI
             _next = saved >= BasicDone ? Step.DiveSwipe : Step.Aim;
             Build(parent);
             _flow.PhaseChanged += HandlePhaseChanged;
+            Loc.Changed += Relabel;
+        }
+
+        // 설정창에서 언어를 바꾸면 떠 있는 안내 카드의 글자와 높이를 다시 맞춘다.
+        void Relabel()
+        {
+            if (_showing == Step.None || _card == null)
+            {
+                return;
+            }
+
+            Fill(_showing);
+            PlaceCard(_hole, _showing == Step.Aim || _showing == Step.DiveSwipe);
         }
 
         // 설정창처럼 튜토리얼보다 위에 와야 하는 창이 열려 있는지. 열려 있는 동안 튜토리얼을 숨긴다.
@@ -197,6 +210,7 @@ namespace ScrapFishing.UI
                 _flow.PhaseChanged -= HandlePhaseChanged;
             }
 
+            Loc.Changed -= Relabel;
             KillLoops();
             _fade?.Kill();
         }
@@ -605,7 +619,7 @@ namespace ScrapFishing.UI
         void Fill(Step step)
         {
             var index = (int)step;
-            _badge.text = $"튜토리얼 ({index}/{StepCount})";
+            _badge.text = Loc.F("ui.tutorial.tab", index, StepCount);
             for (var i = 0; i < _dots.Count; i++)
             {
                 var on = i < index;
@@ -620,77 +634,46 @@ namespace ScrapFishing.UI
                 }
             }
 
-            string title;
-            string[] lines;
+            // 본문은 번역 표에서 줄바꿈(\n)째로 가져온다. {0}은 강조 색, 4단계의 {1}은 잠수 칸 수.
+            string key;
             string button = null;
+            var accent = Yellow;
             switch (step)
             {
                 case Step.Aim:
-                    title = "1단계: 낚싯줄 던지기";
-                    lines = new[]
-                    {
-                        "오르내리는 바늘을 보고",
-                        $"화면을 <color={Yellow}>톡! 터치</color>하면",
-                        "원하는 깊이로",
-                        "낚싯줄을 던져요!"
-                    };
+                    key = "ui.tutorial.s1";
                     break;
                 case Step.Steer:
-                    title = "2단계: 고철 건져 올리기";
-                    lines = new[]
-                    {
-                        $"화면을 <color={Yellow}>쓱~ 문지르면</color>",
-                        "갈고리가 좌우로 따라가요.",
-                        "물건에 갈고리를 대면",
-                        "저절로 걸려 올라와요!"
-                    };
-                    button = "직접 해보기";
+                    key = "ui.tutorial.s2";
+                    button = "ui.tutorial.s2.button";
                     break;
                 case Step.Timer:
-                    title = "3단계: 제한 시간 확인";
-                    lines = new[]
-                    {
-                        $"한 번 출항하면 <color={Yellow}>1분</color>이에요!",
-                        "시간이 끝나기 전에",
-                        "여러 번 던져서 고철을",
-                        "최대한 많이 모아보세요."
-                    };
-                    button = "확인했어요!";
+                    key = "ui.tutorial.s3";
+                    button = "ui.tutorial.s3.button";
                     break;
                 case Step.DiveSwipe:
-                    title = "4단계: 잠수하기";
-                    lines = new[]
-                    {
-                        $"잠수 칸 {(_session != null ? _session.CastsPerDive : RunSession.BaseCastsPerDive)}개가 모두 찼어요!",
-                        $"화면을 <color={Yellow}>위에서 아래로</color>",
-                        $"<color={Yellow}>쓱~ 스와이프</color>하면",
-                        "바닷속으로 잠수해요!"
-                    };
+                    key = "ui.tutorial.s4";
                     break;
                 default:
-                    title = "보너스: 물속 헤엄치기";
-                    lines = new[]
-                    {
-                        $"아래 <color={Mint}>동그란 조이스틱</color>을",
-                        "잡고 움직이면 물속을",
-                        "마음대로 헤엄쳐요!",
-                        "가까이 가기만 해도",
-                        "고철이 저절로 붙어요."
-                    };
+                    key = "ui.tutorial.s5";
+                    accent = Mint;
                     break;
             }
 
-            _title.text = title;
-            _body.text = string.Join("\n", lines);
+            var casts = _session != null ? _session.CastsPerDive : RunSession.BaseCastsPerDive;
+            var body = Loc.F(key + ".body", accent, casts).Replace("\r", string.Empty);
+            var lineCount = body.Split('\n').Length;
+            _title.text = Loc.T(key + ".title");
+            _body.text = body;
             var bodyTop = PanelTop + TitleHeight + 6f;
-            var bodyHeight = lines.Length * BodyLine;
+            var bodyHeight = lineCount * BodyLine;
             _body.rectTransform.offsetMin = new Vector2(TextInset, -(bodyTop + bodyHeight));
             _body.rectTransform.offsetMax = new Vector2(-TextInset, -bodyTop);
             _cardHasButton = !string.IsNullOrEmpty(button);
             _button.gameObject.SetActive(_cardHasButton);
             if (_cardHasButton)
             {
-                _buttonLabel.text = button;
+                _buttonLabel.text = Loc.T(button);
             }
 
             // 버튼은 아래 테두리에 반쯤 걸치므로, 버튼 윗부분만큼 본문 아래를 비운다.

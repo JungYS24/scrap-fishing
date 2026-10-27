@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Gacha
@@ -85,26 +86,26 @@ namespace ScrapFishing.Gacha
             var v = effect.value;
             switch (effect.stat)
             {
-                case GearStat.LureCapacity: return "루어 용량 " + Signed(v) + "개";
-                case GearStat.CatchRadiusPercent: return "흡착 반경 " + Signed(v) + "%";
-                case GearStat.RareChancePercent: return "레어 이상 " + Signed(v) + "%p";
-                case GearStat.SpawnCapBonus: return "스폰 상한 " + Signed(v) + "개";
-                case GearStat.SellPercent: return "판매가 " + Signed(v) + "%";
-                case GearStat.GaugeSpeedPercent: return "수심 게이지 " + Signed(v) + "%";
-                case GearStat.EndBonusPercent: return "판 종료 보너스 " + Signed(v) + "%";
-                case GearStat.DroneRadiusPercent: return "잠수 흡착 반경 " + Signed(v) + "%";
-                case GearStat.HazardWarning: return "위험물 경고";
-                case GearStat.AutoCollectSeconds: return "자동 회수 " + v.ToString("0") + "초마다";
-                case GearStat.HazardShield: return "위험물 무효 " + v.ToString("0") + "회";
-                case GearStat.OxygenPercent: return "산소 " + Signed(v) + "%";
-                case GearStat.HazardDamageReductionPercent: return v >= 100f ? "위험물 피해 무효" : "위험물 피해 -" + v.ToString("0") + "%";
-                case GearStat.SteerSpeedPercent: return "조종 속도 " + Signed(v) + "%";
-                case GearStat.ReelSpeedPercent: return "릴 속도 " + Signed(v) + "%";
-                case GearStat.DiveSpeedPercent: return "잠수 이동 " + Signed(v) + "%";
-                case GearStat.DiveEveryCastsBonus: return "잠수 주기 -" + v.ToString("0") + "캐스트";
-                case GearStat.HookHitRadiusPercent: return "바늘 판정 " + Signed(v) + "%";
-                case GearStat.MaxDepthPercent: return "최대 수심 " + Signed(v) + "%";
-                case GearStat.BonusCatchChancePercent: return "추가 획득 " + v.ToString("0") + "%";
+                case GearStat.LureCapacity: return Loc.F("ui.effect.lure_capacity", Signed(v));
+                case GearStat.CatchRadiusPercent: return Loc.F("ui.effect.catch_radius", Signed(v));
+                case GearStat.RareChancePercent: return Loc.F("ui.effect.rare_chance", Signed(v));
+                case GearStat.SpawnCapBonus: return Loc.F("ui.effect.spawn_cap", Signed(v));
+                case GearStat.SellPercent: return Loc.F("ui.effect.sell", Signed(v));
+                case GearStat.GaugeSpeedPercent: return Loc.F("ui.effect.gauge_speed", Signed(v));
+                case GearStat.EndBonusPercent: return Loc.F("ui.effect.end_bonus", Signed(v));
+                case GearStat.DroneRadiusPercent: return Loc.F("ui.effect.drone_radius", Signed(v));
+                case GearStat.HazardWarning: return Loc.T("ui.effect.hazard_warning");
+                case GearStat.AutoCollectSeconds: return Loc.F("ui.effect.auto_collect", v.ToString("0"));
+                case GearStat.HazardShield: return Loc.F("ui.effect.hazard_shield", v.ToString("0"));
+                case GearStat.OxygenPercent: return Loc.F("ui.effect.oxygen", Signed(v));
+                case GearStat.HazardDamageReductionPercent: return v >= 100f ? Loc.T("ui.effect.hazard_immune") : Loc.F("ui.effect.hazard_reduce", v.ToString("0"));
+                case GearStat.SteerSpeedPercent: return Loc.F("ui.effect.steer_speed", Signed(v));
+                case GearStat.ReelSpeedPercent: return Loc.F("ui.effect.reel_speed", Signed(v));
+                case GearStat.DiveSpeedPercent: return Loc.F("ui.effect.dive_speed", Signed(v));
+                case GearStat.DiveEveryCastsBonus: return Loc.F("ui.effect.dive_every", v.ToString("0"));
+                case GearStat.HookHitRadiusPercent: return Loc.F("ui.effect.hook_radius", Signed(v));
+                case GearStat.MaxDepthPercent: return Loc.F("ui.effect.max_depth", Signed(v));
+                case GearStat.BonusCatchChancePercent: return Loc.F("ui.effect.bonus_catch", v.ToString("0"));
                 default: return effect.stat + " " + Signed(v);
             }
         }

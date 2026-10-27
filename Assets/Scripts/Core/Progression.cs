@@ -82,7 +82,7 @@ namespace ScrapFishing.Core
                 return null;
             }
 
-            return DepthZone.Name(nextDepth) + " 해금";
+            return Loc.F("ui.upgrade.zone_unlock", DepthZone.Name(nextDepth));
         }
 
         public readonly struct GoalHint
@@ -135,16 +135,16 @@ namespace ScrapFishing.Core
 
             if (allMaxed)
             {
-                return new GoalHint("모든 강화 완료! 최고 기록에 도전하세요", null, false, true);
+                return new GoalHint(Loc.T("ui.upgrade.all_done"), null, false, true);
             }
 
             var primary = canBuy
-                ? "지금 [" + ShortName(buyKind) + "] 강화 가능!"
-                : "[" + ShortName(nextKind) + "] 강화까지 $" + Mathf.Max(0, nextGap).ToString("N0") + " 남음";
+                ? Loc.F("ui.upgrade.can_buy", ShortName(buyKind))
+                : Loc.F("ui.upgrade.need_money", ShortName(nextKind), Mathf.Max(0, nextGap).ToString("N0"));
             string zone = null;
             if (TryLevelsUntilNextZone(out var levels, out var zoneName))
             {
-                zone = "수심 강화 " + levels + "번 더 → [" + zoneName + "] 해금";
+                zone = Loc.F("ui.upgrade.zone_hint", levels, zoneName);
             }
 
             return new GoalHint(primary, zone, canBuy, false);
@@ -154,9 +154,9 @@ namespace ScrapFishing.Core
         {
             switch (kind)
             {
-                case UpgradeKind.Reel: return "릴 강화";
-                case UpgradeKind.Boat: return "보트 강화";
-                default: return "수심 강화";
+                case UpgradeKind.Reel: return Loc.T("ui.upgrade.reel");
+                case UpgradeKind.Boat: return Loc.T("ui.upgrade.boat");
+                default: return Loc.T("ui.upgrade.depth");
             }
         }
 
@@ -254,9 +254,9 @@ namespace ScrapFishing.Core
         {
             switch (kind)
             {
-                case UpgradeKind.Reel: return "릴";
-                case UpgradeKind.Boat: return "보트";
-                default: return "수심";
+                case UpgradeKind.Reel: return Loc.T("ui.upgrade.short.reel");
+                case UpgradeKind.Boat: return Loc.T("ui.upgrade.short.boat");
+                default: return Loc.T("ui.upgrade.short.depth");
             }
         }
 

@@ -118,7 +118,7 @@ namespace ScrapFishing.UI
 
             var title = UiFonts.CreateText(rect, "Title", 28, TextAnchor.MiddleCenter);
             Stretch(title.rectTransform, new Vector2(0.08f, 0.86f), new Vector2(0.92f, 0.93f));
-            title.text = "정산";
+            LocText.Bind(title, "ui.results.title");
             _titleRect = title.rectTransform;
 
             var newBest = UiFonts.CreateText(rect, "NewBestText", 28, TextAnchor.MiddleCenter);
@@ -134,7 +134,7 @@ namespace ScrapFishing.UI
             Stretch(_cyText.rectTransform, new Vector2(0.08f, 0.61f), new Vector2(0.92f, 0.68f));
             _cyText.color = Palette.Gold;
             _cyCount = _cyText.gameObject.AddComponent<CountingText>();
-            _cyCount.Bind(_settings, "획득 $", true, "", true);
+            _cyCount.Bind(_settings, Loc.T("ui.results.earned_label"), true, "", true);
             _cyCount.Stepped += HandleCountStep;
             _cyCount.Completed += HandleCountComplete;
 
@@ -172,7 +172,7 @@ namespace ScrapFishing.UI
             _lootGrid.childAlignment = TextAnchor.UpperCenter;
             _lootGrid.startAxis = GridLayoutGroup.Axis.Horizontal;
 
-            _restart = UiButton.Create(rect, "RestartButton", "재도전", new Vector2(0.25f, 0.15f), new Vector2(0.75f, 0.245f), () =>
+            _restart = UiButton.Create(rect, "RestartButton", Loc.T("ui.results.retry"), new Vector2(0.25f, 0.15f), new Vector2(0.75f, 0.245f), () =>
             {
                 if (_restartArmed)
                 {
@@ -189,6 +189,7 @@ namespace ScrapFishing.UI
                 Fx.FadeOut(dur, true);
                 _restartAt = Time.unscaledTime + dur;
             });
+            LocText.Bind(_restart, "ui.results.retry");
             _restartRect = _restart.transform as RectTransform;
             _restartScale = _restartRect.localScale;
 
@@ -216,6 +217,7 @@ namespace ScrapFishing.UI
                     label.color = Palette.Magenta;
                 }
 
+                LocText.Bind(market, "ui.title.oripa_button");
                 _market = market;
             }
 
@@ -230,7 +232,39 @@ namespace ScrapFishing.UI
                 });
             }
 
+            Loc.Changed += Relabel;
             Hide();
+        }
+
+        void OnDestroy()
+        {
+            Loc.Changed -= Relabel;
+        }
+
+        // 결과 화면에서 설정을 열어 언어를 바꾸면, 숫자는 그대로 두고 글자만 다시 쓴다.
+        void Relabel()
+        {
+            if (_cyCount != null)
+            {
+                _cyCount.SetPrefix(Loc.T("ui.results.earned_label"));
+            }
+
+            if (_session != null)
+            {
+                WriteTexts(_session);
+            }
+        }
+
+        void WriteTexts(RunSession session)
+        {
+            _bestText.text = Loc.F("ui.results.best", session.BestCY);
+            var goldHex = ColorUtility.ToHtmlStringRGB(Palette.Gold);
+            var gearBonus = session.GearBonusDollars > 0 ? Loc.F("ui.results.gear_bonus", session.GearBonusDollars.ToString("N0")) : string.Empty;
+            _detail.text = Loc.F("ui.results.detail", session.CY.ToString("N0"), goldHex, session.Gold.ToString("N0"), session.GoldDollars.ToString("N0"), gearBonus);
+            var goal = Progression.NextGoal();
+            _goalText.text = goal.Primary;
+            _goalText.color = goal.CanBuy ? Palette.NeonGreen : goal.AllMaxed ? Palette.Gold : Palette.Text;
+            _zoneText.text = goal.Zone ?? string.Empty;
         }
 
         void Update()
@@ -273,14 +307,7 @@ namespace ScrapFishing.UI
         public void Show(RunSession session)
         {
             _session = session;
-            _bestText.text = $"최고 기록 {session.BestCY} CY";
-            var goldHex = ColorUtility.ToHtmlStringRGB(Palette.Gold);
-            var gearBonus = session.GearBonusDollars > 0 ? $" · 장비 +${session.GearBonusDollars:N0}" : string.Empty;
-            _detail.text = $"CY {session.CY:N0}\n<color=#{goldHex}>골드 {session.Gold:N0}G → +${session.GoldDollars:N0}{gearBonus}</color>\n─────────";
-            var goal = Progression.NextGoal();
-            _goalText.text = goal.Primary;
-            _goalText.color = goal.CanBuy ? Palette.NeonGreen : goal.AllMaxed ? Palette.Gold : Palette.Text;
-            _zoneText.text = goal.Zone ?? string.Empty;
+            WriteTexts(session);
             _newBest.SetActive(session.IsNewBest);
             _targetTotal = session.EarnedDollars;
             _counting = session.EarnedDollars > 0;
@@ -342,7 +369,7 @@ namespace ScrapFishing.UI
             }
             else
             {
-                _cyText.text = $"획득 ${session.EarnedDollars:N0}";
+                _cyText.text = Loc.F("ui.results.earned", session.EarnedDollars.ToString("N0"));
             }
 
             if (_restartRect != null)
@@ -531,7 +558,7 @@ namespace ScrapFishing.UI
 
             if (hazards)
             {
-                SpawnCell("위험물 x" + _session.HazardCount, null, RarityGlow.HazardBorder, RarityGlow.HazardBorder, 0, ItemRarity.Normal, index++, true);
+                SpawnCell(Loc.F("ui.results.hazard_count", _session.HazardCount), null, RarityGlow.HazardBorder, RarityGlow.HazardBorder, 0, ItemRarity.Normal, index++, true);
             }
         }
 

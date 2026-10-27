@@ -332,7 +332,7 @@ namespace ScrapFishing.Boat
             _autoToast = true;
             if (_hud != null)
             {
-                _hud.Notify("자동 회수");
+                _hud.Notify(Loc.T("ui.hud.auto_collect"));
             }
         }
 

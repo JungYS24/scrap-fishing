@@ -80,7 +80,7 @@ namespace ScrapFishing.UI
             _steerGuide = UiFonts.CreateText(rect, "SteerGuide", 22, TextAnchor.MiddleCenter);
             Stretch(_steerGuide.rectTransform, new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.54f));
             _steerGuide.color = Palette.Cyan;
-            _steerGuide.text = "<     좌우로 스와이프     >";
+            LocText.Bind(_steerGuide, "ui.hud.steer_guide");
             _steerGuide.gameObject.SetActive(false);
 
             BuildToast(rect);
@@ -376,7 +376,7 @@ namespace ScrapFishing.UI
 
             _lastCY = _session != null ? _session.CY : _lastCY + gain;
             var signed = gain > 0 ? "+" + gain : gain.ToString();
-            PlayToast(signed + " " + definition.DisplayName, definition.PlaceholderColor);
+            PlayToast(signed + " " + definition.Label, definition.PlaceholderColor);
             if (gain > 0 && _cyPanel != null)
             {
                 Fx.Punch(_cyPanel.transform, 0.12f, 0.16f);
@@ -518,7 +518,7 @@ namespace ScrapFishing.UI
 
             var label = UiFonts.CreateText(bar, "Label", 18, TextAnchor.MiddleCenter);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one);
-            label.text = "산소";
+            LocText.Bind(label, "ui.hud.oxygen");
 
             _oxygenGroup = _oxygenBar.AddComponent<CanvasGroup>();
             _oxygenBar.SetActive(false);
@@ -627,15 +627,15 @@ namespace ScrapFishing.UI
             switch (flow.Phase)
             {
                 case GamePhase.Aiming:
-                    return session.CanDive ? "깊게 탭할수록 고가!\n아래로 스와이프: 잠수" : "깊게 탭할수록 고가!";
+                    return Loc.T(session.CanDive ? "ui.hud.hint_aim_dive" : "ui.hud.hint_aim");
                 case GamePhase.Casting:
-                    return "좌우로 스와이프해서 루어 조종";
+                    return Loc.T("ui.hud.hint_steer");
                 case GamePhase.Reeling:
-                    return "좌우로 스와이프해서 루어 조종";
+                    return Loc.T("ui.hud.hint_steer");
                 case GamePhase.CastComplete:
-                    return session.CanDive ? "탭: 재캐스팅\n아래로 스와이프: 잠수" : "탭해서 다시 캐스팅";
+                    return Loc.T(session.CanDive ? "ui.hud.hint_recast_dive" : "ui.hud.hint_recast");
                 case GamePhase.Diving:
-                    return forcedAscent ? "강제 부상" : "스틱으로 유영";
+                    return Loc.T(forcedAscent ? "ui.hud.forced_ascent" : "ui.hud.swim_stick");
                 default:
                     return string.Empty;
             }

@@ -29,6 +29,13 @@ namespace ScrapFishing.UI
             {
                 button.onClick.AddListener(Buy);
             }
+
+            Loc.Changed += Refresh;
+        }
+
+        void OnDestroy()
+        {
+            Loc.Changed -= Refresh;
         }
 
         void OnDisable()

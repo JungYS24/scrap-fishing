@@ -272,27 +272,27 @@ namespace ScrapFishing.Scrap
             {
                 new[]
                 {
-                    ScrapDefinition.CreateRuntime("부유 합성수지", ScrapGrade.Junk, 8, new Color(0.62f, 0.62f, 0.55f)),
-                    ScrapDefinition.CreateRuntime("깨진 네온 간판", ScrapGrade.Common, 18, Palette.Cyan),
-                    ScrapDefinition.CreateRuntime("오염 피라미", ScrapGrade.Common, 22, new Color(0.45f, 0.85f, 0.4f))
+                    ScrapDefinition.CreateRuntime("부유 합성수지", ScrapGrade.Junk, 8, new Color(0.62f, 0.62f, 0.55f), "scrap.fallback.01"),
+                    ScrapDefinition.CreateRuntime("깨진 네온 간판", ScrapGrade.Common, 18, Palette.Cyan, "scrap.fallback.02"),
+                    ScrapDefinition.CreateRuntime("오염 피라미", ScrapGrade.Common, 22, new Color(0.45f, 0.85f, 0.4f), "scrap.fallback.03")
                 },
                 new[]
                 {
-                    ScrapDefinition.CreateRuntime("드론 코어", ScrapGrade.Common, 28, Palette.Cyan),
-                    ScrapDefinition.CreateRuntime("사이버 의수", ScrapGrade.Rare, 55, Palette.Magenta),
-                    ScrapDefinition.CreateRuntime("네온 뱀장어", ScrapGrade.Rare, 62, Palette.NeonGreen)
+                    ScrapDefinition.CreateRuntime("드론 코어", ScrapGrade.Common, 28, Palette.Cyan, "scrap.fallback.04"),
+                    ScrapDefinition.CreateRuntime("사이버 의수", ScrapGrade.Rare, 55, Palette.Magenta, "scrap.fallback.05"),
+                    ScrapDefinition.CreateRuntime("네온 뱀장어", ScrapGrade.Rare, 62, Palette.NeonGreen, "scrap.fallback.06")
                 },
                 new[]
                 {
-                    ScrapDefinition.CreateRuntime("화학 드럼", ScrapGrade.Rare, 70, new Color(0.85f, 0.55f, 0.15f)),
-                    ScrapDefinition.CreateRuntime("데이터 칩", ScrapGrade.Rare, 80, Palette.Magenta),
-                    ScrapDefinition.CreateRuntime("기계 아귀", ScrapGrade.Mutant, 95, Palette.NeonGreen)
+                    ScrapDefinition.CreateRuntime("화학 드럼", ScrapGrade.Rare, 70, new Color(0.85f, 0.55f, 0.15f), "scrap.fallback.07"),
+                    ScrapDefinition.CreateRuntime("데이터 칩", ScrapGrade.Rare, 80, Palette.Magenta, "scrap.fallback.08"),
+                    ScrapDefinition.CreateRuntime("기계 아귀", ScrapGrade.Mutant, 95, Palette.NeonGreen, "scrap.fallback.09")
                 },
                 new[]
                 {
-                    ScrapDefinition.CreateRuntime("AI 코어", ScrapGrade.Mutant, 110, Palette.Cyan),
-                    ScrapDefinition.CreateRuntime("메카 잔해", ScrapGrade.Mutant, 125, Palette.Magenta),
-                    ScrapDefinition.CreateRuntime("변이 크라켄", ScrapGrade.Mutant, 150, Palette.NeonGreen)
+                    ScrapDefinition.CreateRuntime("AI 코어", ScrapGrade.Mutant, 110, Palette.Cyan, "scrap.fallback.10"),
+                    ScrapDefinition.CreateRuntime("메카 잔해", ScrapGrade.Mutant, 125, Palette.Magenta, "scrap.fallback.11"),
+                    ScrapDefinition.CreateRuntime("변이 크라켄", ScrapGrade.Mutant, 150, Palette.NeonGreen, "scrap.fallback.12")
                 }
             };
         }

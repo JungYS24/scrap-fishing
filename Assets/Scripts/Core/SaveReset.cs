@@ -31,6 +31,7 @@ namespace ScrapFishing.Core
             }
 
             VolumeSettings.Reload();
+            Loc.Reload();
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.ReloadPrefs();

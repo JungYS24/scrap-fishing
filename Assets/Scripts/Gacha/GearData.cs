@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
 
@@ -20,8 +21,9 @@ namespace ScrapFishing.Gacha
         [SerializeField] Sprite layer;
 
         public string Id => id;
-        public string DisplayName => displayName;
-        public string Description => description;
+        // 화면 글자는 번역 표(gear.<id>.name|desc)를 먼저 보고, 없으면 JSON 값 그대로.
+        public string DisplayName => Loc.Or("gear." + id + ".name", displayName);
+        public string Description => Loc.Or("gear." + id + ".desc", description);
         public GearSlot Slot => slot;
         public ItemRarity Rarity => rarity;
         public IReadOnlyList<GearEffect> Effects => effects;
