@@ -325,13 +325,17 @@ namespace ScrapFishing.Boat
                 _casting.SetHud(_hud);
             }
 
-            canvas.gameObject.AddComponent<FirstPlayGuide>().Bind(area.Area, _flow, _casting);
             if (_collector != null)
             {
                 _collector.Bind(_session, EnsureSettlePoint(), _hud);
             }
             _stick = canvas.gameObject.AddComponent<VirtualJoystick>();
             _stick.Build(area.Area);
+            // 첫 출항 튜토리얼. 1단계에서 딤을 눌러도 화면 터치처럼 낚싯줄을 던지도록 HandleTap을 넘긴다.
+            var guide = canvas.gameObject.AddComponent<FirstPlayGuide>();
+            guide.Bind(area.Area, _flow, _casting, _session, _spawner, _hook, _gauge, _stick, _hud, _canvasUi.ChipPanel, HandleTap);
+            // 설정창은 튜토리얼보다 위에 와야 하므로, 열려 있는 동안 튜토리얼을 숨긴다.
+            guide.BindOverlay(() => _settingsView != null && _settingsView.IsOpen);
             _title = _canvasUi.Title;
             _title.Bind(BeginRun);
             _title.BindMarket(OpenMarket);

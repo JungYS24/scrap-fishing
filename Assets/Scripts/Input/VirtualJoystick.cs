@@ -11,6 +11,8 @@ namespace ScrapFishing.Controls
 
         public Vector2 Value { get; private set; }
         public bool IsHeld { get; private set; }
+        public RectTransform Area => _rootRect;
+        public bool IsVisible => _root != null && _root.activeInHierarchy;
 
         GameObject _root;
         RectTransform _rootRect;

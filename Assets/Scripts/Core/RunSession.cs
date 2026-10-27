@@ -55,6 +55,8 @@ namespace ScrapFishing.Core
         readonly List<LootStack> _loot = new List<LootStack>();
         int _hazardCount;
         bool _running;
+        // 튜토리얼 안내가 떠 있는 동안 제한 시간을 멈춘다(1단계는 바늘이 움직여야 해서 timeScale 대신 이걸 쓴다).
+        bool _timerHeld;
         float _chipMultiplier = 1f;
 
         void Start()
@@ -82,6 +84,7 @@ namespace ScrapFishing.Core
             DiveProgress = 0;
             CastsPerDive = CastsPerDiveFor(GearBonuses.Count(GearStat.DiveEveryCastsBonus));
             _running = true;
+            _timerHeld = false;
             _chipMultiplier = Progression.ChipMultiplier * GearBonuses.Scale(GearStat.SellPercent);
             _caught.Clear();
             _loot.Clear();
@@ -142,9 +145,14 @@ namespace ScrapFishing.Core
             DiveProgress = 0;
         }
 
+        public void HoldTimer(bool held)
+        {
+            _timerHeld = held;
+        }
+
         public void Tick(float deltaTime)
         {
-            if (!_running)
+            if (!_running || _timerHeld)
             {
                 return;
             }

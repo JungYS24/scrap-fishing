@@ -1,0 +1,110 @@
+{
+ "tut_panel": {
+  "size": [
+   691,
+   370
+  ],
+  "border_LTRB": [
+   70,
+   60,
+   70,
+   60
+  ],
+  "note": "튜토리얼 패널(노랑, 속 반투명 남색)"
+ },
+ "tut_tab": {
+  "size": [
+   241,
+   56
+  ],
+  "border_LTRB": [
+   24,
+   18,
+   24,
+   18
+  ],
+  "note": "제목 탭(노랑)"
+ },
+ "tut_button": {
+  "size": [
+   233,
+   92
+  ],
+  "border_LTRB": [
+   40,
+   30,
+   40,
+   30
+  ],
+  "note": "확인 버튼(초록)"
+ },
+ "tut_arrow_right": {
+  "size": [
+   100,
+   65
+  ],
+  "border_LTRB": null,
+  "note": "안내 화살표(오른쪽)"
+ },
+ "tut_arrow_down": {
+  "size": [
+   65,
+   100
+  ],
+  "border_LTRB": null,
+  "note": "안내 화살표(아래, 스와이프용)"
+ },
+ "tut_bracket_tl": {
+  "size": [
+   38,
+   40
+  ],
+  "border_LTRB": null,
+  "note": "강조 꺾쇠(왼쪽 위). 회전해서 4모서리"
+ },
+ "tut_hand": {
+  "size": [
+   126,
+   135
+  ],
+  "border_LTRB": null,
+  "note": "탭 손가락"
+ },
+ "tut_ring": {
+  "size": [
+   98,
+   98
+  ],
+  "border_LTRB": null,
+  "note": "탭 물결 링(코드로 크기·알파 애니메이션)"
+ },
+ "tut_dot_on": {
+  "size": [
+   22,
+   22
+  ],
+  "border_LTRB": null,
+  "note": "단계 점 켬"
+ },
+ "tut_dot_off": {
+  "size": [
+   22,
+   22
+  ],
+  "border_LTRB": null,
+  "note": "단계 점 끔"
+ },
+ "tut_glow": {
+  "size": [
+   128,
+   128
+  ],
+  "border_LTRB": [
+   40,
+   40,
+   40,
+   40
+  ],
+  "note": "강조 영역 은은한 빛(코드로 노랑 틴트, Sliced)"
+ }
+}
