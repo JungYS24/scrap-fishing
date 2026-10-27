@@ -18,9 +18,10 @@ namespace ScrapFishing.UI
         public const string OripaButtonName = "OripaButton";
         public const string VersionTextName = "VersionText";
         public const string StorageButtonName = "StorageButton";
-        // 설정 톱니(0.86~0.98 × 0.91~0.98) 바로 왼쪽, 같은 높이·같은 크기, 0.01 간격.
-        static readonly Vector2 StorageMin = new Vector2(0.73f, 0.91f);
-        static readonly Vector2 StorageMax = new Vector2(0.85f, 0.98f);
+        // 오리파 상단 보관함 버튼과 같은 크기: 폭 0.18, 높이 0.054(상단 바 0.075 × 버튼 0.72).
+        // 설정 톱니(0.86~0.98 × 0.91~0.98) 바로 왼쪽 0.01 간격, 톱니와 세로 가운데(0.945)를 맞춘다.
+        static readonly Vector2 StorageMin = new Vector2(0.67f, 0.918f);
+        static readonly Vector2 StorageMax = new Vector2(0.85f, 0.972f);
         // 출항 버튼과 오리파 버튼 사이 간격(화면 높이 비율).
         public const float MarketGap = 0.02f;
         const float PulseHalf = 0.6f;
