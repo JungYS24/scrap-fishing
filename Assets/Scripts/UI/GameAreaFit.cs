@@ -6,8 +6,6 @@ namespace ScrapFishing.UI
 {
     public class GameAreaFit : MonoBehaviour
     {
-        const float Line = 2f;
-
         RectTransform _canvasRect;
         RectTransform _area;
         RectTransform _frame;
@@ -130,13 +128,13 @@ namespace ScrapFishing.UI
             var left = Mathf.Max(0f, center.x - area.x * 0.5f + half.x);
             var right = Mathf.Max(0f, half.x - (center.x + area.x * 0.5f));
 
-            SetBar(_top, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, top), true);
-            SetBar(_bottom, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, bottom), true);
-            SetBar(_left, new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(left, 0f), false);
-            SetBar(_right, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(right, 0f), false);
+            SetBar(_top, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, top));
+            SetBar(_bottom, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, bottom));
+            SetBar(_left, new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(left, 0f));
+            SetBar(_right, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(right, 0f));
         }
 
-        static void SetBar(RectTransform bar, Vector2 min, Vector2 max, Vector2 pivot, Vector2 size, bool horizontal)
+        static void SetBar(RectTransform bar, Vector2 min, Vector2 max, Vector2 pivot, Vector2 size)
         {
             if (bar == null)
             {
@@ -149,30 +147,6 @@ namespace ScrapFishing.UI
             bar.anchoredPosition = Vector2.zero;
             bar.sizeDelta = size;
             bar.gameObject.SetActive(size.x > 0.5f || size.y > 0.5f);
-            var line = bar.Find("Line") as RectTransform;
-            if (line == null)
-            {
-                return;
-            }
-
-            if (horizontal)
-            {
-                var inner = pivot.y > 0.5f;
-                line.anchorMin = new Vector2(0f, inner ? 0f : 1f);
-                line.anchorMax = new Vector2(1f, inner ? 0f : 1f);
-                line.pivot = new Vector2(0.5f, inner ? 0f : 1f);
-                line.sizeDelta = new Vector2(0f, Line);
-            }
-            else
-            {
-                var inner = pivot.x < 0.5f;
-                line.anchorMin = new Vector2(inner ? 1f : 0f, 0f);
-                line.anchorMax = new Vector2(inner ? 1f : 0f, 1f);
-                line.pivot = new Vector2(inner ? 1f : 0f, 0.5f);
-                line.sizeDelta = new Vector2(Line, 0f);
-            }
-
-            line.anchoredPosition = Vector2.zero;
         }
 
         bool ScreenToLocal(Vector2 screen, out Vector2 local)
@@ -218,16 +192,9 @@ namespace ScrapFishing.UI
             go.transform.SetParent(parent, false);
             var rect = go.AddComponent<RectTransform>();
             var image = go.AddComponent<Image>();
+            // 여백은 페이지 배경과 같은 단색만 칠한다(예전엔 게임 화면 쪽 가장자리에 하늘색 선이 있었는데, PC처럼 넓은 화면에서 양옆에 띠로 보였다).
             image.color = Palette.Background;
             image.raycastTarget = false;
-            var lineGo = new GameObject("Line");
-            lineGo.transform.SetParent(go.transform, false);
-            lineGo.AddComponent<RectTransform>();
-            var line = lineGo.AddComponent<Image>();
-            var neon = Palette.Cyan;
-            neon.a = 0.4f;
-            line.color = neon;
-            line.raycastTarget = false;
             return rect;
         }
 

@@ -103,6 +103,9 @@ namespace ScrapFishing.FX
             }
 
             StopRunning(item);
+            // DOTween.Init(재활용 켬) 때문에 끝난 시퀀스 객체는 다른 연출에 다시 쓰인다. 여기 들고 있는 시퀀스가 재활용되면
+            // 나중에 끌 때 엉뚱한 글자의 시퀀스를 끄게 되어 그 글자(FULL, -23 CY 등)가 판이 끝날 때까지 화면에 남는다.
+            sequence.SetRecyclable(false);
             Running[item] = sequence;
         }
 
@@ -111,7 +114,8 @@ namespace ScrapFishing.FX
             if (Running.TryGetValue(item, out var running))
             {
                 Running.Remove(item);
-                if (running != null && running.IsActive())
+                // 끝나는 중(OnComplete 안)인 시퀀스는 자동으로 지워지므로 다시 끄지 않는다.
+                if (running != null && running.IsActive() && !running.IsComplete())
                 {
                     running.Kill(false);
                 }

@@ -222,9 +222,11 @@ namespace ScrapFishing.UI
             return chip;
         }
 
+        // DOTween.Init이 트윈 재활용을 켜 두어서, 들고 있는 시퀀스는 재활용하지 않게 한다(FXPool.Track과 같은 이유).
         void Track(Image chip, Sequence sequence)
         {
             StopRunning(chip);
+            sequence.SetRecyclable(false);
             _running[chip] = sequence;
         }
 
@@ -233,7 +235,8 @@ namespace ScrapFishing.UI
             if (_running.TryGetValue(chip, out var running))
             {
                 _running.Remove(chip);
-                if (running != null && running.IsActive())
+                // 끝나는 중(OnComplete 안)인 시퀀스는 자동으로 지워지므로 다시 끄지 않는다.
+                if (running != null && running.IsActive() && !running.IsComplete())
                 {
                     running.Kill(false);
                 }
