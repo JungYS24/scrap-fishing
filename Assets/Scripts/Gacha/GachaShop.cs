@@ -520,11 +520,6 @@ namespace ScrapFishing.Gacha
             return Commit(Inventory.Equip(gearId));
         }
 
-        public bool Unequip(GearSlot slot)
-        {
-            return Commit(Inventory.Unequip(slot));
-        }
-
         bool Commit(bool changed)
         {
             if (changed)

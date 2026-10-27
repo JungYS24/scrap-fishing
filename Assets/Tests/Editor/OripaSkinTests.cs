@@ -176,7 +176,7 @@ namespace ScrapFishing.Tests
                 Assert.AreEqual("row_synchro", row.GetComponent<Image>().sprite.name);
                 Assert.AreEqual("icon_slot_synchro", row.Find("Icon").GetComponent<Image>().sprite.name);
                 Assert.AreEqual("badge_equipped", row.Find("EquippedBadge").GetComponent<Image>().sprite.name);
-                Assert.AreEqual("btn_unequip", row.Find("Unequip").GetComponent<Image>().sprite.name);
+                Assert.IsNull(row.Find("Unequip"), "장착 칸은 비울 수 없어 해제 버튼이 없다(교체만)");
                 var check = row.Find("Check");
                 Assert.IsNotNull(check, "보관 중인 장비는 체크 칸");
                 Assert.LessOrEqual(World(check).xMax, World(row.Find("Icon")).xMin, "체크 칸이 아이콘을 가리지 않는다");

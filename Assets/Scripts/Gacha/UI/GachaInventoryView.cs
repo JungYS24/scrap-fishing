@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace ScrapFishing.Gacha
 {
-    // 보관함: 슬롯별 장착 칸(아이콘), 총 효과 탭 패널, 일괄 정산, 슬롯 탭, 장비 카드(체크·적용·해제·환원).
+    // 보관함: 슬롯별 장착 칸(아이콘), 총 효과 탭 패널, 일괄 정산, 슬롯 탭, 장비 카드(체크·적용·환원). 장착 칸은 비울 수 없어 해제 버튼은 없고 적용으로 교체만 한다.
     // 적용하면 바로 저장하고 GearBonuses를 갱신한다. 효과는 다음 출항부터 반영된다.
     // 일괄 정산은 지금 탭에 보이는 보관·미처리 장비 중 체크된 것을 전부 환원한다(장착 중인 것은 제외).
     public sealed class GachaInventoryView
@@ -433,7 +433,7 @@ namespace ScrapFishing.Gacha
             effects.resizeTextMinSize = 11;
             effects.resizeTextMaxSize = 16;
 
-            // 오른쪽: 장착 중이면 위에 "장착 중" 배지 + 해제, 아니면 적용. 아래는 환원(동전 그림 오른쪽부터 글자).
+            // 오른쪽: 장착 중이면 위에 "장착 중" 배지, 아니면 적용(교체). 아래는 환원(동전 그림 오른쪽부터 글자).
             var spare = spareCount;
             if (row.Equipped)
             {
@@ -445,8 +445,6 @@ namespace ScrapFishing.Gacha
                 }
 
                 TextOneLine.Fit(badgeText, 16, 10);
-                var unequip = GachaUi.MakeButton(card, "Unequip", "해제", new Vector2(0.77f, 0.38f), new Vector2(0.97f, 0.66f), GachaUi.Muted, 22, () => Unequip(gear.Slot));
-                OripaLook.Button(unequip, "btn_unequip", Palette.Text);
             }
             else if (spare > 0)
             {
@@ -457,7 +455,8 @@ namespace ScrapFishing.Gacha
             if (spare > 0)
             {
                 var armed = _armedRefund == gear.Id && Time.unscaledTime < _armedUntil;
-                var label = armed ? "확인" : "환원 " + GachaUi.Money(_shop.RefundValue(gear.Id));
+                // 버튼 폭이 좁아 "환원" 글자를 빼고 금액만 쓴다(동전 그림이 환원 버튼임을 알려 준다).
+                var label = armed ? "확인" : GachaUi.Money(_shop.RefundValue(gear.Id));
                 var refund = GachaUi.MakeButton(card, "Refund", label, new Vector2(0.75f, 0.06f), new Vector2(0.98f, 0.33f), armed ? Palette.Magenta : Palette.Gold, 16,
                     () => Refund(row));
                 if (OripaLook.Button(refund, "btn_refund", armed ? Palette.Magenta : Palette.Gold))
@@ -572,13 +571,6 @@ namespace ScrapFishing.Gacha
                 AudioManager.Ensure().PlayUpgradeBuy();
             }
 
-            _armedRefund = null;
-            Refresh();
-        }
-
-        void Unequip(GearSlot slot)
-        {
-            _shop.Unequip(slot);
             _armedRefund = null;
             Refresh();
         }

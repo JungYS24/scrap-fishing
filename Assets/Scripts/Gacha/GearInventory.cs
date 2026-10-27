@@ -324,12 +324,13 @@ namespace ScrapFishing.Gacha
                 return false;
             }
 
-            Unequip(gear.Slot);
+            ReturnEquipped(gear.Slot);
             _data.equipped[(int)gear.Slot] = gearId;
             return true;
         }
 
-        public bool Unequip(GearSlot slot)
+        // 장착 칸은 비울 수 없다(해제 없음, 교체만). 교체할 때 기존 장착품을 보관 중으로 돌려놓는 데만 쓴다.
+        bool ReturnEquipped(GearSlot slot)
         {
             var current = EquippedId(slot);
             if (current == null)
