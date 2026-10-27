@@ -17,6 +17,8 @@ namespace ScrapFishing.Gacha
     public sealed class GachaInventoryView
     {
         const float ConfirmWindow = 2f;
+        // 장착 칸의 슬롯 이름을 칸 위쪽 띠에서 아래로 내리는 거리(px).
+        const float SlotLabelDrop = 77f;
 
         static readonly GearSlot?[] Tabs = { null, GearSlot.Lure, GearSlot.Rod, GearSlot.Boat, GearSlot.Drone, GearSlot.Fisher, GearSlot.Helmet };
 
@@ -338,6 +340,9 @@ namespace ScrapFishing.Gacha
                 // 스킨: 등급별 장착 칸(equip_slot_*, 위 탭에 슬롯 이름). 빈 칸은 노멀 칸.
                 var skinned = OripaLook.Apply(cellImage, OripaLook.Of("equip_slot", gear != null ? gear.Rarity : ItemRarity.Normal));
                 var slotName = GachaUi.Label(cell, "Slot", 16, TextAnchor.MiddleCenter, new Vector2(0f, 0.8f), new Vector2(1f, 1f), GachaUi.SlotTint(slot), GachaUi.SlotLabel(slot));
+                // 슬롯 이름은 칸 위 탭이 아니라 칸 아래쪽에 둔다(위쪽은 한국어도 넘쳤다). 위 띠에서 77px 내린 자리.
+                slotName.rectTransform.offsetMin = new Vector2(0f, -SlotLabelDrop);
+                slotName.rectTransform.offsetMax = new Vector2(0f, -SlotLabelDrop);
                 TextOneLine.Fit(slotName, 16, 9);
                 if (gear != null)
                 {

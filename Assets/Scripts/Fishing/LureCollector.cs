@@ -445,15 +445,30 @@ namespace ScrapFishing.Fishing
                 return;
             }
 
-            var pos = item.View.transform.position;
+            // 정산 중 오류가 나도 매달린 스크랩은 반드시 지운다(남으면 보트 위에 아이콘이 멈춰 보인다).
+            var view = item.View;
+            try
+            {
+                Present(view, popup);
+            }
+            finally
+            {
+                Destroy(view.gameObject);
+                item.View = null;
+            }
+        }
+
+        void Present(ScrapView view, bool popup)
+        {
+            var pos = view.transform.position;
             var chip = 0;
             var gold = 0;
             if (_session != null)
             {
-                _session.AddSettledCatch(item.View.Definition, item.View.data, pos, out chip, out gold);
-                if (RollBonusCatch(item.View))
+                _session.AddSettledCatch(view.Definition, view.data, pos, out chip, out gold);
+                if (RollBonusCatch(view))
                 {
-                    _session.AddSettledCatch(item.View.Definition, item.View.data, pos, out var bonusChip, out var bonusGold);
+                    _session.AddSettledCatch(view.Definition, view.data, pos, out var bonusChip, out var bonusGold);
                     chip += bonusChip;
                     gold += bonusGold;
                     Fx.FloatText(pos + Vector3.up * 0.3f, Loc.T("ui.hud.bonus_plus1"), Palette.NeonGreen);
@@ -464,7 +479,7 @@ namespace ScrapFishing.Fishing
             {
                 Fx.FloatText(pos + Vector3.up * 0.12f, "+" + chip, Palette.Cyan);
                 Fx.FloatText(pos, "+" + gold + "G", Palette.Gold);
-                var grade = item.View.Definition != null ? item.View.Definition.Grade : ScrapGrade.Common;
+                var grade = view.Definition != null ? view.Definition.Grade : ScrapGrade.Common;
                 var bits = grade >= ScrapGrade.Rare ? 10 : 5;
                 Fx.Burst(pos, null, bits, Palette.Gold);
                 if (grade >= ScrapGrade.Rare)
@@ -477,9 +492,6 @@ namespace ScrapFishing.Fishing
                     Fx.ScreenFlash(Color.white, 0.08f);
                 }
             }
-
-            Destroy(item.View.gameObject);
-            item.View = null;
         }
 
         void FinishSettle()

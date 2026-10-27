@@ -662,11 +662,10 @@ namespace ScrapFishing.UI
 
             var casts = _session != null ? _session.CastsPerDive : RunSession.BaseCastsPerDive;
             var body = Loc.F(key + ".body", accent, casts).Replace("\r", string.Empty);
-            var lineCount = body.Split('\n').Length;
             _title.text = Loc.T(key + ".title");
             _body.text = body;
             var bodyTop = PanelTop + TitleHeight + 6f;
-            var bodyHeight = lineCount * BodyLine;
+            var bodyHeight = FitBody(body);
             _body.rectTransform.offsetMin = new Vector2(TextInset, -(bodyTop + bodyHeight));
             _body.rectTransform.offsetMax = new Vector2(-TextInset, -bodyTop);
             _cardHasButton = !string.IsNullOrEmpty(button);
@@ -679,6 +678,36 @@ namespace ScrapFishing.UI
             // 버튼은 아래 테두리에 반쯤 걸치므로, 버튼 윗부분만큼 본문 아래를 비운다.
             _cardHeight = bodyTop + bodyHeight + (_cardHasButton ? ButtonHeight * 0.5f + 16f : 30f);
             _card.sizeDelta = new Vector2(_root.rect.width * PanelWidthRatio, _cardHeight);
+        }
+
+        // 본문 글자 크기를 고르고 본문 높이를 돌려준다. 영어처럼 줄이 길어 28px(갈무리14)로 한 줄에 안 들어가면
+        // 도트가 깨지지 않는 22px(갈무리11)로 내린다. 그래도 넘치면 자동 줄바꿈된 실제 줄 수로 높이를 잡는다.
+        float FitBody(string body)
+        {
+            var width = _root.rect.width * PanelWidthRatio - TextInset * 2f;
+            var written = body.Split('\n').Length;
+            var generator = new TextGenerator();
+            var lines = written;
+            var size = 28;
+            foreach (var candidate in new[] { 28, 22 })
+            {
+                size = candidate;
+                _body.font = UiFonts.Resolve(size);
+                _body.fontSize = size;
+                if (width <= 1f)
+                {
+                    break;
+                }
+
+                generator.Populate(body, _body.GetGenerationSettings(new Vector2(width, 10000f)));
+                lines = Mathf.Max(written, generator.lineCount);
+                if (lines <= written)
+                {
+                    break;
+                }
+            }
+
+            return lines * BodyLine * size / 28f;
         }
 
         bool TryHole(Step step, out Rect hole)

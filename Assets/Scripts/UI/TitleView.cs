@@ -9,8 +9,8 @@ namespace ScrapFishing.UI
 {
     public class TitleView : MonoBehaviour
     {
-        // 버전 값은 여기서만 바꾸고, "{0} 버전"/"Ver. {0}" 틀은 번역 표(ui.title.version)를 따른다.
-        public const string Version = "1014";
+        // 버전 값은 여기서만 바꾸고, "ver.{0}" 틀은 번역 표(ui.title.version)를 따른다.
+        public const string Version = "1027";
         public static string VersionLabel => Loc.F("ui.title.version", Version);
         public static string MarketLabel => Loc.T("ui.title.oripa_button");
         public static string StartLabel => Loc.T("ui.title.start");

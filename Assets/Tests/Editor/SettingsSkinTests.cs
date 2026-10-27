@@ -117,7 +117,7 @@ namespace ScrapFishing.Tests
                 AssertSliced(Find(panel, "Header"), skin.headerBar);
                 Assert.AreEqual("설정", Find(panel, "Header/Title").GetComponent<Text>().text);
                 AssertSliced(Find(panel, "Footer"), skin.footerBox);
-                StringAssert.Contains("버전", Find(panel, "Footer/Version").GetComponent<Text>().text);
+                Assert.AreEqual("ver." + TitleView.Version, Find(panel, "Footer/Version").GetComponent<Text>().text);
 
                 // 닫기·음소거: 그림만(글자 없음), 같은 크기, 오른쪽 위 세로, 제목 바와 겹치지 않음.
                 var close = Find(panel, "Close");

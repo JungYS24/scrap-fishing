@@ -12,6 +12,10 @@ namespace ScrapFishing.FX
         static readonly Queue<SpriteRenderer> Bits = new Queue<SpriteRenderer>(32);
         static readonly Queue<Text> Labels = new Queue<Text>(8);
         static readonly List<SpriteRenderer> LiveBits = new List<SpriteRenderer>(32);
+        static readonly List<Text> LiveLabels = new List<Text>(16);
+        // 조각·글자마다 지금 돌고 있는 시퀀스. DOKill(대상)은 시퀀스 안에 든 트윈을 멈추지 못하므로 시퀀스를 직접 끈다.
+        // 끄지 않으면 돌려놓은 뒤에도 옛 시퀀스가 계속 움직이고, 끝날 때 한 번 더 돌려놓아 풀에 같은 오브젝트가 두 번 들어간다.
+        static readonly Dictionary<Component, Tween> Running = new Dictionary<Component, Tween>(48);
 
         static Transform _bitRoot;
         static RectTransform _labelRoot;
@@ -90,14 +94,39 @@ namespace ScrapFishing.FX
             return bit;
         }
 
-        public static void ReturnBit(SpriteRenderer bit)
+        // 꺼낸 조각·글자를 움직이는 시퀀스를 등록한다. 돌려놓을 때 이 시퀀스를 끈다.
+        public static void Track(Component item, Tween sequence)
         {
-            if (bit == null)
+            if (item == null)
             {
                 return;
             }
 
-            LiveBits.Remove(bit);
+            StopRunning(item);
+            Running[item] = sequence;
+        }
+
+        static void StopRunning(Component item)
+        {
+            if (Running.TryGetValue(item, out var running))
+            {
+                Running.Remove(item);
+                if (running != null && running.IsActive())
+                {
+                    running.Kill(false);
+                }
+            }
+        }
+
+        public static void ReturnBit(SpriteRenderer bit)
+        {
+            // 이미 돌려놓은 조각(LiveBits에 없음)은 다시 넣지 않는다.
+            if (bit == null || !LiveBits.Remove(bit))
+            {
+                return;
+            }
+
+            StopRunning(bit);
             bit.transform.DOKill(false);
             bit.DOKill(false);
             bit.gameObject.SetActive(false);
@@ -132,16 +161,18 @@ namespace ScrapFishing.FX
             }
 
             label.gameObject.SetActive(true);
+            LiveLabels.Add(label);
             return label;
         }
 
         public static void ReturnLabel(Text label)
         {
-            if (label == null)
+            if (label == null || !LiveLabels.Remove(label))
             {
                 return;
             }
 
+            StopRunning(label);
             label.transform.DOKill(false);
             label.DOKill(false);
             var group = label.GetComponent<CanvasGroup>();
@@ -160,6 +191,11 @@ namespace ScrapFishing.FX
             {
                 ReturnBit(LiveBits[i]);
             }
+
+            for (var i = LiveLabels.Count - 1; i >= 0; i--)
+            {
+                ReturnLabel(LiveLabels[i]);
+            }
         }
 
         static void DropDestroyedBits()
@@ -170,6 +206,21 @@ namespace ScrapFishing.FX
                 {
                     LiveBits.RemoveAt(i);
                 }
+            }
+
+            LiveLabels.RemoveAll(label => label == null);
+            var gone = new List<Component>();
+            foreach (var item in Running.Keys)
+            {
+                if (item == null)
+                {
+                    gone.Add(item);
+                }
+            }
+
+            foreach (var item in gone)
+            {
+                Running.Remove(item);
             }
 
             var count = Bits.Count;

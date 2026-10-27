@@ -20,6 +20,9 @@ namespace ScrapFishing.UI
 
         readonly Queue<Image> _pool = new Queue<Image>(48);
         readonly List<Image> _live = new List<Image>(48);
+        // 칩마다 돌고 있는 시퀀스. DOKill(대상)은 시퀀스 안 트윈을 멈추지 못하므로 돌려놓을 때 시퀀스를 직접 끈다.
+        // 끄지 않으면 판이 끝나 정리한 칩의 옛 시퀀스가 나중에 Arrive를 불러 칩 숫자를 바꾸고, 같은 칩이 풀에 두 번 들어간다.
+        readonly Dictionary<Image, Sequence> _running = new Dictionary<Image, Sequence>(48);
         Vector3 _iconScale = Vector3.one;
         int _inFlight;
         int _visual;
@@ -143,6 +146,7 @@ namespace ScrapFishing.UI
                     seq.Append(rect.DOAnchorPos(fall, settings.flyDuration).SetEase(Ease.InQuad));
                     seq.Join(chip.DOFade(0f, settings.flyDuration));
                     seq.OnComplete(() => Recycle(chip));
+                    Track(chip, seq);
                 }
             }
 
@@ -218,17 +222,36 @@ namespace ScrapFishing.UI
             return chip;
         }
 
+        void Track(Image chip, Sequence sequence)
+        {
+            StopRunning(chip);
+            _running[chip] = sequence;
+        }
+
+        void StopRunning(Image chip)
+        {
+            if (_running.TryGetValue(chip, out var running))
+            {
+                _running.Remove(chip);
+                if (running != null && running.IsActive())
+                {
+                    running.Kill(false);
+                }
+            }
+        }
+
         void Recycle(Image chip)
         {
-            if (chip == null)
+            // 이미 돌려놓은 칩은 다시 넣지 않는다(풀에 같은 칩이 두 번 들어가면 두 연출이 한 칩을 나눠 쓴다).
+            if (chip == null || !_live.Remove(chip))
             {
                 return;
             }
 
+            StopRunning(chip);
             chip.rectTransform.DOKill(false);
             chip.DOKill(false);
             chip.gameObject.SetActive(false);
-            _live.Remove(chip);
             _pool.Enqueue(chip);
         }
 
@@ -285,9 +308,17 @@ namespace ScrapFishing.UI
             seq.SetDelay(delay);
             seq.OnComplete(() =>
             {
-                Arrive(amount);
-                Recycle(chip);
+                // Arrive에서 오류가 나도 칩은 반드시 치운다(남으면 화면에 칩이 그대로 멈춰 보인다).
+                try
+                {
+                    Arrive(amount);
+                }
+                finally
+                {
+                    Recycle(chip);
+                }
             });
+            Track(chip, seq);
         }
 
         void Arrive(int amount)

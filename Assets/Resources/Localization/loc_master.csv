@@ -28,7 +28,7 @@ ui.zone.drone_graveyard,드론 묘지,Drone Graveyard
 ui.zone.sludge,슬러지,Sludge
 ui.zone.abyss,심연,Abyss
 ui.zone.seabed_plain,해저 평원,Seabed Plains
-ui.title.version,{0} 버전,Ver. {0}
+ui.title.version,ver.{0},ver.{0}
 ui.title.oripa_button,오리파!,Oripa!
 ui.title.start,출항,Set Sail
 ui.title.controls,"깊게 탭할수록 고가
@@ -38,9 +38,9 @@ ui.title.controls,"깊게 탭할수록 고가
 Swipe left/right to steer the lure
 Swipe down to dive
 Use the stick to swim"
-ui.upgrade.reel,릴 강화,Reel Upgrade
-ui.upgrade.boat,보트 강화,Boat Upgrade
-ui.upgrade.depth,수심 강화,Depth Upgrade
+ui.upgrade.reel,릴 강화,Reel
+ui.upgrade.boat,보트 강화,Boat
+ui.upgrade.depth,수심 강화,Depth
 ui.upgrade.short.reel,릴,Reel
 ui.upgrade.short.boat,보트,Boat
 ui.upgrade.short.depth,수심,Depth
@@ -164,6 +164,7 @@ ui.credits.play_bgm,플레이 BGM 「Neo-Tokyo Sludge」,"Gameplay BGM ""Neo-Tok
 ui.credits.ui_art,UI 패널 아트,UI Panel Art
 ui.shop.disclaimer,게임 안에서 번 달러로만 뽑습니다 · 실제 결제 없음,Pulls use in-game dollars only · No real money
 ui.shop.storage,보관함,Storage
+ui.shop.storage_button,보관함,Slot
 ui.shop.tag_boosting,확률 상승 중,Rate Up
 ui.shop.daily_price,무료 · 하루 1회,Free · Once a day
 ui.shop.refund_rate,총 환원율 약 {0}%,Refund rate ~{0}%
@@ -239,7 +240,7 @@ ui.refund.done,달러로 교환했어요,Exchanged for dollars
 ui.refund.pull_again,다시 뽑기,Pull Again
 ui.refund.count,선택한 장비 {0}개를 환원합니다,Refund {0} selected gear?
 ui.inv.caption,장착 중 · 다음 출항부터 반영,Equipped · Applies from your next trip
-ui.inv.total_effects,총 효과 보기,View Total Effects
+ui.inv.total_effects,총 효과 보기,Total Effects
 ui.inv.total_effects_close,총 효과 닫기,Hide Total Effects
 ui.inv.bulk_sell,일괄 정산,Sell All
 ui.inv.bulk_sell_n,일괄 정산 {0}개,Sell All ({0})

@@ -307,6 +307,7 @@ namespace ScrapFishing.FX
             seq.Append(rect.DOAnchorPos(rect.anchoredPosition + Vector2.up * (cfg.floatRise * 80f), cfg.floatDuration).SetEase(Ease.OutQuad));
             seq.Join(group.DOFade(0f, cfg.floatDuration));
             seq.OnComplete(() => FXPool.ReturnLabel(label));
+            FXPool.Track(label, seq);
         }
 
         public static void Burst(Vector3 pos, Sprite spr, int count, Color c)
@@ -351,6 +352,7 @@ namespace ScrapFishing.FX
                 seq.Append(bit.transform.DOMove(dest, dur).SetEase(Ease.OutQuad));
                 seq.Join(bit.DOFade(0f, dur));
                 seq.OnComplete(() => FXPool.ReturnBit(bit));
+                FXPool.Track(bit, seq);
             }
         }
 
@@ -391,6 +393,7 @@ namespace ScrapFishing.FX
             seq.Append(bit.transform.DOScale(new Vector3(0.95f, 0.14f, 1f), dur).SetEase(Ease.OutQuad));
             seq.Join(bit.DOFade(0f, dur));
             seq.OnComplete(() => FXPool.ReturnBit(bit));
+            FXPool.Track(bit, seq);
         }
 
         public static void ScreenFlash(Color c, float dur, float alpha = 0.55f)
@@ -651,6 +654,7 @@ namespace ScrapFishing.FX
                 Burst(hit, null, 5, Palette.Cyan);
                 FloatText(hit, amount >= 0 ? "+" + amount : amount.ToString(), amount >= 0 ? Palette.Cyan : Palette.Magenta);
             });
+            FXPool.Track(bit, seq);
         }
 
         public static void Recycle()

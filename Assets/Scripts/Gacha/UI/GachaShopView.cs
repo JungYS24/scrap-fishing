@@ -222,7 +222,7 @@ namespace ScrapFishing.Gacha
             var inventory = GachaUi.MakeButton(bar, "Inventory", string.Empty, InventoryMin, InventoryMax, Palette.NeonGreen, 22, OpenInventory);
             GachaUi.Stretch((RectTransform)inventory.transform, InventoryMin, InventoryMax);
             TextOneLine.Fit(GachaUi.LabelOf(inventory), 22, 12);
-            LocText.Bind(inventory, "ui.shop.storage");
+            LocText.Bind(inventory, "ui.shop.storage_button");
             _close = GachaUi.MakeButton(bar, "Close", "X", CloseMin, CloseMax, Palette.Magenta, 28, Close);
             GachaUi.Stretch((RectTransform)_close.transform, CloseMin, CloseMax);
             // 스킨: 보관함(초록)·닫기(분홍, 그림에 X가 있어 글자는 뺀다).
