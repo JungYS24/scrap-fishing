@@ -12,11 +12,7 @@ namespace ScrapFishing.Build
         [MenuItem("Scrap Fishing/Build WebGL to docs")]
         public static void Build()
         {
-            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
-            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
-            PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.WebGL.template = "PROJECT:ScrapFishing";
+            ApplySettings();
 
             // Unity names Build files after the last folder, so this must stay "docs".
             var staging = Path.GetFullPath(Path.Combine("Temp", "docs"));
@@ -69,6 +65,22 @@ namespace ScrapFishing.Build
             var output = Path.GetFullPath("docs");
             PublishStaging(staging, output);
             Debug.Log("WebGL build succeeded: " + output);
+        }
+
+        // 배포 빌드와 용량 점검 빌드(BuildSizeReport)가 같은 설정을 쓴다. 모바일 웹 기준으로 용량을 줄이는 설정이다.
+        public static void ApplySettings()
+        {
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.WebGL, ManagedStrippingLevel.High);
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.template = "PROJECT:ScrapFishing";
+            // 코드(wasm): 크기 우선 IL2CPP 생성 + 크기 우선 최적화(LTO). 빌드 시간은 늘어난다.
+            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.WebGL, Il2CppCodeGeneration.OptimizeSize);
+            PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.WebGL, Il2CppCompilerConfiguration.Master);
+            UnityEditor.WebGL.UserBuildSettings.codeOptimization = UnityEditor.WebGL.WasmCodeOptimization.DiskSizeLTO;
+            // Unity 로고 스플래시 없이 바로 시작한다.
+            PlayerSettings.SplashScreen.show = false;
         }
 
         static readonly string[] ShareFiles =

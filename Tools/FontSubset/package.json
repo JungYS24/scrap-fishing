@@ -1,0 +1,12 @@
+{
+  "name": "scrap-fishing-font-subset",
+  "private": true,
+  "type": "module",
+  "description": "Galmuri 폰트를 게임에서 쓰는 글자만 남겨 줄인다.",
+  "scripts": {
+    "subset": "node subset.mjs"
+  },
+  "dependencies": {
+    "subset-font": "2.9.0"
+  }
+}

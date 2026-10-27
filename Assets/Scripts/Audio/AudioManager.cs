@@ -1,9 +1,11 @@
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using ScrapFishing.Data;
 using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Networking;
 using Random = UnityEngine.Random;
 
 namespace ScrapFishing.Audio
@@ -13,7 +15,9 @@ namespace ScrapFishing.Audio
         const string MixResource = "Audio/AudioMix";
         const string LibraryResource = "Audio/SoundCueLibrary";
         const string TitleBgmResource = "Audio/Start_Title_BGM";
-        const string PlayBgmResource = "Audio/Neo-Tokyo Sludge";
+        // 플레이 BGM은 첫 다운로드(WebGL .data)에서 빼고 StreamingAssets에서 따로 받는다(약 3.5MB 절약).
+        // 타이틀 화면에 있는 동안 내려받고, 받기 전에 출항하면 받는 즉시 튼다.
+        public const string PlayBgmFile = "Audio/neo_tokyo_sludge.mp3";
         const int PoolSize = 6;
         const float CountTickGap = 1f / 12f;
         const float LureFullDeniedVolume = 0.3f;
@@ -48,6 +52,7 @@ namespace ScrapFishing.Audio
         float _countTickAt;
         bool _unlocked;
         bool _wantTitle;
+        bool _wantPlay;
         bool _diving;
 
         public static AudioManager Ensure()
@@ -84,7 +89,11 @@ namespace ScrapFishing.Audio
 
             BuildProcedural();
             _titleClip = Resources.Load<AudioClip>(TitleBgmResource);
-            _playClip = Resources.Load<AudioClip>(PlayBgmResource);
+            if (Application.isPlaying)
+            {
+                StartCoroutine(LoadPlayBgm());
+            }
+
             _bgmA = MakeBgm("BgmA");
             _bgmB = MakeBgm("BgmB");
             _bgmLive = _bgmA;
@@ -204,9 +213,37 @@ namespace ScrapFishing.Audio
             }
         }
 
+        IEnumerator LoadPlayBgm()
+        {
+            var url = Application.streamingAssetsPath + "/" + PlayBgmFile;
+            if (!url.Contains("://"))
+            {
+                url = "file://" + url;
+            }
+
+            using (var request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.MPEG))
+            {
+                yield return request.SendWebRequest();
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning("플레이 BGM을 받지 못했습니다: " + url + " / " + request.error);
+                    yield break;
+                }
+
+                _playClip = DownloadHandlerAudioClip.GetContent(request);
+                _playClip.name = "Neo-Tokyo Sludge";
+            }
+
+            if (_wantPlay)
+            {
+                Crossfade(_playClip, mix.playBgm * mix.masterBgm);
+            }
+        }
+
         public void PlayTitleBgm()
         {
             _wantTitle = true;
+            _wantPlay = false;
             _diving = false;
             Crossfade(_titleClip, mix.titleBgm * mix.masterBgm);
         }
@@ -214,6 +251,7 @@ namespace ScrapFishing.Audio
         public void PlayPlayBgm()
         {
             _wantTitle = false;
+            _wantPlay = true;
             _diving = false;
             Crossfade(_playClip, mix.playBgm * mix.masterBgm);
         }
@@ -226,6 +264,8 @@ namespace ScrapFishing.Audio
         public void DuckResults()
         {
             _diving = false;
+            // 플레이 BGM을 아직 받는 중이면 결과 화면에서 뒤늦게 크게 시작하지 않게 한다.
+            _wantPlay = false;
             FadeLive(_bgmTarget * mix.resultsDuck, 0.35f);
         }
 

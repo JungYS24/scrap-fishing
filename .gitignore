@@ -103,3 +103,7 @@ crashlytics-build.properties
 /Assets/Plugins/Demigiant.meta
 /Assets/Plugins/
 /Assets/Plugins.meta
+
+# 폰트 서브셋 도구 의존성, WebGL 용량 점검 결과
+/Tools/FontSubset/node_modules/
+/webgl-size-report.txt

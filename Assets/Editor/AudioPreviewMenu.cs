@@ -36,7 +36,6 @@ public static class AudioPreviewMenu
     {
         AssetDatabase.ImportAsset("Assets/Resources/Audio/SFX", ImportAssetOptions.ImportRecursive);
         AssetDatabase.ImportAsset("Assets/Resources/Audio/Start_Title_BGM.mp3", ImportAssetOptions.ForceUpdate);
-        AssetDatabase.ImportAsset("Assets/Resources/Audio/Neo-Tokyo Sludge.mp3", ImportAssetOptions.ForceUpdate);
         Debug.Log("Audio reimport 요청 완료");
     }
 
