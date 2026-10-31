@@ -42,6 +42,7 @@
         <button type="button" id="boot-reload" hidden>새로고침</button>
       </div>
     </div>
+    <!-- crazygames:remove-start (CrazyGames는 자체 전체화면 버튼을 주고, 가로 창 안에서 돌아가므로 회전 안내도 뺀다) -->
     <button type="button" id="fs-button" aria-label="전체화면" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path fill="currentColor" d="M7 3H3v4h2V5h2V3zm10 0v2h2v2h2V3h-4zM5 17H3v4h4v-2H5v-2zm16 0h-2v2h-2v2h4v-4z"/>
@@ -57,6 +58,7 @@
       <button type="button" id="ios-install-close" aria-label="닫기">닫기</button>
     </div>
     <div id="rotate-hint">세로로 돌려 주세요</div>
+    <!-- crazygames:remove-end -->
     <script>
       window.addEventListener("error", function (event) {
         if (window.__scrapFishingReady) {
@@ -318,8 +320,20 @@
       }
       document.addEventListener("gesturestart", function (event) { event.preventDefault(); });
       document.addEventListener("contextmenu", function (event) { event.preventDefault(); });
+      // crazygames:remove-start 첫 탭에 자동 전체화면
       document.addEventListener("pointerup", onUserActivate);
       document.addEventListener("touchend", onUserActivate, { passive: true });
+      // crazygames:remove-end
+      // 게임은 키보드를 쓰지 않는다. 스페이스·방향키가 페이지(또는 감싼 iframe 바깥)를 스크롤하지 않게 막는다. 입력칸은 그대로 둔다.
+      window.addEventListener("keydown", function (event) {
+        var tag = event.target && event.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") {
+          return;
+        }
+        if ([" ", "Spacebar", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].indexOf(event.key) >= 0) {
+          event.preventDefault();
+        }
+      });
       document.addEventListener("fullscreenchange", onFullscreenChange);
       document.addEventListener("webkitfullscreenchange", onFullscreenChange);
 

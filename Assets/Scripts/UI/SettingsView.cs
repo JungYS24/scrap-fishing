@@ -65,6 +65,19 @@ namespace ScrapFishing.UI
         public const int EventCouponDollars = 500000;
         public const string EventCouponUsedKey = "CouponUsed_fish";
 
+        // 테스트·발표용 쿠폰(smtm·fish 달러 지급, reset 저장 삭제). CrazyGames 빌드에서는 모두 "올바르지 않은 쿠폰"이 된다.
+        public static bool CheatCouponsEnabled
+        {
+            get
+            {
+#if CRAZYGAMES
+                return false;
+#else
+                return true;
+#endif
+            }
+        }
+
         RectTransform _coupon;
         CanvasGroup _couponGroup;
         RectTransform _couponPanel;
@@ -237,6 +250,11 @@ namespace ScrapFishing.UI
 
         void BuildFullscreenButton(Vector2 min, Vector2 max)
         {
+            if (!FullscreenExitButton.Available)
+            {
+                return;
+            }
+
             var sprite = Resources.Load<Sprite>(FullscreenExitButton.IconResource);
             if (sprite == null)
             {
@@ -681,7 +699,7 @@ namespace ScrapFishing.UI
         void RedeemCoupon()
         {
             // "reset": 모든 저장을 지우고 처음 상태로 다시 시작한다(튜토리얼 확인용).
-            if (SaveReset.IsResetCode(_couponInput.text))
+            if (CheatCouponsEnabled && SaveReset.IsResetCode(_couponInput.text))
             {
                 AudioManager.Ensure().PlayUpgradeBuy();
                 SaveReset.ResetAll();
@@ -692,7 +710,7 @@ namespace ScrapFishing.UI
             var dollars = CouponReward(_couponInput.text, Progression.Dollars, eventUsed);
             if (dollars <= 0)
             {
-                _couponMessage.text = Loc.T(eventUsed && IsEventCoupon(_couponInput.text) ? "ui.coupon.used" : "ui.coupon.invalid");
+                _couponMessage.text = Loc.T(CheatCouponsEnabled && eventUsed && IsEventCoupon(_couponInput.text) ? "ui.coupon.used" : "ui.coupon.invalid");
                 _couponMessage.color = Palette.Magenta;
                 AudioManager.Ensure().PlayUpgradeDenied();
                 if (_couponSkinned)
@@ -723,6 +741,17 @@ namespace ScrapFishing.UI
         // eventUsed: 발표용 쿠폰(fish)을 이미 받았으면 그 코드는 0.
         public static int CouponReward(string code, int currentDollars = 0, bool eventUsed = false)
         {
+            return CouponReward(code, currentDollars, eventUsed, CheatCouponsEnabled);
+        }
+
+        // cheats: false면(CrazyGames) 지금 있는 쿠폰이 모두 0이다.
+        public static int CouponReward(string code, int currentDollars, bool eventUsed, bool cheats)
+        {
+            if (!cheats)
+            {
+                return 0;
+            }
+
             int reward;
             if (string.Equals((code ?? string.Empty).Trim(), CouponCode, StringComparison.OrdinalIgnoreCase))
             {

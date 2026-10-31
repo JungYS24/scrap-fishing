@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 
@@ -14,10 +15,16 @@ namespace ScrapFishing.Core
     // 한국어/영어 문자열 표. Resources/Localization/loc_master.csv(key,ko,en)를 처음 쓸 때 한 번 읽는다.
     // 원본은 scrap_fishing_loc_master.xlsx이고, 엑셀에서 CSV(UTF-8)로 저장해 이 파일을 덮어쓴다.
     // 언어는 PlayerPrefs "Language"(ko/en)에 저장하고, 처음 실행이면 기기 언어가 한국어일 때만 ko다.
+    // 웹에서는 브라우저 언어(navigator.language)가 "ko"로 시작할 때만 ko이고, 그 밖의 언어나 읽기 실패는 en이다.
     public static class Loc
     {
         public const string Resource = "Localization/loc_master";
         public const string PrefKey = "Language";
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        static extern string ScrapFishing_BrowserLanguage();
+#endif
 
         static Dictionary<string, string[]> _table;
         static readonly HashSet<string> Warned = new HashSet<string>();
@@ -176,8 +183,30 @@ namespace ScrapFishing.Core
             }
             else
             {
-                _language = Application.systemLanguage == SystemLanguage.Korean ? GameLanguage.Ko : GameLanguage.En;
+                _language = DeviceLanguage();
             }
+        }
+
+        // "ko", "ko-KR"처럼 ko로 시작하면 한국어, 나머지(빈 값 포함)는 영어.
+        public static GameLanguage FromLanguageTag(string tag)
+        {
+            return (tag ?? string.Empty).Trim().StartsWith("ko", StringComparison.OrdinalIgnoreCase) ? GameLanguage.Ko : GameLanguage.En;
+        }
+
+        static GameLanguage DeviceLanguage()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try
+            {
+                return FromLanguageTag(ScrapFishing_BrowserLanguage());
+            }
+            catch (Exception)
+            {
+                return GameLanguage.En;
+            }
+#else
+            return Application.systemLanguage == SystemLanguage.Korean ? GameLanguage.Ko : GameLanguage.En;
+#endif
         }
 
         static void EnsureTable()

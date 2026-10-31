@@ -56,6 +56,16 @@ namespace ScrapFishing.UI
             Apply();
             Adopt();
             LiftSmallText(_area);
+            if (SmallWindowText.Enabled)
+            {
+                var small = GetComponent<SmallWindowText>();
+                if (small == null)
+                {
+                    small = gameObject.AddComponent<SmallWindowText>();
+                }
+
+                small.Bind(_area);
+            }
         }
 
         public void Adopt()

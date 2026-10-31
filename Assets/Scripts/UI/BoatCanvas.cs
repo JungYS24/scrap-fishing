@@ -106,7 +106,7 @@ namespace ScrapFishing.UI
                     _dollarCount = dollarText.gameObject.AddComponent<CountingText>();
                 }
 
-                _dollarCount.Bind(_settings, string.Empty, false, string.Empty, true);
+                _dollarCount.Bind(_settings, string.Empty, true, string.Empty, true);
             }
         }
 
@@ -143,7 +143,7 @@ namespace ScrapFishing.UI
             }
             else if (dollarText != null)
             {
-                dollarText.text = Progression.Dollars.ToString();
+                dollarText.text = Progression.Dollars.ToString("N0");
             }
 
             RefreshUpgrades();

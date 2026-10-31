@@ -12,6 +12,18 @@ namespace ScrapFishing.Build
         [MenuItem("Scrap Fishing/Build WebGL to docs")]
         public static void Build()
         {
+            // 에디터를 CrazyGames 대상으로 바꿔 둔 채 docs를 구우면 쿠폰·전체화면이 빠진 빌드가 배포되므로 막는다.
+            if (CrazyGamesBuilder.IsCrazyGamesTarget)
+            {
+                Debug.LogError("Build Target이 CrazyGames입니다. Tools > Scrap Fishing > Build Target: GitHub Pages로 바꾼 뒤 다시 빌드하세요. docs was left unchanged.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+
+                return;
+            }
+
             ApplySettings();
 
             // Unity names Build files after the last folder, so this must stay "docs".
@@ -174,7 +186,7 @@ namespace ScrapFishing.Build
             }
         }
 
-        static bool ValidateWebGlOutput(string output)
+        internal static bool ValidateWebGlOutput(string output)
         {
             var ok = true;
             var indexPath = Path.Combine(output, "index.html");
