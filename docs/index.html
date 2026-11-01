@@ -19,7 +19,7 @@
     <meta property="og:image:height" content="630">
     <meta property="og:url" content="https://jungys24.github.io/scrap-fishing/">
     <meta name="twitter:card" content="summary_large_image">
-    <title>scrap-fishing</title>
+    <title>Scrap Fishing</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -320,6 +320,16 @@
       document.addEventListener("contextmenu", function (event) { event.preventDefault(); });
       document.addEventListener("pointerup", onUserActivate);
       document.addEventListener("touchend", onUserActivate, { passive: true });
+      // 게임은 키보드를 쓰지 않는다. 스페이스·방향키가 페이지(또는 감싼 iframe 바깥)를 스크롤하지 않게 막는다. 입력칸은 그대로 둔다.
+      window.addEventListener("keydown", function (event) {
+        var tag = event.target && event.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") {
+          return;
+        }
+        if ([" ", "Spacebar", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].indexOf(event.key) >= 0) {
+          event.preventDefault();
+        }
+      });
       document.addEventListener("fullscreenchange", onFullscreenChange);
       document.addEventListener("webkitfullscreenchange", onFullscreenChange);
 
@@ -349,15 +359,15 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/docs.loader.js";
+      var loaderUrl = buildUrl + "/GitHubPages.loader.js";
       var config = {
         arguments: [],
-        dataUrl: buildUrl + "/docs.data.unityweb",
-        frameworkUrl: buildUrl + "/docs.framework.js.unityweb",
-        codeUrl: buildUrl + "/docs.wasm.unityweb",
+        dataUrl: buildUrl + "/GitHubPages.data.unityweb",
+        frameworkUrl: buildUrl + "/GitHubPages.framework.js.unityweb",
+        codeUrl: buildUrl + "/GitHubPages.wasm.unityweb",
         streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "scrap-fishing",
+        companyName: "Studio 10_6",
+        productName: "Scrap Fishing",
         productVersion: "1.0",
         showBanner: unityShowBanner
       };
