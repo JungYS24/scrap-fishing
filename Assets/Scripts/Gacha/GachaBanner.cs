@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace ScrapFishing.Gacha
 {
@@ -61,28 +62,78 @@ namespace ScrapFishing.Gacha
         public ItemRarity GuaranteeMin = ItemRarity.Normal;
         public readonly Dictionary<DayOfWeek, GachaMachineData> WeekdayPool = new Dictionary<DayOfWeek, GachaMachineData>();
 
-        // 배너 전용 아트(Resources 경로). 아직 없으면 비워 두고 머신 카드 디자인을 쓴다.
+        // 배너 전용 아트 경로("Gacha/Banners/<id>"). 아직 없으면 비워 두고 머신 카드 디자인을 쓴다.
+        // 그림(1024×768 JPG 26장)은 첫 다운로드에서 빼려고 StreamingAssets/<경로>.jpg에 두고, 카드가 처음 보일 때 받는다.
         public string BannerImage;
         Sprite _bannerSprite;
-        bool _bannerLoaded;
+        bool _bannerRequested;
+        Action<Sprite> _bannerWaiting;
 
         public bool Offers(int count)
         {
             return PullCounts != null && Array.IndexOf(PullCounts, count) >= 0;
         }
 
-        public Sprite BannerSprite
+        public bool HasBannerImage => !string.IsNullOrEmpty(BannerImage);
+
+        // 받은 배너 그림. 아직 받지 않았거나 그림이 없으면 null(LoadBannerSprite로 받는다).
+        public Sprite BannerSprite => _bannerSprite;
+
+        public static string BannerUrl(string bannerImage)
         {
-            get
+            var url = Application.streamingAssetsPath + "/" + bannerImage + ".jpg";
+            return url.Contains("://") ? url : "file://" + url;
+        }
+
+        // 배너 그림을 받는다(한 번만 받고, 받는 중에 또 부르면 같이 기다린다). 실패하거나 그림이 없으면 null.
+        // 받은 그림은 GPU에서 DXT로 압축해(약 0.4MB) 예전 Resources 배너와 같은 메모리로 둔다.
+        public void LoadBannerSprite(Action<Sprite> done)
+        {
+            if (!HasBannerImage)
             {
-                if (!_bannerLoaded)
+                done?.Invoke(null);
+                return;
+            }
+
+            if (_bannerSprite != null)
+            {
+                done?.Invoke(_bannerSprite);
+                return;
+            }
+
+            _bannerWaiting += done;
+            if (_bannerRequested)
+            {
+                return;
+            }
+
+            _bannerRequested = true;
+            var request = UnityWebRequestTexture.GetTexture(BannerUrl(BannerImage), false);
+            request.SendWebRequest().completed += _ =>
+            {
+                if (request.result == UnityWebRequest.Result.Success)
                 {
-                    _bannerLoaded = true;
-                    _bannerSprite = string.IsNullOrEmpty(BannerImage) ? null : Resources.Load<Sprite>(BannerImage);
+                    var texture = DownloadHandlerTexture.GetContent(request);
+                    texture.name = Id;
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                    texture.filterMode = FilterMode.Bilinear;
+                    texture.Compress(false);
+                    texture.Apply(false, true);
+                    _bannerSprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+                    _bannerSprite.name = Id;
+                }
+                else
+                {
+                    Debug.LogWarning("배너 그림을 받지 못했습니다: " + request.url + " / " + request.error);
+                    // 다음에 다시 보이면 또 받아 본다.
+                    _bannerRequested = false;
                 }
 
-                return _bannerSprite;
-            }
+                request.Dispose();
+                var waiting = _bannerWaiting;
+                _bannerWaiting = null;
+                waiting?.Invoke(_bannerSprite);
+            };
         }
 
         public static GachaBanner Standard(GachaMachineData machine, int order)

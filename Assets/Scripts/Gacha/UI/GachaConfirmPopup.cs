@@ -201,12 +201,26 @@ namespace ScrapFishing.Gacha
             _bannerText.text = BannerCaption(shop, banner);
             _bannerText.color = tint;
             // 배너 그림이 있으면 안내는 그림 왼쪽 아래 모서리의 태그로(그림 가운데를 가리지 않게), 없으면 예전처럼 가운데 안내 + 장비 쇼케이스.
-            var art = banner.BannerSprite;
-            _art.sprite = art;
-            _art.gameObject.SetActive(art != null);
+            // 그림이 아직 안 받아졌으면 자리만 두고(빈 칸) 받는 즉시 넣는다.
+            var hasArt = banner.HasBannerImage;
+            _art.sprite = banner.BannerSprite;
+            _art.enabled = _art.sprite != null;
+            _art.gameObject.SetActive(hasArt);
+            if (hasArt && _art.sprite == null)
+            {
+                banner.LoadBannerSprite(sprite =>
+                {
+                    if (_art != null && _banner == banner)
+                    {
+                        _art.sprite = sprite;
+                        _art.enabled = sprite != null;
+                    }
+                });
+            }
+
             _bannerPanel.transform.Find("CaptionFade").gameObject.SetActive(false);
-            _bannerText.gameObject.SetActive(art == null);
-            _tag.gameObject.SetActive(art != null);
+            _bannerText.gameObject.SetActive(!hasArt);
+            _tag.gameObject.SetActive(hasArt);
             _tagText.text = BannerCaption(shop, banner);
             _tagText.color = tint;
             TextOneLine.Fit(_tagText, 16, 11);
@@ -222,11 +236,11 @@ namespace ScrapFishing.Gacha
             if (_frame != null)
             {
                 OripaLook.Apply(_frame, GachaShopView.FrameSprite(banner), false);
-                _frame.gameObject.SetActive(art != null);
+                _frame.gameObject.SetActive(hasArt);
             }
 
-            _showcase.gameObject.SetActive(art == null);
-            if (art == null)
+            _showcase.gameObject.SetActive(!hasArt);
+            if (!hasArt)
             {
                 GachaUi.Showcase(_showcase, GachaUi.ShowcaseGears(shop, banner));
             }

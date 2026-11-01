@@ -18,7 +18,8 @@ namespace ScrapFishing.Tests
 {
     public class BannerArtTests
     {
-        const string Folder = "Assets/Resources/Gacha/Banners/";
+        // 배너 그림은 첫 다운로드에서 빼려고 StreamingAssets에 두고, 카드가 보일 때 받는다(GachaBanner.LoadBannerSprite).
+        const string Folder = "Assets/StreamingAssets/Gacha/Banners/";
 
         static List<Dictionary<string, object>> JsonBanners()
         {
@@ -37,19 +38,11 @@ namespace ScrapFishing.Tests
                 var id = (string)banner["id"];
                 Assert.AreEqual("Gacha/Banners/" + id, banner["bannerImage"], id);
                 var path = Folder + id + ".jpg";
-                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-                Assert.IsNotNull(importer, path);
-                Assert.AreEqual(TextureImporterType.Sprite, importer.textureType, id);
-                Assert.AreEqual(SpriteImportMode.Single, importer.spriteImportMode, id);
-                Assert.AreEqual(100f, importer.spritePixelsPerUnit, id);
-                Assert.AreEqual(FilterMode.Bilinear, importer.filterMode, id);
-                Assert.AreEqual(1024, importer.maxTextureSize, id);
-                Assert.IsFalse(importer.mipmapEnabled, id);
-                Assert.AreEqual(TextureWrapMode.Clamp, importer.wrapMode, id);
-                Assert.AreEqual(TextureImporterCompression.Compressed, importer.textureCompression, id);
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                Assert.IsNotNull(sprite, id);
-                Assert.AreEqual(new Vector2(1024f, 768f), sprite.rect.size, id);
+                Assert.IsTrue(File.Exists(path), path);
+                var texture = new Texture2D(2, 2);
+                Assert.IsTrue(texture.LoadImage(File.ReadAllBytes(path)), path);
+                Assert.AreEqual(new Vector2(1024f, 768f), new Vector2(texture.width, texture.height), id);
+                Object.DestroyImmediate(texture);
             }
 
             Assert.AreEqual(File.ReadAllText("Assets/Resources/Gacha/oripa_banners.json"), File.ReadAllText("planning/oripa_banners.json"), "planning 사본도 같은 파일");
@@ -175,6 +168,13 @@ namespace ScrapFishing.Tests
                 yield return new WaitForSecondsRealtime(0.15f);
             }
 
+            // 그림은 StreamingAssets에서 비동기로 받으므로 마지막 카드까지 들어올 때를 기다린다.
+            var until = Time.realtimeSinceStartup + 5f;
+            while (view.CardStates().Any(c => c.Art.sprite == null) && Time.realtimeSinceStartup < until)
+            {
+                yield return null;
+            }
+
             cards = view.CardStates().ToList();
             Loaded.Clear();
             long textureBytes = 0;
@@ -187,6 +187,7 @@ namespace ScrapFishing.Tests
                 Loaded.Add(card.Banner.Id);
             }
 
+            Assert.Less(textureBytes / 26, 1024 * 1024, "받은 그림은 DXT로 압축해 둔다(무압축이면 장당 약 2.3MB)");
             Assert.IsFalse(cards[0].Playing, "맨 위 카드는 화면 밖이라 멈춤");
             var viewportHeight = view.Scroll.viewport.rect.height;
             var spacing = view.Scroll.content.GetComponent<VerticalLayoutGroup>().spacing;
@@ -249,6 +250,7 @@ namespace ScrapFishing.Tests
             typeof(GachaShopView).GetMethod("ShowConfirm", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(view, new object[] { festival.Banner, 1 });
             yield return null;
             Assert.IsTrue(popup.IsOpen);
+            Assert.IsNotNull(festival.Banner.BannerSprite, "이미 받은 그림");
             Assert.AreEqual(festival.Banner.BannerSprite, popup.Art.sprite, "팝업에 같은 배너 그림");
             Assert.IsTrue(popup.Art.gameObject.activeSelf);
             Assert.AreEqual(festival.Banner.Desc, popup.Description.text, "잘린 설명 전체");

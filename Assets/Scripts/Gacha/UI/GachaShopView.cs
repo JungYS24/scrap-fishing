@@ -504,18 +504,26 @@ namespace ScrapFishing.Gacha
             return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
         }
 
+        // 그림은 StreamingAssets에서 받으므로 한두 프레임 뒤에 들어온다. 실패하면 다시 보일 때 또 받는다.
         static void LoadArt(BannerCard card)
         {
             card.ArtLoaded = true;
-            var sprite = card.Banner.BannerSprite;
-            if (sprite == null)
+            card.Banner.LoadBannerSprite(sprite =>
             {
-                Debug.LogWarning("배너 그림을 불러오지 못했습니다: Resources/" + card.Banner.BannerImage + " (" + card.Banner.Id + ")");
-                return;
-            }
+                if (card.ArtImage == null)
+                {
+                    return;
+                }
 
-            card.ArtImage.sprite = sprite;
-            card.ArtImage.color = Color.white;
+                if (sprite == null)
+                {
+                    card.ArtLoaded = false;
+                    return;
+                }
+
+                card.ArtImage.sprite = sprite;
+                card.ArtImage.color = Color.white;
+            });
         }
 
         static void SetPlaying(BannerCard card, bool playing)
