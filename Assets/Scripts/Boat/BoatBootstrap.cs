@@ -41,6 +41,7 @@ namespace ScrapFishing.Boat
 
         void Awake()
         {
+            CrazyGamesBridge.Init();
             Progression.MigrateSave();
             Fx.Ensure();
             AudioManager.Ensure();
@@ -82,6 +83,19 @@ namespace ScrapFishing.Boat
         {
             TickSession();
             RefreshHud();
+            CrazyGamesBridge.SetGameplay(IsPlaying());
+        }
+
+        // CrazyGames에 알리는 플레이 상태: 출항해서 낚시·잠수 중이고 설정·오리파 창이 닫혀 있을 때만.
+        // 타이틀(메뉴)·결과 화면·보관함·오리파·설정은 멈춤이다.
+        bool IsPlaying()
+        {
+            if (_flow == null || _flow.Phase == GamePhase.Title || _flow.Phase == GamePhase.Results)
+            {
+                return false;
+            }
+
+            return (_settingsView == null || !_settingsView.IsOpen) && (_market == null || !_market.IsOpen);
         }
 
         void ConfigureCamera()

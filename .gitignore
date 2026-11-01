@@ -101,8 +101,11 @@ crashlytics-build.properties
 # DOTween Pro (유료 에셋 - 공개 저장소에 올리지 않음)
 /Assets/Plugins/Demigiant/
 /Assets/Plugins/Demigiant.meta
-/Assets/Plugins/
+/Assets/Plugins/*
 /Assets/Plugins.meta
+# CrazyGames SDK의 jslib는 Plugins에 있어야 하므로(SDK를 다시 가져오면 여기로 들어온다) 이 파일만 올린다.
+!/Assets/Plugins/crazySDK.jslib
+!/Assets/Plugins/crazySDK.jslib.meta
 
 # 폰트 서브셋 도구 의존성, WebGL 용량 점검 결과
 /Tools/FontSubset/node_modules/

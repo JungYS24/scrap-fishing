@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using ScrapFishing.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -16,6 +17,15 @@ namespace ScrapFishing.Controls
 
         public static bool TryRead(out Vector2 position, out bool pressedThisFrame, out bool releasedThisFrame)
         {
+            // 광고가 나오는 동안은 탭·스와이프·조이스틱을 받지 않는다.
+            if (CrazyGamesBridge.InAdBreak)
+            {
+                position = default;
+                pressedThisFrame = false;
+                releasedThisFrame = false;
+                return false;
+            }
+
             var touch = Touchscreen.current;
             if (touch != null)
             {

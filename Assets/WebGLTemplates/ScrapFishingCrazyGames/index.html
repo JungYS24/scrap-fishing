@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <!--
+      CrazyGames 전용 템플릿. GitHub Pages 템플릿(ScrapFishing)에서 PWA manifest·아이콘·og 메타·iOS 설치 안내·
+      인앱 브라우저 안내·전체화면 버튼·세로 고정·회전 안내를 뺐다(전체화면·회전은 CrazyGames 사이트가 맡는다).
+      캔버스는 부모(iframe)를 꽉 채우고, 세로형 게임의 좌우 여백은 게임(FixedResolution)이 #0b1220으로 칠한다.
+      CrazyGames SDK 스크립트는 SDK의 crazySDK.jslib가 직접 불러오므로 여기서 넣지 않는다.
+      files.json은 SDK 템플릿(WebGLTemplates/CrazyGames)과 같은 빌드 파일 목록이다.
+    -->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0b1220;
+        overscroll-behavior: none;
+        touch-action: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      #unity-canvas {
+        position: fixed;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: #0b1220;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      #unity-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0b1220;
+        color: #ffffff;
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        letter-spacing: 0.12em;
+      }
+
+      #unity-title {
+        font-size: 22px;
+        color: #38ff9c;
+        text-shadow: 0 0 12px rgba(56, 255, 156, 0.45);
+        margin-bottom: 28px;
+      }
+
+      #unity-progress-track {
+        width: min(72vw, 280px);
+        height: 10px;
+        border: 1px solid #59d9ff;
+        box-shadow: 0 0 10px rgba(89, 217, 255, 0.35);
+        background: #071018;
+      }
+
+      #unity-progress-bar {
+        width: 0;
+        height: 100%;
+        background: #38ff9c;
+        box-shadow: 0 0 10px rgba(56, 255, 156, 0.7);
+      }
+
+      #unity-progress-label {
+        margin-top: 14px;
+        font-size: 16px;
+        color: #59d9ff;
+      }
+
+      #unity-warning {
+        position: fixed;
+        left: 50%;
+        top: 8%;
+        transform: translate(-50%, 0);
+        width: min(88vw, 420px);
+        display: none;
+        z-index: 3;
+      }
+
+      .banner-error,
+      .banner-warning {
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        color: #0b1220;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+
+      .banner-error { background: #ff2bd6; }
+      .banner-warning { background: #ffd633; }
+
+      #boot-error {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #0b1220;
+        color: #ffffff;
+        text-align: center;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        z-index: 4;
+      }
+
+      #boot-error[hidden],
+      #boot-reload[hidden] {
+        display: none;
+      }
+
+      #boot-error p {
+        margin: 8px 0;
+        max-width: 28em;
+      }
+
+      #boot-error-detail {
+        color: #59d9ff;
+        font-size: 14px;
+      }
+
+      #boot-reload {
+        margin-top: 16px;
+        padding: 10px 16px;
+        border: 1px solid #59d9ff;
+        border-radius: 6px;
+        background: transparent;
+        color: #59d9ff;
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="unity-loading">
+      <div id="unity-title">SCRAP FISHING</div>
+      <div id="unity-progress-track">
+        <div id="unity-progress-bar"></div>
+      </div>
+      <div id="unity-progress-label">0%</div>
+    </div>
+    <div id="unity-warning"></div>
+    <div id="boot-error" hidden>
+      <p id="boot-error-title"></p>
+      <p id="boot-error-detail"></p>
+      <button type="button" id="boot-reload" hidden></button>
+    </div>
+    <script>
+      // 오류 문구는 브라우저 언어가 ko로 시작하면 한국어, 나머지는 영어.
+      var korean = /^ko/i.test(navigator.language || "");
+      var TEXT = korean ? {
+        failed: "게임을 불러오지 못했습니다.",
+        script: "스크립트 오류가 발생했습니다.",
+        loader: "로더를 받지 못했습니다. 네트워크를 확인해 주세요.",
+        stalled: "네트워크가 느리거나 로딩에 실패했습니다. 새로고침해 주세요",
+        retry: "잠시 후 다시 시도해 주세요.",
+        reload: "새로고침"
+      } : {
+        failed: "The game could not be loaded.",
+        script: "A script error occurred.",
+        loader: "Could not download the game. Please check your connection.",
+        stalled: "Loading is slow or failed. Please reload the page.",
+        retry: "Please try again in a moment.",
+        reload: "Reload"
+      };
+      document.querySelector("#boot-error-title").textContent = TEXT.failed;
+      document.querySelector("#boot-reload").textContent = TEXT.reload;
+
+      window.addEventListener("error", function (event) {
+        if (window.__scrapFishingReady) {
+          return;
+        }
+        var target = event && event.target;
+        var isElement = target && target !== window && target.tagName;
+        if (isElement && String(target.tagName).toUpperCase() !== "SCRIPT") {
+          return;
+        }
+        var message = TEXT.script;
+        if (isElement) {
+          message = TEXT.loader;
+        } else if (event && event.message) {
+          message = event.message;
+        } else if (event && event.error && event.error.message) {
+          message = event.error.message;
+        }
+        document.querySelector("#unity-loading").style.display = "none";
+        document.querySelector("#boot-error").hidden = false;
+        document.querySelector("#boot-error-detail").textContent = message;
+      }, true);
+    </script>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var loading = document.querySelector("#unity-loading");
+      var bar = document.querySelector("#unity-progress-bar");
+      var label = document.querySelector("#unity-progress-label");
+      var bootError = document.querySelector("#boot-error");
+      var bootDetail = document.querySelector("#boot-error-detail");
+      var bootReload = document.querySelector("#boot-reload");
+
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        var div = document.createElement("div");
+        div.textContent = msg;
+        div.className = type === "error" ? "banner-error" : "banner-warning";
+        warningBanner.appendChild(div);
+        warningBanner.style.display = "block";
+        if (type !== "error") {
+          setTimeout(function () {
+            if (div.parentNode) {
+              warningBanner.removeChild(div);
+            }
+            if (!warningBanner.children.length) {
+              warningBanner.style.display = "none";
+            }
+          }, 5000);
+        }
+      }
+
+      function showBootError(message) {
+        loading.style.display = "none";
+        bootError.hidden = false;
+        bootDetail.textContent = message || TEXT.retry;
+      }
+
+      document.addEventListener("contextmenu", function (event) { event.preventDefault(); });
+      // 게임은 키보드를 쓰지 않는다. 스페이스·방향키가 페이지(또는 감싼 iframe 바깥)를 스크롤하지 않게 막는다. 입력칸은 그대로 둔다.
+      window.addEventListener("keydown", function (event) {
+        var tag = event.target && event.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") {
+          return;
+        }
+        if ([" ", "Spacebar", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].indexOf(event.key) >= 0) {
+          event.preventDefault();
+        }
+      });
+      bootReload.addEventListener("click", function () {
+        window.location.reload();
+      });
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        arguments: [],
+#if PROGRESSIVE_ASSET_LOADING
+        primaryDataUrls: {{{ JSON.stringify(PRIMARY_DATA_FILES) }}},
+        secondaryDataUrls: {{{ JSON.stringify(SECONDARY_DATA_FILES) }}},
+#else
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+#endif
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#if MEMORY_FILENAME
+        memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner
+      };
+
+      config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = function () {
+        var sawProgress = false;
+        var stallTimer = window.setTimeout(function () {
+          if (sawProgress || window.__scrapFishingReady) {
+            return;
+          }
+          showBootError(TEXT.stalled);
+          bootReload.hidden = false;
+        }, 20000);
+        createUnityInstance(canvas, config, function (progress) {
+          if (progress > 0) {
+            sawProgress = true;
+            window.clearTimeout(stallTimer);
+          }
+          var percent = Math.round(100 * progress);
+          bar.style.width = percent + "%";
+          label.textContent = percent + "%";
+        }).then(function () {
+          window.__scrapFishingReady = true;
+          window.clearTimeout(stallTimer);
+          bootError.hidden = true;
+          bootReload.hidden = true;
+          loading.style.display = "none";
+        }).catch(function (message) {
+          window.clearTimeout(stallTimer);
+          showBootError(message);
+        });
+      };
+      script.onerror = function () {
+        showBootError(TEXT.loader);
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
