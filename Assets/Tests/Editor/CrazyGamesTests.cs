@@ -83,6 +83,81 @@ namespace ScrapFishing.Tests
             StringAssert.DoesNotContain(CrazyGamesBuilder.Define, CrazyGamesBuilder.DefinesWith(false));
         }
 
+        // CrazyGames 빌드만 Brotli + 폴백 끔이고, 빌드가 끝나면 원래 압축 설정(Gzip + 폴백)으로 돌아온다.
+        [Test]
+        public void BuildScope_UsesBrotliOnlyForCrazyGamesAndRestores()
+        {
+            var compression = PlayerSettings.WebGL.compressionFormat;
+            var fallback = PlayerSettings.WebGL.decompressionFallback;
+            using (new BuildSettingsScope(CrazyGamesBuilder.Template, CrazyGamesBuilder.DefinesWith(true), WebGLCompressionFormat.Brotli, false))
+            {
+                Assert.AreEqual(WebGLCompressionFormat.Brotli, PlayerSettings.WebGL.compressionFormat);
+                Assert.IsFalse(PlayerSettings.WebGL.decompressionFallback);
+            }
+
+            Assert.AreEqual(compression, PlayerSettings.WebGL.compressionFormat);
+            Assert.AreEqual(fallback, PlayerSettings.WebGL.decompressionFallback);
+
+            using (new BuildSettingsScope(WebGLBuilder.Template, CrazyGamesBuilder.DefinesWith(false)))
+            {
+                Assert.AreEqual(WebGLCompressionFormat.Gzip, PlayerSettings.WebGL.compressionFormat);
+                Assert.IsTrue(PlayerSettings.WebGL.decompressionFallback);
+            }
+        }
+
+        [Test]
+        public void BrotliCheck_NeedsBrFilesAndNoUnityweb()
+        {
+            var dir = Path.Combine(Path.GetTempPath(), "sf-brotli-check");
+            if (Directory.Exists(dir))
+            {
+                Directory.Delete(dir, true);
+            }
+
+            Directory.CreateDirectory(dir);
+            try
+            {
+                foreach (var name in new[] { "CrazyGames.loader.js", "CrazyGames.data.br", "CrazyGames.wasm.br", "CrazyGames.framework.js.br" })
+                {
+                    File.WriteAllText(Path.Combine(dir, name), "x");
+                }
+
+                Assert.IsTrue(CrazyGamesBuilder.ValidateBrotliOutput(dir));
+
+                File.WriteAllText(Path.Combine(dir, "CrazyGames.data.unityweb"), "x");
+                UnityEngine.TestTools.LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("unityweb"));
+                Assert.IsFalse(CrazyGamesBuilder.ValidateBrotliOutput(dir), ".unityweb가 있으면 실패");
+
+                File.Delete(Path.Combine(dir, "CrazyGames.data.unityweb"));
+                File.Delete(Path.Combine(dir, "CrazyGames.wasm.br"));
+                UnityEngine.TestTools.LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex(@"wasm\.br"));
+                Assert.IsFalse(CrazyGamesBuilder.ValidateBrotliOutput(dir), ".wasm.br가 없으면 실패");
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        // 템플릿은 빌드 파일 이름을 Unity 자리표시자로 받아서, 압축 형식(.br)이 바뀌어도 고칠 곳이 없어야 한다.
+        [Test]
+        public void CrazyGamesTemplate_DoesNotHardcodeCompressedNames()
+        {
+            foreach (var path in new[] { CrazyGamesTemplate, "Assets/WebGLTemplates/ScrapFishingCrazyGames/files.json" })
+            {
+                var text = File.ReadAllText(path);
+                foreach (var ext in new[] { ".unityweb", ".gz\"", ".br\"" })
+                {
+                    StringAssert.DoesNotContain(ext, text, path);
+                }
+            }
+
+            var html = File.ReadAllText(CrazyGamesTemplate);
+            StringAssert.Contains("{{{ DATA_FILENAME }}}", html);
+            StringAssert.Contains("{{{ CODE_FILENAME }}}", html);
+            StringAssert.Contains("{{{ FRAMEWORK_FILENAME }}}", html);
+        }
+
         [Test]
         public void Bridge_SendsOnlyChangesAndStopsDuringAds()
         {

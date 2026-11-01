@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace ScrapFishing.Build
 {
-    // CrazyGames 빌드. GitHub Pages(docs) 빌드와 같은 압축·최적화 설정을 쓰되, CrazyGames 전용 템플릿
+    // CrazyGames 빌드. GitHub Pages(docs) 빌드와 같은 최적화 설정을 쓰되, CrazyGames 전용 템플릿
     // (WebGLTemplates/ScrapFishingCrazyGames)과 CRAZYGAMES 심볼로 Builds/CrazyGames에 따로 낸다.
-    // 빌드가 끝나면 템플릿·심볼 등 PlayerSettings를 원래 값으로 되돌린다(BuildSettingsScope).
+    // 압축은 CrazyGames 업로드가 요구하는 Brotli(.br, 압축 풀기 폴백 끔)이고, GitHub Pages는 Gzip + 폴백 그대로다.
+    // 빌드가 끝나면(성공·실패 모두) 템플릿·심볼·압축 등 PlayerSettings를 원래 값으로 되돌린다(BuildSettingsScope).
     public static class CrazyGamesBuilder
     {
         public const string Define = "CRAZYGAMES";
@@ -80,7 +81,7 @@ namespace ScrapFishing.Build
         {
             var output = Path.GetFullPath(Path.Combine("Builds", "CrazyGames"));
             bool ok;
-            using (new BuildSettingsScope(Template, DefinesWith(true)))
+            using (new BuildSettingsScope(Template, DefinesWith(true), WebGLCompressionFormat.Brotli, false))
             {
                 ok = BuildTo(output);
             }
@@ -123,7 +124,40 @@ namespace ScrapFishing.Build
                 Directory.Delete(leftover, true);
             }
 
-            return report.summary.result == BuildResult.Succeeded && WebGLBuilder.ValidateWebGlOutput(output);
+            return report.summary.result == BuildResult.Succeeded && WebGLBuilder.ValidateWebGlOutput(output)
+                   && ValidateBrotliOutput(Path.Combine(output, "Build"));
+        }
+
+        static readonly string[] BrotliSuffixes = { ".data.br", ".wasm.br", ".framework.js.br" };
+
+        // CrazyGames는 Brotli 파일만 압축으로 알아본다. 데이터·코드·프레임워크가 .br로 있고,
+        // 폴백 빌드의 .unityweb가 없어야 통과한다.
+        public static bool ValidateBrotliOutput(string buildDir)
+        {
+            if (!Directory.Exists(buildDir))
+            {
+                Debug.LogError("CrazyGames Build folder not found: " + buildDir);
+                return false;
+            }
+
+            var files = Directory.GetFiles(buildDir).Select(Path.GetFileName).ToArray();
+            var ok = true;
+            foreach (var suffix in BrotliSuffixes)
+            {
+                if (!files.Any(f => f.EndsWith(suffix, System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    Debug.LogError("CrazyGames build has no *" + suffix + " in " + buildDir);
+                    ok = false;
+                }
+            }
+
+            foreach (var file in files.Where(f => f.EndsWith(".unityweb", System.StringComparison.OrdinalIgnoreCase)))
+            {
+                Debug.LogError("CrazyGames build must not contain .unityweb (decompression fallback): " + file);
+                ok = false;
+            }
+
+            return ok;
         }
     }
 }

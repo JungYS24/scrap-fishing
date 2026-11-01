@@ -21,6 +21,12 @@ namespace ScrapFishing.Build
         readonly bool _splash;
 
         public BuildSettingsScope(string template, string defines)
+            : this(template, defines, WebGLCompressionFormat.Gzip, true)
+        {
+        }
+
+        // 압축만 대상별로 다르게 할 때(CrazyGames는 Brotli + 압축 풀기 폴백 끔). 끝나면 원래 압축 설정으로 되돌린다.
+        public BuildSettingsScope(string template, string defines, WebGLCompressionFormat compression, bool decompressionFallback)
         {
             _template = PlayerSettings.WebGL.template;
             _defines = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.WebGL);
@@ -36,6 +42,8 @@ namespace ScrapFishing.Build
             WebGLBuilder.ApplySettings();
             PlayerSettings.WebGL.template = template;
             PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.WebGL, defines);
+            PlayerSettings.WebGL.compressionFormat = compression;
+            PlayerSettings.WebGL.decompressionFallback = decompressionFallback;
         }
 
         public void Dispose()
