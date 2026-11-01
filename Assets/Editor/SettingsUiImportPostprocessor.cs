@@ -25,6 +25,13 @@ public class SettingsUiImportPostprocessor : AssetPostprocessor
         { "footer_box", new[] { 8, 8, 8, 8 } },
     };
 
+    // WebGL 최대 크기를 1024보다 줄이는 큰 그림. 패널은 화면에서 최대 약 560px(창 높이 1080)로 보인다.
+    // 무압축 RGBA32는 gzip(.data)에서 잘 줄어서 DXT보다 첫 다운로드가 작다. 그래서 압축 대신 크기만 줄인다.
+    public static readonly Dictionary<string, int> WebGLMaxSizes = new Dictionary<string, int>
+    {
+        { "panel", 512 },
+    };
+
     public static Vector4 UnityBorder(int[] ltrb)
     {
         return new Vector4(ltrb[0], ltrb[3], ltrb[2], ltrb[1]);
@@ -39,11 +46,12 @@ public class SettingsUiImportPostprocessor : AssetPostprocessor
         }
 
         var border = BordersLTRB.TryGetValue(Path.GetFileNameWithoutExtension(path), out var ltrb) ? UnityBorder(ltrb) : Vector4.zero;
-        ApplyUiSprite((TextureImporter)assetImporter, border);
+        var name = Path.GetFileNameWithoutExtension(path);
+        ApplyUiSprite((TextureImporter)assetImporter, border, WebGLMaxSizes.TryGetValue(name, out var max) ? max : 1024);
     }
 
     // UI 스킨 PNG 공통 가져오기 설정. HUD 스킨(HudUiImportPostprocessor)도 같은 설정을 쓴다.
-    public static void ApplyUiSprite(TextureImporter importer, Vector4 border)
+    public static void ApplyUiSprite(TextureImporter importer, Vector4 border, int webglMaxSize = 1024)
     {
         importer.textureType = TextureImporterType.Sprite;
         importer.spriteImportMode = SpriteImportMode.Single;
@@ -68,7 +76,7 @@ public class SettingsUiImportPostprocessor : AssetPostprocessor
         {
             name = "WebGL",
             overridden = true,
-            maxTextureSize = 1024,
+            maxTextureSize = webglMaxSize,
             format = TextureImporterFormat.RGBA32,
             textureCompression = TextureImporterCompression.Uncompressed,
         });

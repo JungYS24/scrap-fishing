@@ -57,8 +57,12 @@ namespace ScrapFishing.Tests
             var skin = AssetDatabase.LoadAssetAtPath<SettingsSkin>("Assets/Resources/UI/SettingsSkin.asset");
             Assert.IsNotNull(skin);
             Assert.IsTrue(skin.Complete);
-            Assert.AreEqual(new Vector2(522f, 770f), skin.panel.rect.size);
-            Assert.AreEqual(new Vector4(130f, 130f, 130f, 130f), skin.panel.border);
+            // 원본 522×770, 테두리 130. WebGL은 최대 512로 줄여 가져오므로(SettingsUiImportPostprocessor.WebGLMaxSizes)
+            // 크기는 비율로 보고, 9-slice 테두리도 같은 비율로 줄었는지 확인한다(안 줄면 틀이 두꺼워 보인다).
+            var scale = skin.panel.rect.width / 522f;
+            Assert.AreEqual(770f * scale, skin.panel.rect.height, 1f);
+            Assert.AreEqual(130f * scale, skin.panel.border.x, 1f, "테두리가 그림과 같은 비율로 줄어야 한다");
+            Assert.AreEqual(skin.panel.border.x, skin.panel.border.w, 0.5f);
         }
 
         static GameObject MakeArea(out RectTransform area)

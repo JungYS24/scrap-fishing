@@ -123,8 +123,10 @@ namespace ScrapFishing.Build
             PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.WebGL, Il2CppCodeGeneration.OptimizeSize);
             PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.WebGL, Il2CppCompilerConfiguration.Master);
             UnityEditor.WebGL.UserBuildSettings.codeOptimization = UnityEditor.WebGL.WasmCodeOptimization.DiskSizeLTO;
-            // Unity 로고 스플래시 없이 바로 시작한다.
+            // Unity 로고 스플래시 없이 바로 시작한다. 스플래시를 꺼도 "Unity 로고 표시"가 켜져 있으면
+            // 로고 텍스처(약 2.7MB)가 빌드에 들어가므로 같이 끈다.
             PlayerSettings.SplashScreen.show = false;
+            PlayerSettings.SplashScreen.showUnityLogo = false;
         }
 
         static readonly string[] ShareFiles =

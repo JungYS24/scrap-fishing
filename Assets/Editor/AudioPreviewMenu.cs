@@ -31,11 +31,11 @@ public static class AudioPreviewMenu
         AudioManager.Ensure().PlayPlayBgm();
     }
 
-    [MenuItem(Root + "Reimport SFX + BGM", false, 60)]
+    [MenuItem(Root + "Reimport SFX", false, 60)]
     static void Reimport()
     {
         AssetDatabase.ImportAsset("Assets/Resources/Audio/SFX", ImportAssetOptions.ImportRecursive);
-        AssetDatabase.ImportAsset("Assets/Resources/Audio/Start_Title_BGM.mp3", ImportAssetOptions.ForceUpdate);
+        // BGM 두 곡은 StreamingAssets에서 실행 중에 받으므로 다시 가져올 것이 없다.
         Debug.Log("Audio reimport 요청 완료");
     }
 
