@@ -1,36 +1,30 @@
 using NUnit.Framework;
 using ScrapFishing.Core;
-using UnityEngine;
+using ScrapFishing.UI;
 
 namespace ScrapFishing.Tests
 {
-    // 기존 테스트는 한국어 문구("음량", "해저 평원" 등)를 확인하므로 모든 테스트를 한국어로 돌린다.
-    // 플레이 모드 진입(도메인 리로드) 뒤에도 유지되게 PlayerPrefs에 쓰고, 끝나면 원래 값으로 되돌린다.
+    // 모든 테스트는 에디터 PlayerPrefs가 아닌 메모리 저장소(TestSaves)로 돈다. 개발자 PC의 저장 상태에 결과가 흔들리지 않는다.
+    // 기존 테스트는 한국어 문구("음량", "해저 평원" 등)를 확인하므로 한국어로 두고,
+    // 첫 플레이 튜토리얼은 끝난 것으로 둔다(튜토리얼이 뜨면 게임이 멈춰 시간·결과 흐름 테스트가 진행되지 않는다).
     [SetUpFixture]
     public class LocTestSetup
     {
-        string _saved;
+        public const int TutorialDone = 2;
 
         [OneTimeSetUp]
-        public void PinKorean()
+        public void UseMemorySaves()
         {
-            _saved = PlayerPrefs.HasKey(Loc.PrefKey) ? PlayerPrefs.GetString(Loc.PrefKey) : null;
-            PlayerPrefs.SetString(Loc.PrefKey, Loc.Code(GameLanguage.Ko));
+            TestSaves.Begin();
+            SaveStore.SetString(Loc.PrefKey, Loc.Code(GameLanguage.Ko));
+            SaveStore.SetInt(FirstPlayGuide.Key, TutorialDone);
             Loc.Reload();
         }
 
         [OneTimeTearDown]
         public void Restore()
         {
-            if (_saved != null)
-            {
-                PlayerPrefs.SetString(Loc.PrefKey, _saved);
-            }
-            else
-            {
-                PlayerPrefs.DeleteKey(Loc.PrefKey);
-            }
-
+            TestSaves.End();
             Loc.Reload();
         }
     }

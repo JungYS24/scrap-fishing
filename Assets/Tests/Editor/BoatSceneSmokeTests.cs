@@ -22,7 +22,7 @@ namespace ScrapFishing.Tests
         [UnityTest]
         public IEnumerator TitleSettingsAndDrones()
         {
-            var soundOn = PlayerPrefs.GetInt("SoundOn", 1);
+            var soundOn = SaveStore.GetInt("SoundOn", 1);
             yield return new EnterPlayMode();
             var load = EditorSceneManager.LoadSceneAsyncInPlayMode(BoatScene, new LoadSceneParameters(LoadSceneMode.Single));
             while (!load.isDone)
@@ -250,8 +250,8 @@ namespace ScrapFishing.Tests
             yield return OpenSettingsFromHud(hud, "잠수");
 
             yield return new ExitPlayMode();
-            PlayerPrefs.SetInt("SoundOn", soundOn);
-            PlayerPrefs.Save();
+            SaveStore.SetInt("SoundOn", soundOn);
+            SaveStore.Save();
         }
 
         static IEnumerator OpenSettingsFromHud(Transform hud, string where)

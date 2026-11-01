@@ -90,7 +90,12 @@ namespace ScrapFishing.Tests
             var audioBefore = AudioListener.pause;
             try
             {
+                CrazyGamesBridge.SetGameplay(true);
+                Assert.IsNull(CrazyGamesBridge.LastSent, "SDK 초기화 전에는 보내지 않는다");
                 CrazyGamesBridge.SetGameplay(false);
+                // 실제로는 Init이 SDK 초기화 콜백에서 부른다(에디터에서는 DontDestroyOnLoad를 못 써 직접 부른다).
+                typeof(CrazyGamesBridge).GetMethod("MarkReady", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+                Assert.IsTrue(CrazyGamesBridge.IsReady);
                 Assert.IsNull(CrazyGamesBridge.LastSent, "시작한 적 없으면 멈춤도 보내지 않는다");
 
                 CrazyGamesBridge.SetGameplay(true);

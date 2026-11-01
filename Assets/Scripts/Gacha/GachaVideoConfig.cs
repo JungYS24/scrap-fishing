@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
 
@@ -236,7 +237,7 @@ namespace ScrapFishing.Gacha
         // 같은 머신 영상을 한 번 끝까지(결과 카드 시점까지) 본 기록. 본 영상만 탭으로 건너뛸 수 있다.
         public static bool HasSeen(string machineId)
         {
-            return PlayerPrefs.GetInt(SeenPrefix + KeyOf(machineId), 0) != 0;
+            return SaveStore.GetInt(SeenPrefix + KeyOf(machineId), 0) != 0;
         }
 
         public static void MarkSeen(string machineId)
@@ -246,13 +247,13 @@ namespace ScrapFishing.Gacha
                 return;
             }
 
-            PlayerPrefs.SetInt(SeenPrefix + KeyOf(machineId), 1);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(SeenPrefix + KeyOf(machineId), 1);
+            SaveStore.Save();
         }
 
         public static void ClearSeen(string machineId)
         {
-            PlayerPrefs.DeleteKey(SeenPrefix + KeyOf(machineId));
+            SaveStore.DeleteKey(SeenPrefix + KeyOf(machineId));
         }
     }
 }

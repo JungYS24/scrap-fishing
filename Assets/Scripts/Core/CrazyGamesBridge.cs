@@ -16,6 +16,7 @@ namespace ScrapFishing.Core
     {
         static CrazyGamesBridge _instance;
         static bool _ready;
+        static Action _whenReady;
         static bool _wantPlay;
         static bool _focused = true;
         static bool _inAd;
@@ -45,9 +46,20 @@ namespace ScrapFishing.Core
             }
         }
 
-        // 첫 씬에서 한 번 부른다(씬을 다시 불러도 한 번만 초기화한다).
-        public static void Init()
+        // SDK 초기화가 끝났는지(SDK를 쓰지 않는 빌드는 Init 직후 true). CrazyGames 빌드는 이 뒤에만 저장(SaveStore)을 읽는다.
+        public static bool IsReady => _ready;
+
+        // 첫 씬에서 부른다(여러 번 불러도 한 번만 초기화한다). onReady는 초기화가 끝나면(이미 끝났으면 바로) 불린다.
+        // CrazyGames 빌드에서만 SDK를 초기화하고, 그 밖의 빌드·에디터는 SDK를 전혀 부르지 않는다.
+        public static void Init(Action onReady = null)
         {
+            if (_ready)
+            {
+                onReady?.Invoke();
+                return;
+            }
+
+            _whenReady += onReady;
             if (_instance != null)
             {
                 return;
@@ -59,15 +71,22 @@ namespace ScrapFishing.Core
 #if CRAZYGAMES && UNITY_WEBGL && !UNITY_EDITOR
             if (CrazySDK.IsAvailable)
             {
-                CrazySDK.Init(() =>
-                {
-                    _ready = true;
-                    Flush();
-                });
+                CrazySDK.Init(MarkReady);
+                return;
             }
 #else
             EditorLog("Init (SDK 호출 안 함)");
 #endif
+            MarkReady();
+        }
+
+        static void MarkReady()
+        {
+            _ready = true;
+            var callbacks = _whenReady;
+            _whenReady = null;
+            callbacks?.Invoke();
+            Flush();
         }
 
         // 게임이 지금 플레이 중인지(출항해서 낚시·잠수 중이고 설정·오리파 창이 닫혀 있음).
@@ -172,8 +191,13 @@ namespace ScrapFishing.Core
                 return;
             }
 
+            if (!_ready)
+            {
+                return;
+            }
+
 #if CRAZYGAMES && UNITY_WEBGL && !UNITY_EDITOR
-            if (!Active || !_ready)
+            if (!Active)
             {
                 return;
             }
@@ -205,6 +229,7 @@ namespace ScrapFishing.Core
         {
             _instance = null;
             _ready = false;
+            _whenReady = null;
             _wantPlay = false;
             _focused = true;
             _inAd = false;

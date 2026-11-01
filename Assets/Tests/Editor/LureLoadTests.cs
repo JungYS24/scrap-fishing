@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using ScrapFishing.Core;
 using ScrapFishing.Fishing;
 using UnityEngine;
 
@@ -56,26 +57,26 @@ namespace ScrapFishing.Tests
         [Test]
         public void RodStats_ReelLevelAddsOneSlot()
         {
-            var previous = PlayerPrefs.GetInt("UpgradeReel", 0);
+            var previous = SaveStore.GetInt("UpgradeReel", 0);
             try
             {
-                PlayerPrefs.SetInt("UpgradeReel", 0);
-                PlayerPrefs.Save();
+                SaveStore.SetInt("UpgradeReel", 0);
+                SaveStore.Save();
                 Assert.AreEqual(4, RodStats.MaxAttach);
-                PlayerPrefs.SetInt("UpgradeReel", 1);
-                PlayerPrefs.Save();
+                SaveStore.SetInt("UpgradeReel", 1);
+                SaveStore.Save();
                 Assert.AreEqual(5, RodStats.MaxAttach);
-                PlayerPrefs.SetInt("UpgradeReel", 5);
-                PlayerPrefs.Save();
+                SaveStore.SetInt("UpgradeReel", 5);
+                SaveStore.Save();
                 Assert.AreEqual(9, RodStats.MaxAttach);
-                PlayerPrefs.SetInt("UpgradeReel", 99);
-                PlayerPrefs.Save();
+                SaveStore.SetInt("UpgradeReel", 99);
+                SaveStore.Save();
                 Assert.AreEqual(9, RodStats.MaxAttach);
             }
             finally
             {
-                PlayerPrefs.SetInt("UpgradeReel", previous);
-                PlayerPrefs.Save();
+                SaveStore.SetInt("UpgradeReel", previous);
+                SaveStore.Save();
             }
         }
     }

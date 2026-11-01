@@ -17,7 +17,7 @@ namespace ScrapFishing.Gacha
         //          새 카탈로그에 없는 옛 장비 id만 등급 환원가만큼 달러로 돌려준다. 수트 머신 카운트는 헬멧 머신으로 옮긴다.
         // v2 미만: 예전 규칙대로 달러·강화를 초기화한다(밸런스가 바뀌기 전의 저장값).
         // 현재 버전 이상: 건드리지 않는다. 더 높은 버전을 낮은 빌드가 지워 버리는 일을 막는다.
-        public static bool Run(IKeyValueStore store, GachaCatalog catalog = null)
+        public static bool Run(ISaveStore store, GachaCatalog catalog = null)
         {
             var version = store.GetInt(VersionKey, 0);
             if (version >= CurrentVersion)
@@ -43,7 +43,7 @@ namespace ScrapFishing.Gacha
         }
 
         // 가챠 저장이 없거나 깨졌으면 빈 데이터로 새로 만든다. 실패해도 다른 키는 그대로 둔다.
-        static void EnsureGachaSave(IKeyValueStore store)
+        static void EnsureGachaSave(ISaveStore store)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace ScrapFishing.Gacha
         }
 
         // 반환값: 돌려준 달러.
-        public static int RefundRetiredGear(IKeyValueStore store, GachaCatalog catalog)
+        public static int RefundRetiredGear(ISaveStore store, GachaCatalog catalog)
         {
             if (catalog == null || catalog.Machines.Count == 0)
             {

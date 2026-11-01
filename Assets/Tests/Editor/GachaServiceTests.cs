@@ -181,7 +181,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Shop_InsufficientDollars_ChangesNothing()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var wallet = new MemoryWallet(4999);
             var shop = NewShop(store, wallet);
             Assert.IsFalse(shop.TryPull(_lure, 1, out _));
@@ -192,7 +192,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Shop_PullSpendsAndSavesImmediately()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var wallet = new MemoryWallet(1000000);
             var shop = NewShop(store, wallet);
             GachaPullResult result = null;
@@ -216,7 +216,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Shop_MarksDuplicates()
         {
-            var shop = NewShop(new MemoryKeyValueStore(), new MemoryWallet(100000), new FixedRandom(0f));
+            var shop = NewShop(new MemorySaveStore(), new MemoryWallet(100000), new FixedRandom(0f));
             Assert.IsTrue(shop.TryPull(_lure, 1, out var first));
             Assert.IsFalse(first.Items[0].Duplicate);
             Assert.IsTrue(shop.TryPull(_lure, 1, out var second));
@@ -226,7 +226,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Shop_RefundAddsDollarsAndEquippedCannotBeRefunded()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var wallet = new MemoryWallet(10000);
             var shop = NewShop(store, wallet, new FixedRandom(0f));
             Assert.IsTrue(shop.TryPull(_lure, 2, out _));
@@ -284,7 +284,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Migration_V2KeepsDollarsAndUpgradeLevels()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             store.SetInt(SaveMigration.VersionKey, 2);
             store.SetInt(Progression.DollarKey, 123456);
             store.SetInt(Progression.LevelKey(UpgradeKind.Reel), 3);
@@ -307,7 +307,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Migration_CurrentVersionIsNoOp()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             store.SetInt(SaveMigration.VersionKey, SaveMigration.CurrentVersion);
             store.SetInt(Progression.DollarKey, 500);
             Assert.IsFalse(SaveMigration.Run(store));
@@ -318,7 +318,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Migration_BrokenGachaSaveIsRebuiltWithoutTouchingDollars()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             store.SetInt(SaveMigration.VersionKey, 2);
             store.SetInt(Progression.DollarKey, 777);
             store.SetString(GearInventory.SaveKey, "{not json");
@@ -330,7 +330,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Migration_LegacySaveStillResets()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             store.SetInt(SaveMigration.VersionKey, 1);
             store.SetInt(Progression.DollarKey, 999);
             store.SetInt(Progression.LevelKey(UpgradeKind.Reel), 4);
@@ -363,7 +363,7 @@ namespace ScrapFishing.Tests
             }
         }
 
-        GachaShop NewShop(IKeyValueStore store, IGachaWallet wallet, IGachaRandom random = null)
+        GachaShop NewShop(ISaveStore store, IGachaWallet wallet, IGachaRandom random = null)
         {
             return new GachaShop(_catalog, new GachaService(random ?? new SystemGachaRandom(Seed)), wallet, store, () => 0L);
         }

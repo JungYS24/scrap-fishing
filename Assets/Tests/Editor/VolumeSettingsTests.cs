@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using ScrapFishing.Audio;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Tests
@@ -17,8 +18,8 @@ namespace ScrapFishing.Tests
             for (var i = 0; i < Channels.Length; i++)
             {
                 var key = VolumeSettings.Key(Channels[i]);
-                _saved[i] = PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) : (int?)null;
-                PlayerPrefs.DeleteKey(key);
+                _saved[i] = SaveStore.HasKey(key) ? SaveStore.GetInt(key) : (int?)null;
+                SaveStore.DeleteKey(key);
             }
 
             VolumeSettings.Reload();
@@ -32,15 +33,15 @@ namespace ScrapFishing.Tests
                 var key = VolumeSettings.Key(Channels[i]);
                 if (_saved[i].HasValue)
                 {
-                    PlayerPrefs.SetInt(key, _saved[i].Value);
+                    SaveStore.SetInt(key, _saved[i].Value);
                 }
                 else
                 {
-                    PlayerPrefs.DeleteKey(key);
+                    SaveStore.DeleteKey(key);
                 }
             }
 
-            PlayerPrefs.Save();
+            SaveStore.Save();
             VolumeSettings.Reload();
         }
 
@@ -72,9 +73,9 @@ namespace ScrapFishing.Tests
             VolumeSettings.Set(VolumeChannel.Master, 100);
             VolumeSettings.Set(VolumeChannel.Bgm, 35);
             VolumeSettings.Set(VolumeChannel.Sfx, 0);
-            Assert.AreEqual(100, PlayerPrefs.GetInt(VolumeSettings.MasterKey));
-            Assert.AreEqual(35, PlayerPrefs.GetInt(VolumeSettings.BgmKey));
-            Assert.AreEqual(0, PlayerPrefs.GetInt(VolumeSettings.SfxKey));
+            Assert.AreEqual(100, SaveStore.GetInt(VolumeSettings.MasterKey));
+            Assert.AreEqual(35, SaveStore.GetInt(VolumeSettings.BgmKey));
+            Assert.AreEqual(0, SaveStore.GetInt(VolumeSettings.SfxKey));
 
             VolumeSettings.Reload();
             Assert.AreEqual(100, VolumeSettings.Get(VolumeChannel.Master));

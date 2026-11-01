@@ -10,7 +10,7 @@ namespace ScrapFishing.Fishing
 
         static readonly int[] CapacityByLevel = { 4, 5, 6, 7, 8, 9 };
 
-        public static int Level => Mathf.Max(0, PlayerPrefs.GetInt(LevelKey, 0));
+        public static int Level => Mathf.Max(0, SaveStore.GetInt(LevelKey, 0));
 
         public static int MaxLevel => CapacityByLevel.Length - 1;
 
@@ -25,15 +25,15 @@ namespace ScrapFishing.Fishing
                 return false;
             }
 
-            PlayerPrefs.SetInt(LevelKey, Level + 1);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(LevelKey, Level + 1);
+            SaveStore.Save();
             return true;
         }
 
         public static void ResetLevel()
         {
-            PlayerPrefs.SetInt(LevelKey, 0);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(LevelKey, 0);
+            SaveStore.Save();
         }
     }
 }

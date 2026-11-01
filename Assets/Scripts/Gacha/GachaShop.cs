@@ -96,14 +96,14 @@ namespace ScrapFishing.Gacha
 
         readonly GachaService _service;
         readonly IGachaWallet _wallet;
-        readonly IKeyValueStore _store;
+        readonly ISaveStore _store;
         readonly Func<long> _clock;
 
         public GachaCatalog Catalog { get; }
         public GearInventory Inventory { get; }
         public int Balance => _wallet.Balance;
 
-        public GachaShop(GachaCatalog catalog, GachaService service, IGachaWallet wallet, IKeyValueStore store, Func<long> clock = null)
+        public GachaShop(GachaCatalog catalog, GachaService service, IGachaWallet wallet, ISaveStore store, Func<long> clock = null)
         {
             Catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
             _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -116,7 +116,7 @@ namespace ScrapFishing.Gacha
         // 실제 게임용 상점. 장착 칸이 빈 슬롯은 노멀 1번으로 채워 저장한다(첫 시작이면 6종 모두).
         public static GachaShop CreateDefault()
         {
-            var shop = new GachaShop(GachaCatalog.LoadDefault(), new GachaService(new SystemGachaRandom()), ProgressionWallet.Instance, PlayerPrefsStore.Instance);
+            var shop = new GachaShop(GachaCatalog.LoadDefault(), new GachaService(new SystemGachaRandom()), ProgressionWallet.Instance, SaveStore.Current);
             shop.EnsureStarterGear();
             return shop;
         }
@@ -171,7 +171,7 @@ namespace ScrapFishing.Gacha
             Inventory.AddPulled(gears, machine.Id, _clock(), bannerId);
             Inventory.Write(_store);
 
-            // ProgressionWallet은 차감과 함께 PlayerPrefs.Save()를 부르므로 가챠 저장도 같이 기록된다.
+            // ProgressionWallet은 차감과 함께 SaveStore.Save()를 부르므로 가챠 저장도 같이 기록된다.
             if (!_wallet.TrySpend(CostOf(machine, count)))
             {
                 Inventory.RestoreJson(snapshot);
@@ -451,7 +451,7 @@ namespace ScrapFishing.Gacha
             readonly int? _high;
             readonly int? _festivalDay;
 
-            public BannerKeys(IKeyValueStore store, GachaBanner banner)
+            public BannerKeys(ISaveStore store, GachaBanner banner)
             {
                 _id = banner.Id;
                 _day = Read(store, DailyDayKey + _id);
@@ -460,7 +460,7 @@ namespace ScrapFishing.Gacha
                 _festivalDay = Read(store, FestivalDayKey + _id);
             }
 
-            public void Restore(IKeyValueStore store)
+            public void Restore(ISaveStore store)
             {
                 Write(store, DailyDayKey + _id, _day);
                 Write(store, FestivalPullsKey + _id, _pulls);
@@ -468,12 +468,12 @@ namespace ScrapFishing.Gacha
                 Write(store, FestivalDayKey + _id, _festivalDay);
             }
 
-            static int? Read(IKeyValueStore store, string key)
+            static int? Read(ISaveStore store, string key)
             {
                 return store.HasKey(key) ? store.GetInt(key, 0) : (int?)null;
             }
 
-            static void Write(IKeyValueStore store, string key, int? value)
+            static void Write(ISaveStore store, string key, int? value)
             {
                 if (value.HasValue)
                 {

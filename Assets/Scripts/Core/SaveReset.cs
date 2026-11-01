@@ -26,8 +26,8 @@ namespace ScrapFishing.Core
             }
             else
             {
-                PlayerPrefs.DeleteAll();
-                PlayerPrefs.Save();
+                SaveStore.DeleteAll();
+                SaveStore.Save();
             }
 
             VolumeSettings.Reload();

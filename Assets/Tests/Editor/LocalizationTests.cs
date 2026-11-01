@@ -193,21 +193,21 @@ namespace ScrapFishing.Tests
         }
 
         [Test]
-        public void LanguageIsSavedInPlayerPrefs()
+        public void LanguageIsSaved()
         {
-            var saved = PlayerPrefs.GetString(Loc.PrefKey);
+            var saved = SaveStore.GetString(Loc.PrefKey);
             try
             {
                 Loc.Language = GameLanguage.En;
-                Assert.AreEqual("en", PlayerPrefs.GetString(Loc.PrefKey));
+                Assert.AreEqual("en", SaveStore.GetString(Loc.PrefKey));
                 Loc.Reload();
                 Assert.AreEqual(GameLanguage.En, Loc.Language, "다시 읽어도 영어");
                 Loc.Toggle();
-                Assert.AreEqual("ko", PlayerPrefs.GetString(Loc.PrefKey));
+                Assert.AreEqual("ko", SaveStore.GetString(Loc.PrefKey));
             }
             finally
             {
-                PlayerPrefs.SetString(Loc.PrefKey, saved);
+                SaveStore.SetString(Loc.PrefKey, saved);
                 Loc.Reload();
             }
         }

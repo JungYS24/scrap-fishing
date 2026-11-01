@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.Scrap;
 using UnityEngine;
@@ -131,7 +132,7 @@ namespace ScrapFishing.Audio
             }
         }
 
-        public bool SoundOn => PlayerPrefs.GetInt(SoundPref, 1) != 0;
+        public bool SoundOn => SaveStore.GetInt(SoundPref, 1) != 0;
 
         // 따로 AudioSource를 쓰는 효과음(오리파 연출 등)이 맞출 음량: 믹스의 효과음 기준 × 설정의 마스터·효과음 음량.
         public float SfxLevel => Mathf.Clamp01((mix != null ? mix.masterSfx : 1f) * VolumeSettings.SfxGain);
@@ -140,8 +141,8 @@ namespace ScrapFishing.Audio
 
         public void SetSoundOn(bool on)
         {
-            PlayerPrefs.SetInt(SoundPref, on ? 1 : 0);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(SoundPref, on ? 1 : 0);
+            SaveStore.Save();
             ApplySoundPref();
             SoundChanged?.Invoke();
         }

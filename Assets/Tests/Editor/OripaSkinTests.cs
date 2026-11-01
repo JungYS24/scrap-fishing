@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.Gacha;
 using UnityEditor;
@@ -96,7 +97,7 @@ namespace ScrapFishing.Tests
 
         static GachaShop MakeShop(GachaCatalog catalog, out GearData synchro)
         {
-            var shop = new GachaShop(catalog, new GachaService(new SystemGachaRandom(5)), new MemoryWallet(10000000), new MemoryKeyValueStore(), () => 0L);
+            var shop = new GachaShop(catalog, new GachaService(new SystemGachaRandom(5)), new MemoryWallet(10000000), new MemorySaveStore(), () => 0L);
             shop.EnsureStarterGear();
             var gears = new List<GearData>();
             foreach (ItemRarity rarity in System.Enum.GetValues(typeof(ItemRarity)))

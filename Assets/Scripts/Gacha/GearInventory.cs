@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Gacha
@@ -72,13 +73,13 @@ namespace ScrapFishing.Gacha
             _data = Sanitize(data);
         }
 
-        public static GearInventory Load(IKeyValueStore store, GachaCatalog catalog)
+        public static GearInventory Load(ISaveStore store, GachaCatalog catalog)
         {
             return new GearInventory(catalog, Read(store));
         }
 
         // 저장값이 없거나 깨졌으면 빈 데이터를 돌려준다. 달러·강화 키는 건드리지 않는다.
-        public static GachaSaveData Read(IKeyValueStore store)
+        public static GachaSaveData Read(ISaveStore store)
         {
             var json = store != null ? store.GetString(SaveKey, null) : null;
             if (string.IsNullOrEmpty(json))
@@ -96,7 +97,7 @@ namespace ScrapFishing.Gacha
             }
         }
 
-        public void Write(IKeyValueStore store)
+        public void Write(ISaveStore store)
         {
             store.SetString(SaveKey, ToJson());
         }
