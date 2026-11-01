@@ -200,7 +200,8 @@ namespace ScrapFishing.Gacha
             }
 
             var entry = _config.For(machine.Id);
-            Preload(entry != null ? entry.sfx : null);
+            // 효과음은 오리파를 열 때 미리 받기 시작한다(GachaShopView.Open). 아직이면 여기서 받기를 시작한다.
+            GachaSfx.Get(machine.Id);
             var url = GachaVideoConfig.VideoUrl(entry);
             if (string.IsNullOrEmpty(url) || (url == _preparedUrl && _player.isPrepared))
             {
@@ -266,7 +267,7 @@ namespace ScrapFishing.Gacha
             _phase = Phase.Starting;
             _deadline = Time.unscaledTime + Mathf.Max(0.5f, _config.startTimeout);
             _audio.Stop();
-            _audio.clip = entry.sfx != null ? entry.sfx : Resources.Load<AudioClip>(GachaVideoConfig.SfxPath(entry.machineId));
+            _audio.clip = GachaSfx.Get(entry.machineId);
             ApplyVolume();
             _player.time = 0d;
             _player.Play();
@@ -349,14 +350,6 @@ namespace ScrapFishing.Gacha
             return clip != null && clip.loadState == AudioDataLoadState.Loaded ? clip.length : 0f;
         }
 
-        static void Preload(AudioClip clip)
-        {
-            if (clip != null && clip.loadState == AudioDataLoadState.Unloaded)
-            {
-                clip.LoadAudioData();
-            }
-        }
-
         void HandleStarted(VideoPlayer source)
         {
             if (_phase == Phase.Starting)
@@ -422,6 +415,12 @@ namespace ScrapFishing.Gacha
                 Debug.LogWarning("오리파 연출 영상이 멈춰 결과로 바로 넘어갑니다: " + _player.url);
                 Abort();
                 return;
+            }
+
+            // 효과음을 아직 못 받았으면(느린 네트워크) 받는 대로 붙인다. 아래에서 영상 시간에 맞춰 튼다.
+            if (_audio.clip == null)
+            {
+                _audio.clip = GachaSfx.Get(_entry.machineId);
             }
 
             // 소리가 영상보다 앞서거나 늦으면 영상 시간에 맞춘다.

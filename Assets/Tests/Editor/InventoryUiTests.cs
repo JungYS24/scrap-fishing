@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using ScrapFishing.Core;
 using ScrapFishing.Gacha;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -33,7 +34,7 @@ namespace ScrapFishing.Tests
 
         static GachaShop MakeShop(GachaCatalog catalog, MemoryWallet wallet)
         {
-            var shop = new GachaShop(catalog, new GachaService(new SystemGachaRandom(7)), wallet, new MemoryKeyValueStore(), () => 0L);
+            var shop = new GachaShop(catalog, new GachaService(new SystemGachaRandom(7)), wallet, new MemorySaveStore(), () => 0L);
             shop.EnsureStarterGear();
             shop.Inventory.AddPulled(new[] { "lure_rare_01", "lure_rare_01", "rod_epic_01", "boat_normal_02" }.Select(catalog.FindGear).ToList(), "test", 0L);
             shop.Store("lure_rare_01", 1);
@@ -123,7 +124,7 @@ namespace ScrapFishing.Tests
             yield return new EnterPlayMode();
             var machines = OripaCatalogJson.Load();
             var catalog = new GachaCatalog(machines);
-            var shop = new GachaShop(catalog, new GachaService(new SystemGachaRandom(11)), new MemoryWallet(10000000), new MemoryKeyValueStore(), () => 0L);
+            var shop = new GachaShop(catalog, new GachaService(new SystemGachaRandom(11)), new MemoryWallet(10000000), new MemorySaveStore(), () => 0L);
             var banner = catalog.BannerSet.Find("banner_rod_standard");
             Assert.IsTrue(shop.TryPull(banner, 10, out var result));
 

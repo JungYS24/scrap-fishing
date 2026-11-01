@@ -50,8 +50,8 @@ namespace ScrapFishing.Core
             EnsureLanguage();
             if (save)
             {
-                PlayerPrefs.SetString(PrefKey, Code(value));
-                PlayerPrefs.Save();
+                SaveStore.SetString(PrefKey, Code(value));
+                SaveStore.Save();
             }
 
             if (_language == value)
@@ -172,7 +172,7 @@ namespace ScrapFishing.Core
             }
 
             _languageLoaded = true;
-            var saved = PlayerPrefs.GetString(PrefKey, string.Empty);
+            var saved = SaveStore.GetString(PrefKey, string.Empty);
             if (saved == "ko")
             {
                 _language = GameLanguage.Ko;

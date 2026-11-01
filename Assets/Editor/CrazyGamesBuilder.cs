@@ -14,6 +14,7 @@ namespace ScrapFishing.Build
     {
         public const string Define = "CRAZYGAMES";
         public const string Template = "PROJECT:ScrapFishingCrazyGames";
+        public const string BootScene = "Assets/Scenes/CrazyGamesBoot.unity";
         const string TargetMenuCrazyGames = "Tools/Scrap Fishing/Build Target: CrazyGames";
         const string TargetMenuGitHub = "Tools/Scrap Fishing/Build Target: GitHub Pages";
 
@@ -108,7 +109,8 @@ namespace ScrapFishing.Build
             Directory.CreateDirectory(output);
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { "Assets/Scenes/Boat.unity" },
+                // 첫 씬에서 SDK 초기화를 기다린 뒤 게임 씬을 연다(저장은 초기화 뒤에만 읽는다).
+                scenes = new[] { BootScene, "Assets/Scenes/Boat.unity" },
                 locationPathName = output,
                 target = BuildTarget.WebGL,
                 options = BuildOptions.None

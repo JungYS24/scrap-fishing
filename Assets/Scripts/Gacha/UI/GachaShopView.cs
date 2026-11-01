@@ -153,6 +153,8 @@ namespace ScrapFishing.Gacha
             }
 
             AudioManager.Ensure().Unlock();
+            // 뽑기 연출 효과음 6개를 미리 받아 둔다(첫 뽑기에서 늦게 나오지 않게).
+            GachaSfx.Preload(_shop.Catalog.Machines);
             _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
             _confirm.Hide();
@@ -186,6 +188,7 @@ namespace ScrapFishing.Gacha
                     foreach (var card in _cards)
                     {
                         SetPlaying(card, false);
+                        ReleaseArt(card);
                     }
                 });
         }
@@ -399,11 +402,16 @@ namespace ScrapFishing.Gacha
             // 아트 카드(bannerImage가 있는 배너): 그림은 처음 보일 때 불러오고, 효과는 보일 때만 돈다.
             public bool Art;
             public Image ArtImage;
+            // ArtLoaded: 이번에 보이면서 그림을 요청했는지. 실패하면 화면 밖으로 나갈 때 풀어서 다시 보일 때 또 요청한다.
             public bool ArtLoaded;
+            public bool ArtFailed;
+            // 마지막으로 그림을 받아 보여 준 순서(개수 상한을 넘으면 오래된 것부터 내린다).
+            public int ArtStamp;
             public EllipsisText Desc;
             public Text Info;
             public readonly List<Tween> Effects = new List<Tween>();
             public bool Playing;
+            public bool Visible;
             // 스킨 테두리(속이 빈 banner_frame_*, 그림 위에 얹음)와 완료 표시용 어둡게 덮는 판.
             public Image Frame;
             public Image Dim;
@@ -492,9 +500,73 @@ namespace ScrapFishing.Gacha
                 {
                     LoadArt(card);
                 }
+                else if (!visible && card.ArtFailed)
+                {
+                    // 받기에 실패한 카드는 다시 보일 때 한 번 더 받아 본다(배너당 GachaBanner.MaxBannerAttempts번까지).
+                    card.ArtFailed = false;
+                    card.ArtLoaded = false;
+                }
 
+                card.Visible = visible;
                 SetPlaying(card, visible);
             }
+
+            TrimArt();
+        }
+
+        // 받아 둔 배너 그림은 장당 약 2.3MB(무압축)라, 화면 밖 그림은 MaxLoadedArt장까지만 두고 오래된 것부터 내린다.
+        // 오리파를 닫으면 모두 내린다. 다시 보이면 다시 받는다(브라우저 캐시에 있어 보통 바로 온다).
+        public const int MaxLoadedArt = 8;
+        int _artStamp;
+
+        void TrimArt()
+        {
+            var loaded = 0;
+            foreach (var card in _cards)
+            {
+                if (card.Banner.BannerSprite != null)
+                {
+                    loaded++;
+                }
+            }
+
+            while (loaded > MaxLoadedArt)
+            {
+                BannerCard oldest = null;
+                foreach (var card in _cards)
+                {
+                    if (!card.Visible && card.Banner.BannerSprite != null && (oldest == null || card.ArtStamp < oldest.ArtStamp))
+                    {
+                        oldest = card;
+                    }
+                }
+
+                if (oldest == null)
+                {
+                    return;
+                }
+
+                ReleaseArt(oldest);
+                loaded--;
+            }
+        }
+
+        static void ReleaseArt(BannerCard card)
+        {
+            if (!card.Art)
+            {
+                return;
+            }
+
+            if (card.ArtImage != null && card.ArtImage.sprite == card.Banner.BannerSprite)
+            {
+                card.ArtImage.sprite = null;
+                card.ArtImage.color = new Color(1f, 1f, 1f, 0f);
+            }
+
+            card.Banner.ReleaseBannerSprite();
+            card.ArtLoaded = false;
+            card.ArtFailed = false;
         }
 
         static Rect WorldRect(RectTransform rect)
@@ -504,18 +576,32 @@ namespace ScrapFishing.Gacha
             return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
         }
 
-        static void LoadArt(BannerCard card)
+        // 그림은 StreamingAssets에서 받으므로 몇 프레임 뒤에 들어온다.
+        // 받지 못하면(404·네트워크 끊김) 머신 기본 배너 그림을, 그것도 없으면 빈 칸(테두리만)을 둔다.
+        void LoadArt(BannerCard card)
         {
             card.ArtLoaded = true;
-            var sprite = card.Banner.BannerSprite;
-            if (sprite == null)
+            card.Banner.LoadBannerSprite(sprite =>
             {
-                Debug.LogWarning("배너 그림을 불러오지 못했습니다: Resources/" + card.Banner.BannerImage + " (" + card.Banner.Id + ")");
-                return;
-            }
+                if (card.ArtImage == null)
+                {
+                    return;
+                }
 
-            card.ArtImage.sprite = sprite;
-            card.ArtImage.color = Color.white;
+                if (sprite == null)
+                {
+                    card.ArtFailed = !card.Banner.BannerGaveUp;
+                    var fallback = card.Banner.Machine != null ? card.Banner.Machine.Banner : null;
+                    card.ArtImage.sprite = fallback;
+                    card.ArtImage.color = fallback != null ? Color.white : new Color(1f, 1f, 1f, 0f);
+                    return;
+                }
+
+                card.ArtStamp = ++_artStamp;
+                card.ArtImage.sprite = sprite;
+                card.ArtImage.color = Color.white;
+                TrimArt();
+            });
         }
 
         static void SetPlaying(BannerCard card, bool playing)

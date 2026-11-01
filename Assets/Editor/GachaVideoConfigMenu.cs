@@ -26,9 +26,9 @@ namespace ScrapFishing.EditorTools
             var config = GachaVideoConfig.CreateDefault();
             foreach (var entry in config.machines)
             {
-                if (entry.sfx == null)
+                if (!File.Exists(Path.Combine(Application.streamingAssetsPath, GachaSfx.FileOf(entry.machineId))))
                 {
-                    Debug.LogWarning("오리파 연출 효과음을 찾지 못했습니다: Resources/" + GachaVideoConfig.SfxPath(entry.machineId));
+                    Debug.LogWarning("오리파 연출 효과음을 찾지 못했습니다: StreamingAssets/" + GachaSfx.FileOf(entry.machineId));
                 }
 
                 if (!File.Exists(Path.Combine(Application.streamingAssetsPath, GachaVideoConfig.VideoFolder, entry.videoFile)))

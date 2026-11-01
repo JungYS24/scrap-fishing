@@ -11,66 +11,102 @@ namespace ScrapFishing.Build
     {
         public const string Template = "PROJECT:ScrapFishing";
 
-        // GitHub Pages 빌드: GitHub 템플릿과 CRAZYGAMES를 뺀 심볼로 Temp/docs에 빌드한 뒤 docs에 올린다.
+        // GitHub Pages 빌드: GitHub 템플릿과 CRAZYGAMES를 뺀 심볼로 Builds/GitHubPages에 빌드한다(docs는 건드리지 않는다).
+        // 배포는 "Build/Publish GitHub Pages to docs"로 따로 한다.
         // 빌드가 끝나면 템플릿·심볼 등 PlayerSettings를 원래 값으로 되돌린다(BuildSettingsScope).
         [MenuItem("Build/GitHub Pages WebGL", false, 2)]
         public static void Build()
         {
+            // CrazyGames SDK의 사이트락은 SDK 초기화와 상관없이 모든 WebGL 빌드에서 돈다(CrazySDK.OnRuntimeMethodLoad).
+            // github.io가 허용 목록에 없으면 GitHub 판이 시작하자마자 멈추므로 빌드하지 않는다.
+            if (!GitHubPagesSiteLock.IsWhitelisted(out var problem))
+            {
+                Fail("GitHub Pages build stopped: " + problem);
+                return;
+            }
+
             bool ok;
             using (new BuildSettingsScope(Template, CrazyGamesBuilder.DefinesWith(false)))
             {
-                ok = BuildDocs();
+                ok = BuildTo(OutputFolder);
             }
 
-            if (!ok && Application.isBatchMode)
+            if (!ok)
             {
-                EditorApplication.Exit(1);
+                Fail("GitHub Pages build failed. See the log above.");
+                return;
             }
+
+            Debug.Log("GitHub Pages build succeeded: " + OutputFolder + " (publish with Build/Publish GitHub Pages to docs)");
         }
 
-        static bool BuildDocs()
+        // Builds/GitHubPages의 결과를 docs에 올린다. 배치모드가 아니면 확인 창을 먼저 띄운다.
+        [MenuItem("Build/Publish GitHub Pages to docs", false, 3)]
+        public static void PublishToDocs()
         {
-            // Unity names Build files after the last folder, so this must stay "docs".
-            var staging = Path.GetFullPath(Path.Combine("Temp", "docs"));
-            if (Directory.Exists(staging))
+            var source = OutputFolder;
+            if (!Directory.Exists(source) || !ValidateWebGlOutput(source))
             {
-                Directory.Delete(staging, true);
+                Fail("Builds/GitHubPages has no valid build. Run Build/GitHub Pages WebGL first.");
+                return;
             }
 
-            Directory.CreateDirectory(staging);
+            var output = Path.GetFullPath("docs");
+            if (!Application.isBatchMode && !EditorUtility.DisplayDialog(
+                    "Publish GitHub Pages",
+                    "Builds/GitHubPages 빌드로 docs/를 덮어씁니다.\n커밋·푸시하면 GitHub Pages에 배포됩니다. 계속할까요?",
+                    "docs에 복사",
+                    "취소"))
+            {
+                return;
+            }
 
-            var options = new BuildPlayerOptions
+            PublishStaging(source, output);
+            Debug.Log("Published GitHub Pages build to " + output);
+        }
+
+        public static string OutputFolder => Path.GetFullPath(Path.Combine("Builds", "GitHubPages"));
+
+        static void Fail(string message)
+        {
+            Debug.LogError(message);
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(1);
+                return;
+            }
+
+            EditorUtility.DisplayDialog("Scrap Fishing build", message, "OK");
+        }
+
+        static bool BuildTo(string output)
+        {
+            if (Directory.Exists(output))
+            {
+                Directory.Delete(output, true);
+            }
+
+            Directory.CreateDirectory(output);
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/Scenes/Boat.unity" },
-                locationPathName = staging,
+                locationPathName = output,
                 target = BuildTarget.WebGL,
                 options = BuildOptions.None
-            };
-
-            var report = BuildPipeline.BuildPlayer(options);
+            });
             File.WriteAllText(Path.GetFullPath("webgl-build.status"), report.summary.result.ToString());
-            var leftover = Path.Combine(staging, "TemplateData");
+            var leftover = Path.Combine(output, "TemplateData");
             if (Directory.Exists(leftover))
             {
                 Directory.Delete(leftover, true);
             }
 
-            if (report.summary.result != BuildResult.Succeeded)
+            if (report.summary.result != BuildResult.Succeeded || !ValidateWebGlOutput(output))
             {
-                Debug.LogError("WebGL build failed: " + report.summary.result + ". docs was left unchanged.");
                 return false;
             }
 
-            if (!ValidateWebGlOutput(staging))
-            {
-                Debug.LogError("WebGL output check failed. docs was left unchanged.");
-                return false;
-            }
-
-            CopyShareFiles(staging);
-            var output = Path.GetFullPath("docs");
-            PublishStaging(staging, output);
-            Debug.Log("WebGL build succeeded: " + output);
+            CopyShareFiles(output);
             return true;
         }
 
@@ -87,8 +123,10 @@ namespace ScrapFishing.Build
             PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.WebGL, Il2CppCodeGeneration.OptimizeSize);
             PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.WebGL, Il2CppCompilerConfiguration.Master);
             UnityEditor.WebGL.UserBuildSettings.codeOptimization = UnityEditor.WebGL.WasmCodeOptimization.DiskSizeLTO;
-            // Unity 로고 스플래시 없이 바로 시작한다.
+            // Unity 로고 스플래시 없이 바로 시작한다. 스플래시를 꺼도 "Unity 로고 표시"가 켜져 있으면
+            // 로고 텍스처(약 2.7MB)가 빌드에 들어가므로 같이 끈다.
             PlayerSettings.SplashScreen.show = false;
+            PlayerSettings.SplashScreen.showUnityLogo = false;
         }
 
         static readonly string[] ShareFiles =

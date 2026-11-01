@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using ScrapFishing.Gacha;
 using UnityEngine;
@@ -65,7 +66,7 @@ namespace ScrapFishing.Tests
             return banner;
         }
 
-        GachaShop NewShop(IKeyValueStore store, IGachaWallet wallet, IGachaRandom random = null)
+        GachaShop NewShop(ISaveStore store, IGachaWallet wallet, IGachaRandom random = null)
         {
             return new GachaShop(_catalog, new GachaService(random ?? new SystemGachaRandom(Seed)), wallet, store, () => _now);
         }
@@ -127,7 +128,7 @@ namespace ScrapFishing.Tests
             Assert.AreEqual(ItemRarity.Rare, GachaService.GuaranteeFor(100), "10연 이상은 레어 보장만");
             var rewards = Resources.Load<TextAsset>(OripaCatalogJson.Resource);
             StringAssert.DoesNotContain("\"count\": 100", rewards.text);
-            var shop = NewShop(new MemoryKeyValueStore(), new MemoryWallet(10000000));
+            var shop = NewShop(new MemorySaveStore(), new MemoryWallet(10000000));
             foreach (var banner in _catalog.Banners)
             {
                 Assert.AreEqual(BannerBlock.NotOffered, shop.Block(banner, 100), banner.Id);
@@ -222,7 +223,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Pickup_SharesMachineCounter()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var wallet = new MemoryWallet(1000000);
             var shop = NewShop(store, wallet, new FixedRandom(0f));
             var lure = _catalog.FindMachine("machine_lure");
@@ -242,7 +243,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Standard_BannerMatchesMachinePull()
         {
-            var shop = NewShop(new MemoryKeyValueStore(), new MemoryWallet(100000), new FixedRandom(0f));
+            var shop = NewShop(new MemorySaveStore(), new MemoryWallet(100000), new FixedRandom(0f));
             Assert.IsTrue(shop.TryPull(Banner("banner_boat_standard"), 1, out var result));
             Assert.AreEqual(7500, result.Cost);
             Assert.AreEqual(1, shop.Inventory.Counter("machine_boat"));
@@ -252,7 +253,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Daily_SecondPullSameKstDayRejected()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var wallet = new MemoryWallet(0);
             var shop = NewShop(store, wallet);
             var daily = Banner("banner_daily");
@@ -277,7 +278,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Daily_DayBoundaryIsKst0500()
         {
-            var shop = NewShop(new MemoryKeyValueStore(), new MemoryWallet(0));
+            var shop = NewShop(new MemorySaveStore(), new MemoryWallet(0));
             _now = Kst(2026, 10, 27, 4, 59);
             Assert.AreEqual(new DateTime(2026, 10, 26), shop.DailyDay());
             Assert.AreEqual(DayOfWeek.Monday, shop.DailyDay().DayOfWeek);
@@ -303,7 +304,7 @@ namespace ScrapFishing.Tests
                 { DayOfWeek.Sunday, null },
             };
             var daily = Banner("banner_daily");
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var shop = NewShop(store, new MemoryWallet(0));
             var sundayMachines = new HashSet<string>();
             // 2026-10-26(월)부터 8주. 매일 받은 장비가 그 요일 머신이고 레어 이상이다.
@@ -330,7 +331,7 @@ namespace ScrapFishing.Tests
 
             Assert.Greater(sundayMachines.Count, 1, "일요일은 전체 풀");
 
-            var fixedShop = NewShop(new MemoryKeyValueStore(), new MemoryWallet(0), new FixedRandom(0f));
+            var fixedShop = NewShop(new MemorySaveStore(), new MemoryWallet(0), new FixedRandom(0f));
             Assert.IsTrue(fixedShop.TryPull(daily, 1, out var low));
             Assert.AreEqual(ItemRarity.Rare, low.Items[0].Gear.Rarity, "가장 낮은 난수도 레어");
         }
@@ -338,7 +339,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Daily_DoesNotTouchMachineCounters()
         {
-            var shop = NewShop(new MemoryKeyValueStore(), new MemoryWallet(0), new FixedRandom(0f));
+            var shop = NewShop(new MemorySaveStore(), new MemoryWallet(0), new FixedRandom(0f));
             shop.Inventory.SetCounter("machine_lure", 30);
             Assert.IsTrue(shop.TryPull(Banner("banner_daily"), 1, out _));
             Assert.AreEqual(30, shop.Inventory.Counter("machine_lure"));
@@ -351,7 +352,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Festival_ThirtyPullLimitAndTenPullBlockedAtNine()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var wallet = new MemoryWallet(10000000);
             var shop = NewShop(store, wallet);
             var festival = Banner("banner_festival");
@@ -394,7 +395,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Festival_PityResetsEachDay()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var festival = Banner("banner_festival");
             var high = NewShop(store, new MemoryWallet(10000000), new FixedRandom(0.99999f));
             Assert.IsTrue(high.TryPull(festival, 1, out _));
@@ -431,7 +432,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Festival_ThirtiethPullIsLegendOrBetter()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var shop = NewShop(store, new MemoryWallet(10000000), new FixedRandom(0f));
             var festival = Banner("banner_festival");
             shop.Inventory.SetCounter("machine_lure", 12);
@@ -462,7 +463,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Festival_NoPityAfterEarlierLegend()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var festival = Banner("banner_festival");
             var high = NewShop(store, new MemoryWallet(10000000), new FixedRandom(0.99999f));
             Assert.IsTrue(high.TryPull(festival, 1, out var first));
@@ -505,7 +506,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Festival_FailedSpendRestoresKeys()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var shop = NewShop(store, new MemoryWallet(8999));
             var festival = Banner("banner_festival");
             Assert.AreEqual(BannerBlock.NoDollars, shop.Block(festival, 1));
@@ -517,7 +518,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void History_RecordsGearMachineAndBanner()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             var shop = NewShop(store, new MemoryWallet(10000000));
             Assert.IsTrue(shop.TryPull(Banner("banner_festival"), 10, out _));
             Assert.IsTrue(shop.TryPull(Banner("banner_daily"), 1, out _));
@@ -542,7 +543,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void History_OldSaveWithoutBannerFieldLoads()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             store.SetString(GearInventory.SaveKey,
                 "{\"version\":1,\"gear\":[{\"id\":\"lure_rare_01\",\"unprocessed\":1,\"stored\":0}],\"equipped\":[\"\",\"\",\"\",\"\",\"\",\"\"],"
                 + "\"counters\":[{\"machine\":\"machine_lure\",\"count\":12}],"

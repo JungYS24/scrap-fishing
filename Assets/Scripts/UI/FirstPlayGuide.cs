@@ -173,7 +173,7 @@ namespace ScrapFishing.UI
             _chipPanel = chipPanel != null ? chipPanel.transform as RectTransform : null;
             _tapThrough = tapThrough;
 
-            var saved = PlayerPrefs.GetInt(Key, 0);
+            var saved = SaveStore.GetInt(Key, 0);
             if (saved >= Done || parent == null || _flow == null)
             {
                 return;
@@ -481,13 +481,13 @@ namespace ScrapFishing.UI
 
         static void Save(int value)
         {
-            if (PlayerPrefs.GetInt(Key, 0) >= value)
+            if (SaveStore.GetInt(Key, 0) >= value)
             {
                 return;
             }
 
-            PlayerPrefs.SetInt(Key, value);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(Key, value);
+            SaveStore.Save();
         }
 
         void Hide(bool fade, bool resume)

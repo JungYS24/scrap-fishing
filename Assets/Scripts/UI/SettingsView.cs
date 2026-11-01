@@ -706,7 +706,7 @@ namespace ScrapFishing.UI
                 return;
             }
 
-            var eventUsed = PlayerPrefs.GetInt(EventCouponUsedKey, 0) != 0;
+            var eventUsed = SaveStore.GetInt(EventCouponUsedKey, 0) != 0;
             var dollars = CouponReward(_couponInput.text, Progression.Dollars, eventUsed);
             if (dollars <= 0)
             {
@@ -728,7 +728,7 @@ namespace ScrapFishing.UI
 
             if (IsEventCoupon(_couponInput.text))
             {
-                PlayerPrefs.SetInt(EventCouponUsedKey, 1);
+                SaveStore.SetInt(EventCouponUsedKey, 1);
             }
 
             Progression.AddDollars(dollars);

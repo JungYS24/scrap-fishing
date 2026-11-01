@@ -5,7 +5,6 @@ using NUnit.Framework;
 using ScrapFishing.Boat;
 using ScrapFishing.Core;
 using ScrapFishing.UI;
-using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,34 +17,12 @@ namespace ScrapFishing.Tests
     public class ResultsFlowTests
     {
         const string BoatScene = "Assets/Scenes/Boat.unity";
-        // 튜토리얼이 뜨면 게임이 멈춰 시간이 끝나지 않는다. 저장이 비어 있어도(새 PC, 회사·제품 이름 변경) 끝난 것으로 두고,
-        // 테스트가 끝나면 원래 값으로 돌린다. 플레이 모드 진입 때 도메인이 다시 불러와지므로 SessionState에 기억한다.
-        const string TutorialBackup = "ResultsFlowTests.Tutorial";
-        const int TutorialDone = 2;
-
+        // 튜토리얼이 뜨면 게임이 멈춰 시간이 끝나지 않는다. 저장은 메모리 저장소(TestSaves)라 개발자 PC 저장과 무관하게,
+        // 테스트마다 튜토리얼을 끝난 것으로 둔다.
         [SetUp]
         public void SkipTutorial()
         {
-            SessionState.SetInt(TutorialBackup, PlayerPrefs.HasKey(FirstPlayGuide.Key) ? PlayerPrefs.GetInt(FirstPlayGuide.Key) : -1);
-            PlayerPrefs.SetInt(FirstPlayGuide.Key, TutorialDone);
-            PlayerPrefs.Save();
-        }
-
-        [TearDown]
-        public void RestoreTutorial()
-        {
-            var saved = SessionState.GetInt(TutorialBackup, -1);
-            if (saved < 0)
-            {
-                PlayerPrefs.DeleteKey(FirstPlayGuide.Key);
-            }
-            else
-            {
-                PlayerPrefs.SetInt(FirstPlayGuide.Key, saved);
-            }
-
-            PlayerPrefs.Save();
-            SessionState.EraseInt(TutorialBackup);
+            SaveStore.SetInt(FirstPlayGuide.Key, LocTestSetup.TutorialDone);
         }
 
         [UnityTest]
@@ -125,14 +102,14 @@ namespace ScrapFishing.Tests
         [UnityTest]
         public IEnumerator Results_ShowWithLootAndNewBest()
         {
-            var dollars = PlayerPrefs.GetInt(Progression.DollarKey, 0);
-            var best = PlayerPrefs.GetInt("BestCY", 0);
+            var dollars = SaveStore.GetInt(Progression.DollarKey, 0);
+            var best = SaveStore.GetInt("BestCY", 0);
             yield return new EnterPlayMode();
             yield return LoadAndBegin();
             var boot = Object.FindFirstObjectByType<BoatBootstrap>();
             var flow = boot.GetComponent<GameFlow>();
             var session = boot.GetComponent<RunSession>();
-            PlayerPrefs.SetInt("BestCY", 0);
+            SaveStore.SetInt("BestCY", 0);
             foreach (var item in ScrapFishing.Data.ItemDatabase.Instance.Items)
             {
                 if (item != null && item.Chip > 0)
@@ -146,9 +123,9 @@ namespace ScrapFishing.Tests
             yield return new WaitForSecondsRealtime(4f);
             AssertVisible("loot");
             yield return new ExitPlayMode();
-            PlayerPrefs.SetInt(Progression.DollarKey, dollars);
-            PlayerPrefs.SetInt("BestCY", best);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(Progression.DollarKey, dollars);
+            SaveStore.SetInt("BestCY", best);
+            SaveStore.Save();
         }
 
         // 강화 3종을 모두 최대로 올린 저장으로 한 판을 끝내도 결과창이 뜨는지(풀강 후 60초가 끝나면 멈추던 버그).
@@ -156,16 +133,16 @@ namespace ScrapFishing.Tests
         [UnityTest]
         public IEnumerator Results_ShowWhenAllUpgradesMaxed([Values(false, true)] bool richDollars)
         {
-            var dollars = PlayerPrefs.GetInt(Progression.DollarKey, 0);
-            var best = PlayerPrefs.GetInt("BestCY", 0);
+            var dollars = SaveStore.GetInt(Progression.DollarKey, 0);
+            var best = SaveStore.GetInt("BestCY", 0);
             // 플레이 모드에 들어가며 도메인이 다시 읽혀도 남도록 배열 대신 값 하나씩 둔다.
-            var reel = PlayerPrefs.GetInt(Progression.LevelKey(UpgradeKind.Reel), 0);
-            var boat = PlayerPrefs.GetInt(Progression.LevelKey(UpgradeKind.Boat), 0);
-            var depth = PlayerPrefs.GetInt(Progression.LevelKey(UpgradeKind.Depth), 0);
-            PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Reel), Progression.MaxUpgradeLevel);
-            PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Boat), Progression.MaxUpgradeLevel);
-            PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Depth), Progression.MaxUpgradeLevel);
-            PlayerPrefs.SetInt(Progression.DollarKey, richDollars ? int.MaxValue - 10 : 0);
+            var reel = SaveStore.GetInt(Progression.LevelKey(UpgradeKind.Reel), 0);
+            var boat = SaveStore.GetInt(Progression.LevelKey(UpgradeKind.Boat), 0);
+            var depth = SaveStore.GetInt(Progression.LevelKey(UpgradeKind.Depth), 0);
+            SaveStore.SetInt(Progression.LevelKey(UpgradeKind.Reel), Progression.MaxUpgradeLevel);
+            SaveStore.SetInt(Progression.LevelKey(UpgradeKind.Boat), Progression.MaxUpgradeLevel);
+            SaveStore.SetInt(Progression.LevelKey(UpgradeKind.Depth), Progression.MaxUpgradeLevel);
+            SaveStore.SetInt(Progression.DollarKey, richDollars ? int.MaxValue - 10 : 0);
             try
             {
                 yield return new EnterPlayMode();
@@ -190,13 +167,13 @@ namespace ScrapFishing.Tests
             }
             finally
             {
-                PlayerPrefs.SetInt(Progression.DollarKey, dollars);
-                PlayerPrefs.SetInt("BestCY", best);
-                PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Reel), reel);
-                PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Boat), boat);
-                PlayerPrefs.SetInt(Progression.LevelKey(UpgradeKind.Depth), depth);
+                SaveStore.SetInt(Progression.DollarKey, dollars);
+                SaveStore.SetInt("BestCY", best);
+                SaveStore.SetInt(Progression.LevelKey(UpgradeKind.Reel), reel);
+                SaveStore.SetInt(Progression.LevelKey(UpgradeKind.Boat), boat);
+                SaveStore.SetInt(Progression.LevelKey(UpgradeKind.Depth), depth);
 
-                PlayerPrefs.Save();
+                SaveStore.Save();
             }
         }
 

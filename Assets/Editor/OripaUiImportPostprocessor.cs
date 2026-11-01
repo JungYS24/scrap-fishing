@@ -4,12 +4,14 @@ using ScrapFishing.Gacha;
 using UnityEditor;
 using UnityEngine;
 
-// Assets/scrap_fishing_ui/oripa 아래 오리파·보관함 UI 스킨 PNG를 설정 패널 스킨과 같은 설정으로 가져온다(최대 1024).
+// Assets/scrap_fishing_ui/oripa 아래 오리파·보관함 UI 스킨 PNG를 설정 패널 스킨과 같은 설정으로 가져온다(최대 1024, WebGL 512).
+// WebGL은 512로 줄인다: 팝업·배너 틀이 화면에서 최대 약 560px(창 높이 1080)이라 차이가 작고, 첫 다운로드가 줄어든다.
 // 9-slice 테두리는 같은 폴더 oripa_ui_manifest.json의 border_LTRB([L,T,R,B])를 Unity 순서(L,B,R,T)로 바꿔 넣는다. null이면 테두리 없음.
 public class OripaUiImportPostprocessor : AssetPostprocessor
 {
     public const string Root = "Assets/scrap_fishing_ui/oripa/";
     public const string Manifest = Root + "oripa_ui_manifest.json";
+    public const int WebGLMaxSize = 512;
 
     void OnPreprocessTexture()
     {
@@ -21,7 +23,7 @@ public class OripaUiImportPostprocessor : AssetPostprocessor
 
         var importer = (TextureImporter)assetImporter;
         var ltrb = BorderOf(Path.GetFileNameWithoutExtension(path));
-        SettingsUiImportPostprocessor.ApplyUiSprite(importer, ltrb != null ? SettingsUiImportPostprocessor.UnityBorder(ltrb) : Vector4.zero);
+        SettingsUiImportPostprocessor.ApplyUiSprite(importer, ltrb != null ? SettingsUiImportPostprocessor.UnityBorder(ltrb) : Vector4.zero, WebGLMaxSize);
         importer.maxTextureSize = 1024;
     }
 

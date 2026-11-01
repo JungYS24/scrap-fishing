@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ScrapFishing.Core;
 using ScrapFishing.Data;
 using UnityEngine;
 
 namespace ScrapFishing.Gacha
 {
-    // 오리파 뽑기 연출 영상 설정. 머신마다 영상 파일(StreamingAssets/Gacha), 같은 길이의 효과음, 등급 섬광·결과 카드 시점을 둔다.
+    // 오리파 뽑기 연출 영상 설정. 머신마다 영상 파일(StreamingAssets/Gacha), 등급 섬광·결과 카드 시점을 둔다.
+    // 영상과 같은 길이의 효과음은 StreamingAssets/Audio/Gacha에서 받는다(GachaSfx).
     // Resources/Gacha/GachaVideoConfig.asset을 Inspector에서 고치면 되고, 에셋이 없으면 CreateDefault 값으로 돈다.
     [CreateAssetMenu(menuName = "ScrapFishing/Gacha/GachaVideoConfig")]
     public class GachaVideoConfig : ScriptableObject
     {
         public const string Resource = "Gacha/GachaVideoConfig";
         public const string VideoFolder = "Gacha";
-        public const string SfxFolder = "Audio/Gacha/";
         public const int MaxVideoPull = 10;
         const string SeenPrefix = "gacha_video_seen_";
         const string MachinePrefix = "machine_";
@@ -24,8 +25,6 @@ namespace ScrapFishing.Gacha
             public string machineId;
             [Tooltip("StreamingAssets/Gacha 아래 파일 이름")]
             public string videoFile;
-            [Tooltip("영상과 같은 길이의 효과음(Resources/Audio/Gacha)")]
-            public AudioClip sfx;
             [Tooltip("이번 뽑기의 최고 등급 색으로 화면이 번쩍이는 시점(초)")]
             public float flashTime;
             [Tooltip("영상이 흰 화면이 된 뒤 결과 카드를 띄우는 시점(초)")]
@@ -108,7 +107,6 @@ namespace ScrapFishing.Gacha
                 {
                     machineId = id,
                     videoFile = "gacha_" + id + ".mp4",
-                    sfx = Resources.Load<AudioClip>(SfxPath(id)),
                     flashTime = flash,
                     cardTime = card,
                 });
@@ -117,10 +115,6 @@ namespace ScrapFishing.Gacha
             return config;
         }
 
-        public static string SfxPath(string machineId)
-        {
-            return SfxFolder + "gacha_" + KeyOf(machineId) + "_sfx";
-        }
 
         // 카탈로그의 머신 id(machine_lure)와 설정 키(lure) 둘 다 받는다.
         public static string KeyOf(string machineId)
@@ -236,7 +230,7 @@ namespace ScrapFishing.Gacha
         // 같은 머신 영상을 한 번 끝까지(결과 카드 시점까지) 본 기록. 본 영상만 탭으로 건너뛸 수 있다.
         public static bool HasSeen(string machineId)
         {
-            return PlayerPrefs.GetInt(SeenPrefix + KeyOf(machineId), 0) != 0;
+            return SaveStore.GetInt(SeenPrefix + KeyOf(machineId), 0) != 0;
         }
 
         public static void MarkSeen(string machineId)
@@ -246,13 +240,13 @@ namespace ScrapFishing.Gacha
                 return;
             }
 
-            PlayerPrefs.SetInt(SeenPrefix + KeyOf(machineId), 1);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(SeenPrefix + KeyOf(machineId), 1);
+            SaveStore.Save();
         }
 
         public static void ClearSeen(string machineId)
         {
-            PlayerPrefs.DeleteKey(SeenPrefix + KeyOf(machineId));
+            SaveStore.DeleteKey(SeenPrefix + KeyOf(machineId));
         }
     }
 }

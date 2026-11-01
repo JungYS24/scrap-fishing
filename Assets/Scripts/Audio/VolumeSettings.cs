@@ -1,4 +1,5 @@
 using System;
+using ScrapFishing.Core;
 using UnityEngine;
 
 namespace ScrapFishing.Audio
@@ -44,7 +45,7 @@ namespace ScrapFishing.Audio
             if (changed)
             {
                 Values[index] = value;
-                PlayerPrefs.SetInt(Key(channel), value);
+                SaveStore.SetInt(Key(channel), value);
             }
 
             if (save)
@@ -64,7 +65,7 @@ namespace ScrapFishing.Audio
             for (var i = 0; i < Values.Length; i++)
             {
                 Values[i] = DefaultValue;
-                PlayerPrefs.SetInt(Key((VolumeChannel)i), DefaultValue);
+                SaveStore.SetInt(Key((VolumeChannel)i), DefaultValue);
             }
 
             Save();
@@ -83,7 +84,7 @@ namespace ScrapFishing.Audio
 
         public static void Save()
         {
-            PlayerPrefs.Save();
+            SaveStore.Save();
         }
 
         // PlayerPrefs에서 다시 읽는다. 테스트와 앱 재시작 흉내에 쓴다.
@@ -114,7 +115,7 @@ namespace ScrapFishing.Audio
             _loaded = true;
             for (var i = 0; i < Values.Length; i++)
             {
-                Values[i] = Mathf.Clamp(PlayerPrefs.GetInt(Key((VolumeChannel)i), DefaultValue), 0, MaxValue);
+                Values[i] = Mathf.Clamp(SaveStore.GetInt(Key((VolumeChannel)i), DefaultValue), 0, MaxValue);
             }
         }
     }

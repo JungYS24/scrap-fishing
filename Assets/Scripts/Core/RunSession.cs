@@ -99,13 +99,13 @@ namespace ScrapFishing.Core
             GearBonusDollars = Mathf.Max(0, Mathf.RoundToInt(baseDollars * Mathf.Max(0f, GearBonuses.Get(GearStat.EndBonusPercent)) / 100f));
             EarnedDollars = baseDollars + GearBonusDollars;
             Progression.AddDollars(EarnedDollars);
-            BestCY = PlayerPrefs.GetInt(BestKey, 0);
+            BestCY = SaveStore.GetInt(BestKey, 0);
             IsNewBest = CY > BestCY;
             if (IsNewBest)
             {
                 BestCY = CY;
-                PlayerPrefs.SetInt(BestKey, BestCY);
-                PlayerPrefs.Save();
+                SaveStore.SetInt(BestKey, BestCY);
+                SaveStore.Save();
             }
 
             Time.timeScale = 0f;

@@ -58,6 +58,13 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(File.Exists("Assets/WebGLTemplates/ScrapFishingCrazyGames/files.json"), "CrazyGames 업로드용 빌드 파일 목록");
         }
 
+        // SDK 사이트락은 초기화와 상관없이 모든 WebGL 빌드에서 돈다. GitHub Pages 도메인이 허용 목록에 있어야 GitHub 판이 멈추지 않는다.
+        [Test]
+        public void SiteLock_WhitelistsGitHubPages()
+        {
+            Assert.IsTrue(GitHubPagesSiteLock.IsWhitelisted(out var problem), problem);
+        }
+
         [Test]
         public void BuildScope_RestoresPlayerSettings()
         {
@@ -83,7 +90,12 @@ namespace ScrapFishing.Tests
             var audioBefore = AudioListener.pause;
             try
             {
+                CrazyGamesBridge.SetGameplay(true);
+                Assert.IsNull(CrazyGamesBridge.LastSent, "SDK 초기화 전에는 보내지 않는다");
                 CrazyGamesBridge.SetGameplay(false);
+                // 실제로는 Init이 SDK 초기화 콜백에서 부른다(에디터에서는 DontDestroyOnLoad를 못 써 직접 부른다).
+                typeof(CrazyGamesBridge).GetMethod("MarkReady", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+                Assert.IsTrue(CrazyGamesBridge.IsReady);
                 Assert.IsNull(CrazyGamesBridge.LastSent, "시작한 적 없으면 멈춤도 보내지 않는다");
 
                 CrazyGamesBridge.SetGameplay(true);

@@ -190,7 +190,7 @@ namespace ScrapFishing.Tests
         [Test]
         public void Migration_OldSaveWithSuitKeepsDollarsAndEquipment()
         {
-            var store = new MemoryKeyValueStore();
+            var store = new MemorySaveStore();
             store.SetInt(SaveMigration.VersionKey, 3);
             store.SetInt(Progression.DollarKey, 1000);
             store.SetInt(Progression.LevelKey(UpgradeKind.Reel), 4);

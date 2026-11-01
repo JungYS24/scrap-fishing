@@ -33,14 +33,14 @@ namespace ScrapFishing.Core
 
         public static event Action Changed;
 
-        public static int Dollars => PlayerPrefs.GetInt(DollarKey, 0);
+        public static int Dollars => SaveStore.GetInt(DollarKey, 0);
         public static float CatchRadiusBonus => Level(UpgradeKind.Reel) * ReelRadiusPerLevel;
         public static float ChipMultiplier => 1f + Level(UpgradeKind.Boat) * BoatChipPerLevel;
         public static float MaxDepth => DepthAt(Level(UpgradeKind.Depth));
 
         public static int Level(UpgradeKind kind)
         {
-            return Mathf.Max(0, PlayerPrefs.GetInt(LevelKey(kind), 0));
+            return Mathf.Max(0, SaveStore.GetInt(LevelKey(kind), 0));
         }
 
         public static int MaxLevel(UpgradeKind kind)
@@ -68,7 +68,7 @@ namespace ScrapFishing.Core
 
         public static void MigrateSave()
         {
-            if (SaveMigration.Run(PlayerPrefsStore.Instance))
+            if (SaveMigration.Run(SaveStore.Current))
             {
                 Changed?.Invoke();
             }
@@ -174,8 +174,8 @@ namespace ScrapFishing.Core
             }
 
             // 쿠폰을 여러 번 쓰면 int 최대값 근처까지 갈 수 있어서, 넘쳐 음수가 되지 않게 자른다.
-            PlayerPrefs.SetInt(DollarKey, (int)System.Math.Min(int.MaxValue, (long)Dollars + amount));
-            PlayerPrefs.Save();
+            SaveStore.SetInt(DollarKey, (int)System.Math.Min(int.MaxValue, (long)Dollars + amount));
+            SaveStore.Save();
             Changed?.Invoke();
         }
 
@@ -186,21 +186,21 @@ namespace ScrapFishing.Core
                 return false;
             }
 
-            PlayerPrefs.SetInt(DollarKey, Dollars - amount);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(DollarKey, Dollars - amount);
+            SaveStore.Save();
             Changed?.Invoke();
             return true;
         }
 
         public static void ResetProgress()
         {
-            PlayerPrefs.DeleteKey(DollarKey);
+            SaveStore.DeleteKey(DollarKey);
             foreach (UpgradeKind kind in Enum.GetValues(typeof(UpgradeKind)))
             {
-                PlayerPrefs.DeleteKey(LevelKey(kind));
+                SaveStore.DeleteKey(LevelKey(kind));
             }
 
-            PlayerPrefs.Save();
+            SaveStore.Save();
             Changed?.Invoke();
         }
 
@@ -217,9 +217,9 @@ namespace ScrapFishing.Core
                 return false;
             }
 
-            PlayerPrefs.SetInt(DollarKey, Dollars - cost);
-            PlayerPrefs.SetInt(LevelKey(kind), Level(kind) + 1);
-            PlayerPrefs.Save();
+            SaveStore.SetInt(DollarKey, Dollars - cost);
+            SaveStore.SetInt(LevelKey(kind), Level(kind) + 1);
+            SaveStore.Save();
             Changed?.Invoke();
             return true;
         }

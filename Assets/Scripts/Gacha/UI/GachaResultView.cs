@@ -106,6 +106,8 @@ namespace ScrapFishing.Gacha
 
         public void Show(GachaShop shop, GachaPullResult result)
         {
+            // 뽑은 장비가 저장되도록 결과를 띄울 때 저장을 요청한다(CrazyGames Data 모듈은 최대 30초 늦게 보낸다).
+            SaveStore.Save();
             _shop = shop;
             _result = result;
             Banner = result.Banner;

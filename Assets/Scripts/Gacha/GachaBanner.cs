@@ -61,28 +61,82 @@ namespace ScrapFishing.Gacha
         public ItemRarity GuaranteeMin = ItemRarity.Normal;
         public readonly Dictionary<DayOfWeek, GachaMachineData> WeekdayPool = new Dictionary<DayOfWeek, GachaMachineData>();
 
-        // 배너 전용 아트(Resources 경로). 아직 없으면 비워 두고 머신 카드 디자인을 쓴다.
+        // 배너 전용 아트 경로("Gacha/Banners/<id>"). 아직 없으면 비워 두고 머신 카드 디자인을 쓴다.
+        // 그림(1024×768 JPG 26장)은 첫 다운로드에서 빼려고 StreamingAssets/<경로>.jpg에 두고, 카드가 보일 때 받는다(BannerArtLoader).
         public string BannerImage;
+
+        // 받기에 이만큼 실패하면 더 받지 않는다(무한 재시도 방지).
+        public const int MaxBannerAttempts = 3;
+
         Sprite _bannerSprite;
-        bool _bannerLoaded;
+        bool _bannerLoading;
+        int _bannerFailures;
+        Action<Sprite> _bannerWaiting;
 
         public bool Offers(int count)
         {
             return PullCounts != null && Array.IndexOf(PullCounts, count) >= 0;
         }
 
-        public Sprite BannerSprite
+        public bool HasBannerImage => !string.IsNullOrEmpty(BannerImage);
+
+        // 받은 배너 그림. 아직 받지 않았거나, 해제했거나, 그림이 없으면 null(LoadBannerSprite로 받는다).
+        public Sprite BannerSprite => _bannerSprite;
+
+        public bool BannerGaveUp => _bannerFailures >= MaxBannerAttempts;
+
+        public static string BannerUrl(string bannerImage)
         {
-            get
+            var url = Application.streamingAssetsPath + "/" + bannerImage + ".jpg";
+            return url.Contains("://") ? url : "file://" + url;
+        }
+
+        // 배너 그림을 받는다. 받는 중에 또 부르면 같은 요청을 같이 기다린다(한 번만 받는다).
+        // 실패하면 null을 넘기고, 다음에 다시 부르면(카드가 다시 보이면) MaxBannerAttempts번까지 다시 받는다.
+        public void LoadBannerSprite(Action<Sprite> done)
+        {
+            if (_bannerSprite != null)
             {
-                if (!_bannerLoaded)
+                done?.Invoke(_bannerSprite);
+                return;
+            }
+
+            if (!HasBannerImage || BannerGaveUp)
+            {
+                done?.Invoke(null);
+                return;
+            }
+
+            _bannerWaiting += done;
+            if (_bannerLoading)
+            {
+                return;
+            }
+
+            _bannerLoading = true;
+            BannerArtLoader.Load(BannerUrl(BannerImage), Id, sprite =>
+            {
+                _bannerLoading = false;
+                if (sprite == null)
                 {
-                    _bannerLoaded = true;
-                    _bannerSprite = string.IsNullOrEmpty(BannerImage) ? null : Resources.Load<Sprite>(BannerImage);
+                    _bannerFailures++;
+                }
+                else
+                {
+                    _bannerSprite = sprite;
                 }
 
-                return _bannerSprite;
-            }
+                var waiting = _bannerWaiting;
+                _bannerWaiting = null;
+                waiting?.Invoke(sprite);
+            });
+        }
+
+        // 그림을 메모리에서 내린다(다시 보이면 다시 받는다. 브라우저 캐시에 있으면 바로 온다).
+        public void ReleaseBannerSprite()
+        {
+            BannerArtLoader.Release(_bannerSprite);
+            _bannerSprite = null;
         }
 
         public static GachaBanner Standard(GachaMachineData machine, int order)

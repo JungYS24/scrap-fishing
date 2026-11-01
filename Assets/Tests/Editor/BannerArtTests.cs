@@ -18,7 +18,8 @@ namespace ScrapFishing.Tests
 {
     public class BannerArtTests
     {
-        const string Folder = "Assets/Resources/Gacha/Banners/";
+        // 배너 그림은 첫 다운로드에서 빼려고 StreamingAssets에 두고, 카드가 보일 때 받는다(GachaBanner.LoadBannerSprite).
+        const string Folder = "Assets/StreamingAssets/Gacha/Banners/";
 
         static List<Dictionary<string, object>> JsonBanners()
         {
@@ -37,19 +38,11 @@ namespace ScrapFishing.Tests
                 var id = (string)banner["id"];
                 Assert.AreEqual("Gacha/Banners/" + id, banner["bannerImage"], id);
                 var path = Folder + id + ".jpg";
-                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-                Assert.IsNotNull(importer, path);
-                Assert.AreEqual(TextureImporterType.Sprite, importer.textureType, id);
-                Assert.AreEqual(SpriteImportMode.Single, importer.spriteImportMode, id);
-                Assert.AreEqual(100f, importer.spritePixelsPerUnit, id);
-                Assert.AreEqual(FilterMode.Bilinear, importer.filterMode, id);
-                Assert.AreEqual(1024, importer.maxTextureSize, id);
-                Assert.IsFalse(importer.mipmapEnabled, id);
-                Assert.AreEqual(TextureWrapMode.Clamp, importer.wrapMode, id);
-                Assert.AreEqual(TextureImporterCompression.Compressed, importer.textureCompression, id);
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                Assert.IsNotNull(sprite, id);
-                Assert.AreEqual(new Vector2(1024f, 768f), sprite.rect.size, id);
+                Assert.IsTrue(File.Exists(path), path);
+                var texture = new Texture2D(2, 2);
+                Assert.IsTrue(texture.LoadImage(File.ReadAllBytes(path)), path);
+                Assert.AreEqual(new Vector2(1024f, 768f), new Vector2(texture.width, texture.height), id);
+                Object.DestroyImmediate(texture);
             }
 
             Assert.AreEqual(File.ReadAllText("Assets/Resources/Gacha/oripa_banners.json"), File.ReadAllText("planning/oripa_banners.json"), "planning 사본도 같은 파일");
@@ -168,30 +161,48 @@ namespace ScrapFishing.Tests
                 }
             }
 
-            // 스크롤하면서 보이는 카드가 차례로 불러와진다. 끝까지 내리면 26장 모두.
+            // 스크롤하면서 보이는 카드가 차례로 불러와진다. 끝까지 내리면 26장 모두 한 번씩 받는다.
+            // 받아 둔 그림은 GachaShopView.MaxLoadedArt장까지만 남고, 화면 밖 오래된 그림부터 내린다.
+            var requestsBefore = BannerArtLoader.Requests - loadedAtOpen;
             for (var p = 1f; p >= -0.01f; p -= 0.05f)
             {
                 view.Scroll.verticalNormalizedPosition = Mathf.Max(0f, p);
                 yield return new WaitForSecondsRealtime(0.15f);
             }
 
+            // 그림은 StreamingAssets에서 비동기로 받고 한 프레임에 한 장씩 풀므로, 보이는 카드에 들어올 때를 기다린다.
+            var until = Time.realtimeSinceStartup + 5f;
+            while (VisibleWithoutArt(view, view.Scroll) > 0 && Time.realtimeSinceStartup < until)
+            {
+                yield return null;
+            }
+
             cards = view.CardStates().ToList();
+            Assert.AreEqual(26, BannerArtLoader.Requests - requestsBefore, "26장 모두 한 번씩만 받는다");
+            Assert.AreEqual(0, VisibleWithoutArt(view, view.Scroll), "보이는 카드는 그림이 있다");
+            var kept = cards.Where(c => c.Banner.BannerSprite != null).ToList();
+            Assert.LessOrEqual(kept.Count, GachaShopView.MaxLoadedArt, "받아 둔 그림은 상한까지만");
+            Assert.AreEqual(kept.Count, BannerArtLoader.LiveTextures, "내린 그림의 텍스처도 지운다");
             Loaded.Clear();
             long textureBytes = 0;
-            foreach (var card in cards)
+            foreach (var card in kept)
             {
-                Assert.IsTrue(card.Loaded, card.Banner.Id + " 스크롤해서 보이면 불러온다");
-                Assert.IsNotNull(card.Art.sprite, card.Banner.Id);
-                Assert.AreEqual(card.Banner.Id, card.Art.sprite.name, "파일 이름 = 배너 id");
-                textureBytes += Profiler.GetRuntimeMemorySizeLong(card.Art.sprite.texture);
+                var texture = card.Banner.BannerSprite.texture;
+                Assert.AreEqual(card.Banner.Id, card.Banner.BannerSprite.name, "파일 이름 = 배너 id");
+                Assert.AreEqual(TextureFormat.RGB24, texture.format, "도트 경계가 번지지 않게 무압축");
+                Assert.AreEqual(1, texture.mipmapCount, "밉맵 없음");
+                Assert.AreEqual(FilterMode.Point, texture.filterMode);
+                Assert.IsFalse(texture.isReadable, "CPU 사본은 버린다");
+                textureBytes += Profiler.GetRuntimeMemorySizeLong(texture);
                 Loaded.Add(card.Banner.Id);
             }
 
+            Debug.Log($"배너 그림 풀기 마지막 {BannerArtLoader.LastDecodeMs:0.0}ms, 남은 그림 {kept.Count}장 {textureBytes / 1024f / 1024f:0.0}MB");
             Assert.IsFalse(cards[0].Playing, "맨 위 카드는 화면 밖이라 멈춤");
             var viewportHeight = view.Scroll.viewport.rect.height;
             var spacing = view.Scroll.content.GetComponent<VerticalLayoutGroup>().spacing;
             Debug.Log($"한 화면 카드 수: 지금 {viewportHeight / (cardWidth * 0.6f + spacing):0.00}장, 예전(폭×0.75) {viewportHeight / (cardWidth * 0.75f + spacing):0.00}장 (목록 높이 {viewportHeight:0}px, 카드 {cardWidth * 0.6f:0}px ← {cardWidth * 0.75f:0}px)");
-            Debug.Log($"배너 그림 메모리: 처음 화면 {loadedAtOpen}장, 26장 모두 {textureBytes / 1024f / 1024f:0.0}MB (장당 {textureBytes / 26f / 1024f:0}KB), 오리파 열기 전후 할당 증가 {(Profiler.GetTotalAllocatedMemoryLong() - before) / 1024f / 1024f:0.0}MB");
+            Debug.Log($"배너 그림: 처음 화면 {loadedAtOpen}장, 오리파 열기 전후 할당 증가 {(Profiler.GetTotalAllocatedMemoryLong() - before) / 1024f / 1024f:0.0}MB");
 
             // 전체 탭 순서: 대축제 → 오늘의 암시장(받기 완료면 맨 아래) → 싱크로 픽업 6 → 레전드 픽업 12 → 상시 6.
             var order = view.CardStates().Select(c => c.Banner).ToList();
@@ -249,11 +260,32 @@ namespace ScrapFishing.Tests
             typeof(GachaShopView).GetMethod("ShowConfirm", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(view, new object[] { festival.Banner, 1 });
             yield return null;
             Assert.IsTrue(popup.IsOpen);
+            Assert.IsNotNull(festival.Banner.BannerSprite, "이미 받은 그림");
             Assert.AreEqual(festival.Banner.BannerSprite, popup.Art.sprite, "팝업에 같은 배너 그림");
             Assert.IsTrue(popup.Art.gameObject.activeSelf);
             Assert.AreEqual(festival.Banner.Desc, popup.Description.text, "잘린 설명 전체");
             popup.Hide();
             yield return new ExitPlayMode();
+        }
+
+        static int VisibleWithoutArt(GachaShopView view, ScrollRect scroll)
+        {
+            var viewport = scroll.viewport.rect;
+            var count = 0;
+            foreach (var card in view.CardStates())
+            {
+                var corners = new Vector3[4];
+                card.Root.GetWorldCorners(corners);
+                var min = scroll.viewport.InverseTransformPoint(corners[0]);
+                var max = scroll.viewport.InverseTransformPoint(corners[2]);
+                var visible = card.Root.gameObject.activeInHierarchy && max.y > viewport.yMin && min.y < viewport.yMax;
+                if (visible && card.Art.sprite == null)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         static float WorldTop(RectTransform rect)

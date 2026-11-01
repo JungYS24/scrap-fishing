@@ -594,6 +594,8 @@ namespace ScrapFishing.Boat
             _results.Show(_session);
             _title.SetVisible(false);
             _flow.ShowResults();
+            // CrazyGames Data 모듈은 저장을 최대 30초까지 묶어 보내므로, 판이 끝나는 지점에서 한 번 더 저장을 요청한다.
+            SaveStore.Save();
         }
 
         void RefreshHud()
