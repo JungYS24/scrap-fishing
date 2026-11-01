@@ -42,12 +42,50 @@ namespace ScrapFishing.Tests
                 Assert.AreEqual(Flash[i], entry.flashTime, 0.001f, Keys[i] + " 섬광");
                 Assert.AreEqual(Card[i], entry.cardTime, 0.001f, Keys[i] + " 결과 카드");
                 Assert.IsTrue(File.Exists(Path.Combine(Application.streamingAssetsPath, "Gacha", entry.videoFile)), entry.videoFile);
-                Assert.IsNotNull(entry.sfx, Keys[i] + " 효과음");
-                Assert.AreEqual(10f, entry.sfx.length, 0.3f, Keys[i] + " 효과음 길이");
+                // 효과음은 첫 다운로드에서 빼려고 StreamingAssets의 mp3로 받는다(GachaSfx).
+                var sfx = Path.Combine(Application.streamingAssetsPath, GachaSfx.FileOf("machine_" + Keys[i]));
+                Assert.IsTrue(File.Exists(sfx), sfx);
+                Assert.Greater(new FileInfo(sfx).Length, 10000, Keys[i] + " 효과음");
                 StringAssert.EndsWith("Gacha" + Path.DirectorySeparatorChar + entry.videoFile, GachaVideoConfig.VideoUrl(entry).Replace('/', Path.DirectorySeparatorChar));
             }
 
             Assert.AreEqual(0.6f, config.flashDuration, 0.001f);
+        }
+
+        // 오리파를 열 때 미리 받는 효과음 6개가 다 받아지고 길이가 영상과 같다(10초).
+        [UnityTest]
+        public IEnumerator Sfx_PreloadsAllMachines()
+        {
+            yield return new EnterPlayMode();
+            var catalog = GachaCatalog.LoadDefault();
+            GachaSfx.Preload(catalog.Machines);
+            var until = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < until && !AllSfxLoaded(catalog))
+            {
+                yield return null;
+            }
+
+            foreach (var machine in catalog.Machines)
+            {
+                var clip = GachaSfx.Get(machine.Id);
+                Assert.IsNotNull(clip, machine.Id + " 효과음");
+                Assert.AreEqual(10f, clip.length, 0.3f, machine.Id + " 효과음 길이");
+            }
+
+            yield return new ExitPlayMode();
+        }
+
+        static bool AllSfxLoaded(GachaCatalog catalog)
+        {
+            foreach (var machine in catalog.Machines)
+            {
+                if (!GachaSfx.IsLoaded(machine.Id))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         [Test]
@@ -156,13 +194,15 @@ namespace ScrapFishing.Tests
                 machine.Configure("machine_" + Keys[i], Keys[i], GearSlot.Lure, 100, new List<GearData>());
                 GachaVideoConfig.ClearSeen(machine.Id);
                 view.Prepare(machine);
+                // 미리 불러 둔 상태 = 영상 준비 + 효과음(StreamingAssets mp3) 받기 완료. 오리파를 열 때 둘 다 시작한다.
                 var prepareStart = Time.realtimeSinceStartup;
-                while (!view.Player.isPrepared && Time.realtimeSinceStartup - prepareStart < 10f)
+                while ((!view.Player.isPrepared || !GachaSfx.IsLoaded(machine.Id)) && Time.realtimeSinceStartup - prepareStart < 10f)
                 {
                     yield return null;
                 }
 
                 Assert.IsTrue(view.Player.isPrepared, Keys[i] + " 영상 준비");
+                Assert.IsTrue(GachaSfx.IsLoaded(machine.Id), Keys[i] + " 효과음 받기");
 
                 _finished = 0;
                 var one = Make(machine, 1, tops[i], made);

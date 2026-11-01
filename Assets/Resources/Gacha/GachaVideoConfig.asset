@@ -15,32 +15,26 @@ MonoBehaviour:
   machines:
   - machineId: lure
     videoFile: gacha_lure.mp4
-    sfx: {fileID: 8300000, guid: 03776633a7fb4184d9a0ad1f923572c2, type: 3}
     flashTime: 3.5
     cardTime: 6.5
   - machineId: rod
     videoFile: gacha_rod.mp4
-    sfx: {fileID: 8300000, guid: b6b8148993559794889b610805f58a25, type: 3}
     flashTime: 4.3
     cardTime: 7.7
   - machineId: boat
     videoFile: gacha_boat.mp4
-    sfx: {fileID: 8300000, guid: 1d202e791c2c2b04e8ed9f4eb81062fa, type: 3}
     flashTime: 5.2
     cardTime: 7.5
   - machineId: drone
     videoFile: gacha_drone.mp4
-    sfx: {fileID: 8300000, guid: 0a5a4545dce30134297d0bf7b2b4f528, type: 3}
     flashTime: 5.5
     cardTime: 7.5
   - machineId: fisher
     videoFile: gacha_fisher.mp4
-    sfx: {fileID: 8300000, guid: a3c8df22c10ee0c489803b1741bfbb58, type: 3}
     flashTime: 5.2
     cardTime: 7.2
   - machineId: helmet
     videoFile: gacha_helmet.mp4
-    sfx: {fileID: 8300000, guid: fb33767b7b803334da7f0031646b6649, type: 3}
     flashTime: 5.2
     cardTime: 7.5
   flashDuration: 0.6
@@ -52,5 +46,44 @@ MonoBehaviour:
   tenColumns: 2
   cardFlipInterval: 0.1
   cardFlipDuration: 0.2
+  psyPalettes:
+  - a: {r: 0.16470589, g: 0.2, b: 0.3137255, a: 1}
+    b: {r: 0.3529412, g: 0.4, b: 0.5019608, a: 1}
+    c: {r: 0.6039216, g: 0.6392157, b: 0.70980394, a: 1}
+    speed: 0.6
+    intensity: 0.5
+    cycle: 1
+  - a: {r: 0.05490196, g: 0.16470589, b: 0.4, a: 1}
+    b: {r: 0.24705882, g: 0.6627451, b: 1, a: 1}
+    c: {r: 0.62352943, g: 0.8901961, b: 1, a: 1}
+    speed: 0.6
+    intensity: 1
+    cycle: 1
+  - a: {r: 0.16470589, g: 0.05490196, b: 0.36862746, a: 1}
+    b: {r: 0.7058824, g: 0.36078432, b: 1, a: 1}
+    c: {r: 1, g: 0.5411765, b: 0.9411765, a: 1}
+    speed: 0.6
+    intensity: 1
+    cycle: 1
+  - a: {r: 0.3529412, g: 0.11764706, b: 0, a: 1}
+    b: {r: 1, g: 0.6039216, b: 0.18039216, a: 1}
+    c: {r: 1, g: 0.8784314, b: 0.5411765, a: 1}
+    speed: 0.9
+    intensity: 1
+    cycle: 1
+  - a: {r: 1, g: 1, b: 1, a: 1}
+    b: {r: 1, g: 0.37254903, b: 0.8235294, a: 1}
+    c: {r: 0.72156864, g: 1, b: 0.23529412, a: 1}
+    speed: 1.1
+    intensity: 1
+    cycle: 2.2
+  psyFrequency: 36
+  psySwirl: 6
+  psyCenterDarken: 0.35
+  psyFadeIn: 0.4
+  psyPulseDuration: 0.3
+  psyPulseSpeed: 2.5
+  psyPulseIntensity: 0.3
+  psyDownscale: 4
   startTimeout: 4
   stallTimeout: 3

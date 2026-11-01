@@ -153,6 +153,8 @@ namespace ScrapFishing.Gacha
             }
 
             AudioManager.Ensure().Unlock();
+            // 뽑기 연출 효과음 6개를 미리 받아 둔다(첫 뽑기에서 늦게 나오지 않게).
+            GachaSfx.Preload(_shop.Catalog.Machines);
             _root.SetAsLastSibling();
             _root.gameObject.SetActive(true);
             _confirm.Hide();
@@ -598,6 +600,7 @@ namespace ScrapFishing.Gacha
                 card.ArtStamp = ++_artStamp;
                 card.ArtImage.sprite = sprite;
                 card.ArtImage.color = Color.white;
+                TrimArt();
             });
         }
 
