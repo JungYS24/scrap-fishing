@@ -58,6 +58,13 @@ namespace ScrapFishing.Tests
             Assert.IsTrue(File.Exists("Assets/WebGLTemplates/ScrapFishingCrazyGames/files.json"), "CrazyGames 업로드용 빌드 파일 목록");
         }
 
+        // SDK 사이트락은 초기화와 상관없이 모든 WebGL 빌드에서 돈다. GitHub Pages 도메인이 허용 목록에 있어야 GitHub 판이 멈추지 않는다.
+        [Test]
+        public void SiteLock_WhitelistsGitHubPages()
+        {
+            Assert.IsTrue(GitHubPagesSiteLock.IsWhitelisted(out var problem), problem);
+        }
+
         [Test]
         public void BuildScope_RestoresPlayerSettings()
         {
