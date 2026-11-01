@@ -4,6 +4,8 @@ using System.Text;
 using NUnit.Framework;
 using ScrapFishing.Boat;
 using ScrapFishing.Core;
+using ScrapFishing.UI;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -16,6 +18,35 @@ namespace ScrapFishing.Tests
     public class ResultsFlowTests
     {
         const string BoatScene = "Assets/Scenes/Boat.unity";
+        // 튜토리얼이 뜨면 게임이 멈춰 시간이 끝나지 않는다. 저장이 비어 있어도(새 PC, 회사·제품 이름 변경) 끝난 것으로 두고,
+        // 테스트가 끝나면 원래 값으로 돌린다. 플레이 모드 진입 때 도메인이 다시 불러와지므로 SessionState에 기억한다.
+        const string TutorialBackup = "ResultsFlowTests.Tutorial";
+        const int TutorialDone = 2;
+
+        [SetUp]
+        public void SkipTutorial()
+        {
+            SessionState.SetInt(TutorialBackup, PlayerPrefs.HasKey(FirstPlayGuide.Key) ? PlayerPrefs.GetInt(FirstPlayGuide.Key) : -1);
+            PlayerPrefs.SetInt(FirstPlayGuide.Key, TutorialDone);
+            PlayerPrefs.Save();
+        }
+
+        [TearDown]
+        public void RestoreTutorial()
+        {
+            var saved = SessionState.GetInt(TutorialBackup, -1);
+            if (saved < 0)
+            {
+                PlayerPrefs.DeleteKey(FirstPlayGuide.Key);
+            }
+            else
+            {
+                PlayerPrefs.SetInt(FirstPlayGuide.Key, saved);
+            }
+
+            PlayerPrefs.Save();
+            SessionState.EraseInt(TutorialBackup);
+        }
 
         [UnityTest]
         public IEnumerator Results_ShowAfterTimeUp_TwiceInARow()

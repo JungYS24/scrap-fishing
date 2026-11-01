@@ -9,23 +9,27 @@ namespace ScrapFishing.Build
 {
     public static class WebGLBuilder
     {
-        [MenuItem("Scrap Fishing/Build WebGL to docs")]
+        public const string Template = "PROJECT:ScrapFishing";
+
+        // GitHub Pages 빌드: GitHub 템플릿과 CRAZYGAMES를 뺀 심볼로 Temp/docs에 빌드한 뒤 docs에 올린다.
+        // 빌드가 끝나면 템플릿·심볼 등 PlayerSettings를 원래 값으로 되돌린다(BuildSettingsScope).
+        [MenuItem("Build/GitHub Pages WebGL", false, 2)]
         public static void Build()
         {
-            // 에디터를 CrazyGames 대상으로 바꿔 둔 채 docs를 구우면 쿠폰·전체화면이 빠진 빌드가 배포되므로 막는다.
-            if (CrazyGamesBuilder.IsCrazyGamesTarget)
+            bool ok;
+            using (new BuildSettingsScope(Template, CrazyGamesBuilder.DefinesWith(false)))
             {
-                Debug.LogError("Build Target이 CrazyGames입니다. Tools > Scrap Fishing > Build Target: GitHub Pages로 바꾼 뒤 다시 빌드하세요. docs was left unchanged.");
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-
-                return;
+                ok = BuildDocs();
             }
 
-            ApplySettings();
+            if (!ok && Application.isBatchMode)
+            {
+                EditorApplication.Exit(1);
+            }
+        }
 
+        static bool BuildDocs()
+        {
             // Unity names Build files after the last folder, so this must stay "docs".
             var staging = Path.GetFullPath(Path.Combine("Temp", "docs"));
             if (Directory.Exists(staging))
@@ -54,29 +58,20 @@ namespace ScrapFishing.Build
             if (report.summary.result != BuildResult.Succeeded)
             {
                 Debug.LogError("WebGL build failed: " + report.summary.result + ". docs was left unchanged.");
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-
-                return;
+                return false;
             }
 
             if (!ValidateWebGlOutput(staging))
             {
                 Debug.LogError("WebGL output check failed. docs was left unchanged.");
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-
-                return;
+                return false;
             }
 
             CopyShareFiles(staging);
             var output = Path.GetFullPath("docs");
             PublishStaging(staging, output);
             Debug.Log("WebGL build succeeded: " + output);
+            return true;
         }
 
         // 배포 빌드와 용량 점검 빌드(BuildSizeReport)가 같은 설정을 쓴다. 모바일 웹 기준으로 용량을 줄이는 설정이다.
@@ -88,7 +83,6 @@ namespace ScrapFishing.Build
             PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             PlayerSettings.WebGL.decompressionFallback = true;
-            PlayerSettings.WebGL.template = "PROJECT:ScrapFishing";
             // 코드(wasm): 크기 우선 IL2CPP 생성 + 크기 우선 최적화(LTO). 빌드 시간은 늘어난다.
             PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.WebGL, Il2CppCodeGeneration.OptimizeSize);
             PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.WebGL, Il2CppCompilerConfiguration.Master);
