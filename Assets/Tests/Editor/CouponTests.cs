@@ -63,7 +63,7 @@ namespace ScrapFishing.Tests
             Assert.AreEqual(0, SettingsView.CouponReward("smtm", 0, false, false));
             Assert.AreEqual(0, SettingsView.CouponReward("fish", 0, false, false));
             Assert.AreEqual(0, SettingsView.CouponReward("reset", 0, false, false));
-#if CRAZYGAMES
+#if CRAZYGAMES || ITCHIO
             Assert.IsFalse(SettingsView.CheatCouponsEnabled);
             Assert.AreEqual(0, SettingsView.CouponReward("smtm"));
 #else

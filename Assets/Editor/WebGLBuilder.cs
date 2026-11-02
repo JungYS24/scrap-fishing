@@ -67,7 +67,7 @@ namespace ScrapFishing.Build
 
         public static string OutputFolder => Path.GetFullPath(Path.Combine("Builds", "GitHubPages"));
 
-        static void Fail(string message)
+        internal static void Fail(string message)
         {
             Debug.LogError(message);
             if (Application.isBatchMode)
@@ -79,7 +79,8 @@ namespace ScrapFishing.Build
             EditorUtility.DisplayDialog("Scrap Fishing build", message, "OK");
         }
 
-        static bool BuildTo(string output)
+        // GitHub 템플릿 빌드(GitHub Pages·itch.io 공용). 지금 PlayerSettings(템플릿·심볼·압축)로 output에 굽고 공유 이미지를 넣는다.
+        internal static bool BuildTo(string output)
         {
             if (Directory.Exists(output))
             {

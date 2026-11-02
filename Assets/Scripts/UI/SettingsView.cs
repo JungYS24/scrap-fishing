@@ -65,12 +65,12 @@ namespace ScrapFishing.UI
         public const int EventCouponDollars = 500000;
         public const string EventCouponUsedKey = "CouponUsed_fish";
 
-        // 테스트·발표용 쿠폰(smtm·fish 달러 지급, reset 저장 삭제). CrazyGames 빌드에서는 모두 "올바르지 않은 쿠폰"이 된다.
+        // 테스트·발표용 쿠폰(smtm·fish 달러 지급, reset 저장 삭제). CrazyGames·itch.io 빌드에서는 모두 "올바르지 않은 쿠폰"이 된다.
         public static bool CheatCouponsEnabled
         {
             get
             {
-#if CRAZYGAMES
+#if CRAZYGAMES || ITCHIO
                 return false;
 #else
                 return true;

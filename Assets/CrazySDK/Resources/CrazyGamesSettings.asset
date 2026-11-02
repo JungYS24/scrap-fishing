@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   whitelistedDomains:
   - https://jungys24.github.io
+  - https://html-classic.itch.zone
+  - https://html.itch.zone
+  - https://v6p9d9t4.ssl.hwcdn.net
   pauseGameDuringAd: 1
   accountAvailableResponse: 0
   linkAccountResponse: 0

@@ -55,13 +55,19 @@ namespace ScrapFishing.Build
             Debug.Log("Build target: " + (on ? "CrazyGames" : "GitHub Pages") + " (" + defines + ")");
         }
 
-        // 지금 WebGL 심볼에서 CRAZYGAMES만 켜거나 끈 문자열.
+        // 지금 WebGL 심볼에서 CRAZYGAMES만 켜거나 끈 문자열(ITCHIO는 늘 뺀다).
         public static string DefinesWith(bool crazyGames)
         {
-            var defines = CurrentDefines().Where(d => d != Define).ToList();
-            if (crazyGames)
+            return DefinesFor(crazyGames ? Define : null);
+        }
+
+        // 배포 대상 심볼(CRAZYGAMES·ITCHIO)을 모두 빼고 target 하나만 켠 문자열. null이면 GitHub Pages(둘 다 끔).
+        public static string DefinesFor(string target)
+        {
+            var defines = CurrentDefines().Where(d => d != Define && d != ItchIoBuilder.Define).ToList();
+            if (target != null)
             {
-                defines.Add(Define);
+                defines.Add(target);
             }
 
             return string.Join(";", defines);
