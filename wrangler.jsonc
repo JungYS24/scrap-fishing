@@ -1,0 +1,8 @@
+// Cloudflare Workers 정적 배포 설정(네트워크 프로그래밍 9강). 푸시하면 Cloudflare 빌드 서버가 npx wrangler deploy로
+// web/ 폴더를 올린다. web/은 Unity의 Build/Publish Cloudflare to web 메뉴가 만든다(Brotli + Decompression Fallback).
+// 주소: https://scrap-fishing.<계정>.workers.dev
+{
+  "name": "scrap-fishing",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./web" }
+}

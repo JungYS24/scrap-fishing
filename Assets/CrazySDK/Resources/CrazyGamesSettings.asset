@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   whitelistedDomains:
   - https://jungys24.github.io
+  - https://scrap-fishing.ys47497568.workers.dev
   pauseGameDuringAd: 1
   accountAvailableResponse: 0
   linkAccountResponse: 0

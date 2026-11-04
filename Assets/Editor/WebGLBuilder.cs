@@ -67,7 +67,7 @@ namespace ScrapFishing.Build
 
         public static string OutputFolder => Path.GetFullPath(Path.Combine("Builds", "GitHubPages"));
 
-        static void Fail(string message)
+        internal static void Fail(string message)
         {
             Debug.LogError(message);
             if (Application.isBatchMode)
@@ -79,7 +79,7 @@ namespace ScrapFishing.Build
             EditorUtility.DisplayDialog("Scrap Fishing build", message, "OK");
         }
 
-        static bool BuildTo(string output)
+        internal static bool BuildTo(string output)
         {
             if (Directory.Exists(output))
             {
@@ -153,7 +153,9 @@ namespace ScrapFishing.Build
             }
         }
 
-        static void PublishStaging(string staging, string output)
+        // staging 빌드를 output에 올린다. Build 폴더는 Build.next에 먼저 복사한 뒤 바꿔 끼워, 도중에 실패해도 반쪽 빌드가 남지 않는다.
+        // gitHubPages면 Jekyll 처리를 끄는 .nojekyll을 둔다(Cloudflare 등 다른 곳에는 필요 없다).
+        internal static void PublishStaging(string staging, string output, bool gitHubPages = true)
         {
             Directory.CreateDirectory(output);
             var stagingBuild = Path.Combine(staging, "Build");
@@ -201,7 +203,10 @@ namespace ScrapFishing.Build
                 Directory.Delete(publishedTemplateData, true);
             }
 
-            File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty);
+            if (gitHubPages)
+            {
+                File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty);
+            }
         }
 
         static void CopyDirectory(string source, string destination)
