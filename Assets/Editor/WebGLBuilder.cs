@@ -28,7 +28,8 @@ namespace ScrapFishing.Build
             bool ok;
             using (new BuildSettingsScope(Template, CrazyGamesBuilder.DefinesWith(false)))
             {
-                ok = BuildTo(OutputFolder);
+                // 10강: Cloudflare 판과 같이 Login → Menu → Boat로 시작한다.
+                ok = BuildTo(OutputFolder, FirebaseScenes.BuildScenes);
             }
 
             if (!ok)
