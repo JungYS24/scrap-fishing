@@ -79,7 +79,9 @@ namespace ScrapFishing.Build
             EditorUtility.DisplayDialog("Scrap Fishing build", message, "OK");
         }
 
-        internal static bool BuildTo(string output)
+        public const string BoatScene = "Assets/Scenes/Boat.unity";
+
+        internal static bool BuildTo(string output, string[] scenes = null)
         {
             if (Directory.Exists(output))
             {
@@ -89,7 +91,7 @@ namespace ScrapFishing.Build
             Directory.CreateDirectory(output);
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { "Assets/Scenes/Boat.unity" },
+                scenes = scenes ?? new[] { BoatScene },
                 locationPathName = output,
                 target = BuildTarget.WebGL,
                 options = BuildOptions.None

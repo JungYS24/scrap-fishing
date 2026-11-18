@@ -17,6 +17,7 @@ namespace ScrapFishing.Audio
         const string MixResource = "Audio/AudioMix";
         const string LibraryResource = "Audio/SoundCueLibrary";
         // BGM 두 곡은 첫 다운로드(WebGL .data)에서 빼고 StreamingAssets에서 따로 받는다(타이틀 약 1.7MB, 플레이 약 3.5MB 절약).
+        // 파일은 모노 64kbps mp3다(9강 실습 6: 폰 스피커는 사실상 모노. 178kbps 스테레오 6.1MB → 2.2MB).
         // 타이틀 곡을 먼저 받는다. 웹은 첫 탭 전에는 소리를 낼 수 없어서(Unlock) 보통 그 사이에 받아진다.
         // 받기 전에 타이틀·출항이 되면 받는 즉시 튼다.
         public const string TitleBgmFile = "Audio/Start_Title_BGM.mp3";
