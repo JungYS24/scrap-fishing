@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ScrapFishing.Data;
 using ScrapFishing.Fishing;
 using ScrapFishing.Gacha;
+using ScrapFishing.Net;
 using ScrapFishing.Scrap;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -106,6 +107,13 @@ namespace ScrapFishing.Core
                 BestCY = CY;
                 SaveStore.SetInt(BestKey, BestCY);
                 SaveStore.Save();
+            }
+
+            // 10강: 최고 기록을 Firebase에 올린다. 서버 기록보다 높을 때만 실제로 쓰므로(ScoreSaver가 먼저 GET),
+            // 로그인 전에 쌓인 로컬 최고 기록도 다음 판이 끝날 때 올라간다. 로그인 안 했으면(Uid 없음) 건너뛴다.
+            if (ScoreSaver.Instance != null)
+            {
+                ScoreSaver.Instance.Save(BestCY);
             }
 
             Time.timeScale = 0f;

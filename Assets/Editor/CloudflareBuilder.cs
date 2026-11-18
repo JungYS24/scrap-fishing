@@ -69,7 +69,8 @@ namespace ScrapFishing.Build
             bool ok;
             using (new BuildSettingsScope(WebGLBuilder.Template, CrazyGamesBuilder.DefinesWith(false), WebGLCompressionFormat.Brotli, true))
             {
-                ok = WebGLBuilder.BuildTo(OutputFolder);
+                // 10강: Login → Menu → Boat. 씬이 없으면 Tools/Firebase/Create Login & Menu Scenes를 먼저 실행한다.
+                ok = WebGLBuilder.BuildTo(OutputFolder, FirebaseScenes.BuildScenes);
             }
 
             if (!ok)
